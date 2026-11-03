@@ -1,602 +1,414 @@
 # Audio System Architecture
 
-## Purpose
-
-The RDK audio subsystem spans five HAL services — AudioDecoder, AudioSink, AudioMixer, AVClock, and AVBuffer — each documented individually. This document models how they work together as an integrated audio system, covering end-to-end data flow, buffer ownership, middleware and HAL responsibilities, multi-playback scenarios, and the API extensibility roadmap.
-
-This document is intended for SoC vendors implementing HAL services, middleware developers integrating with them, and architects evaluating the design.
-
----
-
 !!! info "References"
     |||
     |-|-|
     |**AudioMixer Interface**|[audiomixer/current](https://github.com/rdkcentral/rdk-halif-aidl/tree/develop/audiomixer/current/com/rdk/hal/audiomixer)|
-    |**AudioSink Interface**|[audiosink/current](https://github.com/rdkcentral/rdk-halif-aidl/tree/develop/audiosink/current/com/rdk/hal/audiosink)|
-    |**AudioDecoder Interface**|[audiodecoder/current](https://github.com/rdkcentral/rdk-halif-aidl/tree/develop/audiodecoder/current/com/rdk/hal/audiodecoder)|
-    |**AVClock Interface**|[avclock/current](https://github.com/rdkcentral/rdk-halif-aidl/tree/develop/avclock/current/com/rdk/hal/avclock)|
-    |**AVBuffer Interface**|[avbuffer/current](https://github.com/rdkcentral/rdk-halif-aidl/tree/develop/avbuffer/current/com/rdk/hal/avbuffer)|
+    |**Platform profile**|[hfp-audiomixer.yaml](https://github.com/rdkcentral/rdk-halif-aidl/blob/develop/audiomixer/current/hfp-audiomixer.yaml)|
+    |**Interface surface**|[AudioMixer HAL](audio_mixer.md)|
+    |**Use cases**|[AudioMixer Use Cases](use_cases.md)|
 
----
+## Summary
 
-!!! tip "Related Pages"
-    * [AudioMixer HAL](audio_mixer.md)
-    * [Audio Sink HAL](../../audio_sink/current/audio_sink.md)
-    * [Audio Decoder HAL](../../audio_decoder/current/audio_decoder.md)
-    * [AV Clock HAL](../../av_clock/current/av_clock.md)
-    * [AV Buffer HAL](../../av_buffer/current/av_buffer.md)
-    * [HAL Session State Management](../../key_concepts/hal/hal_session_state_management.md)
-    * [HAL Feature Profiles](../../key_concepts/hal/hal_feature_profiles.md)
+The RDK audio path is built from five HAL services. Audio Decoder decodes, Audio Sink paces PCM against an AV Clock, AV Buffer holds the data, and Audio Mixer combines up to N inputs per mixer instance and drives that instance's output ports. Middleware owns every policy decision: which resource serves which stream, which source feeds which mixer input, the balance between inputs, the format and AQ settings of each port, and what happens when a port disappears. The HAL executes those decisions and reports state through listeners.
 
----
+The mixer exposes no buffers and no timestamps. Data reaches it through a routed source (an Audio Sink, an HDMI or Composite input, or application audio). It leaves through output ports, or through a shared-memory ring buffer for capture. Timing is owned upstream by Audio Sink and AV Clock.
 
-## Audio Subsystem Components
+Multi-playback is expressed as several `IAudioMixer` instances, each opened by one client with a fixed secure mode, plus per-input routing and volume within an instance. The HAL defines no priority or pre-emption model, so contention is resolved by the middleware audio manager. Platform differences are declared in `hfp-audiomixer.yaml` and surfaced through `getCapabilities()`, never through divergent APIs.
 
-| Component | HAL Module | Role |
-| --------- | ---------- | ---- |
-| **AudioDecoder** | `audiodecoder` | Decodes compressed audio (AC3, AAC, etc.). Tunnelled mode: decoded audio is delivered internally to the mixer. Non-tunnelled mode: decoded PCM is returned to middleware via callback. |
-| **AudioSink** | `audiosink` | Receives PCM frames from middleware via `queueAudioFrame()` and delivers them to the mixer. Manages per-stream volume, mute, and fading. |
-| **AudioMixer** | `audiomixer` | Mixes multiple audio inputs (main, associated, PCM, TTS) and routes the result to output ports (HDMI, SPDIF). Manages AQ processing, output format, and transcode. |
-| **AVClock** | `avclock` | Synchronises audio and video presentation timing. Forms sync groups linking AudioSink(s) and VideoSink to a shared clock. |
-| **AVBuffer** | `avbuffer` | Shared buffer infrastructure for audio and video data. Manages pool allocation, buffer lifecycle, and secure/non-secure memory. |
+Interface additions that multi-playback needs are tracked in [#981 Feature: audiomixer API additions for multi-playback](https://github.com/rdkcentral/rdk-halif-aidl/issues/981).
 
----
-
-## End-to-End Audio Data Flow
-
-### Audio Path Overview
-
-The following diagram shows the complete audio pipeline from source to physical output, including all four path variants.
-
-```mermaid
-flowchart TD
-    Source["Audio Source<br/>(Broadcast / OTT / App)"]
-
-    subgraph Middleware["RDK Middleware"]
-        ResourceMgr["Resource Manager"]
-        BufferMgmt["Buffer Management"]
-    end
-
-    subgraph HAL["HAL Audio Services"]
-        Decoder["AudioDecoder<br/>IAudioDecoderController"]
-        Sink["AudioSink<br/>IAudioSinkController"]
-        Mixer["AudioMixer<br/>IAudioMixerController"]
-        Clock["AVClock<br/>IAVClockController"]
-    end
-
-    subgraph Output["Output Ports"]
-        HDMI["HDMI<br/>IAudioOutputPort"]
-        SPDIF["SPDIF<br/>IAudioOutputPort"]
-    end
-
-    PhysicalOut["Physical Output<br/>(TV Speakers / AVR / Soundbar)"]
-
-    Source --> ResourceMgr
-    ResourceMgr -->|"Compressed audio"| Decoder
-    Decoder -->|"Tunnelled path<br/>(internal)"| Mixer
-    Decoder -->|"Non-tunnelled path<br/>(PCM via callback)"| BufferMgmt
-    ResourceMgr -->|"PCM-only path<br/>(TTS / Clips)"| BufferMgmt
-    BufferMgmt -->|"queueAudioFrame()"| Sink
-    Sink -->|"Audio data"| Mixer
-    Clock -.->|"Sync group"| Sink
-    Mixer --> HDMI
-    Mixer --> SPDIF
-    HDMI --> PhysicalOut
-    SPDIF --> PhysicalOut
-
-    classDef blue fill:#1565C0,stroke:#E0E0E0,stroke-width:2px,color:#E0E0E0;
-    classDef wheat fill:#FFB74D,stroke:#424242,stroke-width:2px,color:#000000;
-    classDef green fill:#4CAF50,stroke:#E0E0E0,stroke-width:2px,color:#FFFFFF;
-    classDef default fill:#1E1E1E,stroke:#E0E0E0,stroke-width:1px,color:#E0E0E0;
-
-    Source:::blue
-    ResourceMgr:::blue
-    BufferMgmt:::blue
-    Decoder:::wheat
-    Sink:::wheat
-    Mixer:::wheat
-    Clock:::wheat
-    HDMI:::green
-    SPDIF:::green
-    PhysicalOut:::green
-```
-
-### Tunnelled Audio Path
-
-In tunnelled mode, the AudioDecoder manages output directly. Compressed audio is submitted to the decoder via `decodeBuffer()`, and the decoded audio is delivered internally to the mixer without middleware involvement. The `onFrameOutput()` callback indicates this by carrying `frameBufferHandle = -1`; no PCM buffer is transferred to middleware, and the callback may still be emitted for metadata and/or state signalling, with `metadata` possibly null when unchanged.
-
-This is the primary path for broadcast and DRM-protected content, and for Dolby MS12 processing.
-
-### Non-Tunnelled Audio Path
-
-In non-tunnelled mode, the AudioDecoder decodes compressed audio and returns PCM buffers to middleware via the `onFrameOutput()` callback. Middleware then queues these PCM frames via `IAudioSinkController.queueAudioFrame()` with presentation timestamps. The AudioSink delivers frames to the mixer for output.
-
-This path gives middleware full control over decoded audio, enabling inspection, modification, or re-routing before mixing.
-
-### PCM-Only Audio Path
-
-Clear PCM from applications (TTS, system sounds, notification clips) bypasses the AudioDecoder entirely. Middleware allocates an AVBuffer, copies PCM data in, and queues directly via `IAudioSinkController.queueAudioFrame()`. This path is used for `ContentType.CLIP` and `ContentType.TTS` inputs on PCM-only mixer inputs (e.g., `pcm1`, `pcm2`, `aux`).
-
-### Audio Passthrough Path
-
-When an output port is configured with `OutputFormat.PASSTHROUGH`, the selected compressed bitstream is carried to that output using a vendor-defined internal pipeline behaviour controlled by the `IAudioOutputPort` configuration. In this mode, normal PCM decoding and mixer processing for that stream are bypassed or reduced as implementation-defined, but the stream still traverses the mixer/output-port path for routing to the selected hardware output. The AIDL does not define a direct binding from an `AudioDecoder` instance to an output port. Only one compressed source can be passed through at a time; other mixer inputs must be handled independently (decoded and mixed, or muted).
-
-Concurrent decode+passthrough is needed when some ports use passthrough (e.g., SPDIF) and others require decoded PCM (e.g., TV speakers via HDMI).
-
----
-
-## Buffer Ownership and Lifecycle
-
-### Buffer Flow
-
-The following sequence shows the lifecycle of an audio buffer through the non-tunnelled decode path, from allocation through to freeing.
-
-```mermaid
-sequenceDiagram
-    box rgb(30,136,229) Middleware
-        participant MW as Resource Manager
-    end
-    box rgb(67,160,71) Buffer Infrastructure
-        participant BUF as AVBuffer Pool
-    end
-    box rgb(249,168,37) HAL Services
-        participant DEC as AudioDecoder
-        participant SINK as AudioSink
-        participant MIX as AudioMixer
-    end
-
-    Note over MW,MIX: Non-Tunnelled Decode Path
-
-    MW->>BUF: alloc(inputPool)
-    BUF-->>MW: bufferHandle (compressed)
-    MW->>MW: Fill buffer with compressed audio
-    MW->>DEC: decodeBuffer(pts, bufferHandle)
-    Note right of MW: Ownership → Decoder
-
-    DEC->>BUF: free(inputBuffer)
-    DEC->>BUF: alloc(outputPool)
-    BUF-->>DEC: frameHandle (PCM)
-    DEC->>DEC: Decode into frameHandle
-    DEC-->>MW: onFrameOutput(pts, frameHandle, metadata)
-    Note right of MW: Ownership → Middleware
-
-    MW->>SINK: queueAudioFrame(pts, frameHandle, metadata)
-    Note right of MW: Ownership → AudioSink
-
-    SINK->>MIX: Deliver audio at presentation time
-    SINK->>BUF: free(frameHandle)
-    Note right of SINK: Buffer freed after rendering
-
-    Note over MW,MIX: PCM-Only Path (TTS / Clips)
-
-    MW->>BUF: alloc(pcmPool)
-    BUF-->>MW: bufferHandle (PCM)
-    MW->>MW: Fill buffer with PCM audio
-    MW->>SINK: queueAudioFrame(pts, bufferHandle, metadata)
-    Note right of MW: Ownership → AudioSink
-    SINK->>MIX: Deliver audio at presentation time
-    SINK->>BUF: free(bufferHandle)
-```
-
-### Ownership Transfer Rules
-
-| Event | Owner Before | Owner After |
-|-------|-------------|-------------|
-| `decodeBuffer()` returns `true` | Middleware | AudioDecoder |
-| `decodeBuffer()` returns `false` or throws | Middleware | Middleware (retry or discard) |
-| `onFrameOutput()` callback | AudioDecoder | Middleware |
-| `queueAudioFrame()` returns `true` | Middleware | AudioSink |
-| `queueAudioFrame()` returns `false` or throws | Middleware | Middleware (retry or discard) |
-| `flush()` or `stop()` on AudioSink | AudioSink | AudioSink (frees pending buffers) |
-
-### Secure vs Non-Secure Buffers
-
-Secure Audio Processing (SAP) is maintained end-to-end through the pipeline:
-
-1. **AVBuffer** — allocated from a secure pool (DRM-protected memory)
-2. **AudioDecoder** — opened with `secure = true` (see `Capabilities.supportsSecure`)
-3. **AudioSink** — opened with a secure-capable sink (see `Capabilities.supportsSecure`)
-4. **AudioMixer** — opened with `secure = true` (see `Capabilities.supportsSecure`)
-
-Secure buffers must never be copied to non-secure memory. The HAL implementation must enforce this at every ownership transfer point.
-
----
-
-## Middleware / HAL Responsibility Split
-
-### Responsibility Matrix
-
-| Responsibility | Owner | Interface / Mechanism |
-|---|---|---|
-| Resource discovery (how many decoders, sinks, mixers, clocks) | Middleware | `getXxxIds()` on each Manager |
-| Resource allocation (which decoder for which stream) | Middleware | Internal resource management logic |
-| Audio routing decisions (which source to which mixer input) | Middleware | `IAudioMixerController.setInputRouting()` |
-| Codec selection and stream setup | Middleware | `IAudioDecoder.open(codec, secure, listener)` |
-| Buffer pool allocation | Middleware | `IAVBuffer.createAudioPool()` / `createVideoPool()`, then pool `alloc()` / `free()` |
-| Decoder output pool management | HAL | Internal to AudioDecoder |
-| PCM format requirements declaration | HAL | `IAudioSinkManager.getPlatformCapabilities()` |
-| Audio mixing execution | HAL | Vendor implementation |
-| Output format selection | Middleware | `IAudioOutputPort.setProperty(OUTPUT_FORMAT, ...)` |
-| Transcode format selection | Middleware | `IAudioOutputPort.setProperty(TRANSCODE_FORMAT, ...)` |
-| AV synchronisation execution | HAL | Vendor implementation driven by AVClock |
-| Sync group configuration | Middleware | `IAVClockController.setAudioSink()` / `setVideoSink()` |
-| Per-stream volume and mute | Middleware | `IAudioSinkController.getVolume()` / `setVolume()` / `setVolumeRamp()` |
-| Per-output-port volume and mute | Middleware | `IAudioOutputPort.setProperty(VOLUME/MUTE, ...)` |
-| AQ profile selection | Middleware | `IAudioMixerController.setProperty(ACTIVE_AQ_PROFILE, ...)` |
-| AQ processing execution | HAL | Vendor implementation (Dolby MS12, DTS:X Ultra, etc.) |
-| Error reporting | HAL | `onError()` callbacks on event listeners |
-| Error recovery and retry | Middleware | Reacts to HAL error callbacks |
-| Client crash cleanup | HAL | Automatic `stop()` + `close()` on Binder death |
-
-### Boundary Diagram
-
-```mermaid
-flowchart TD
-    subgraph MW["RDK Middleware<br/>(routing, allocation, policy)"]
-        ResMgr["Resource Manager"]
-    end
-
-    subgraph Boundary["HAL AIDL Boundary"]
-        direction LR
-        DecAPI["AudioDecoder"]
-        SinkAPI["AudioSink"]
-        MixAPI["AudioMixer"]
-        ClockAPI["AVClock"]
-        BufAPI["AVBuffer"]
-    end
-
-    subgraph Vendor["Vendor Implementation"]
-        VendorImpl["SoC Audio Subsystem<br/>(mixing, sync, decode, AQ, output)"]
-    end
-
-    subgraph HW["Hardware"]
-        DSP["Audio DSP / Hardware"]
-    end
-
-    ResMgr --> DecAPI
-    ResMgr --> SinkAPI
-    ResMgr --> MixAPI
-    ResMgr --> ClockAPI
-    ResMgr --> BufAPI
-    DecAPI --> VendorImpl
-    SinkAPI --> VendorImpl
-    MixAPI --> VendorImpl
-    ClockAPI --> VendorImpl
-    BufAPI --> VendorImpl
-    VendorImpl --> DSP
-
-    classDef blue fill:#1565C0,stroke:#E0E0E0,stroke-width:2px,color:#E0E0E0;
-    classDef wheat fill:#FFB74D,stroke:#424242,stroke-width:2px,color:#000000;
-    classDef green fill:#4CAF50,stroke:#E0E0E0,stroke-width:2px,color:#FFFFFF;
-    classDef default fill:#1E1E1E,stroke:#E0E0E0,stroke-width:1px,color:#E0E0E0;
-
-    ResMgr:::blue
-    DecAPI:::wheat
-    SinkAPI:::wheat
-    MixAPI:::wheat
-    ClockAPI:::wheat
-    BufAPI:::wheat
-    VendorImpl:::green
-    DSP:::green
-```
-
----
-
-## Multi-Playback Scenarios
-
-### Platform Resource Topology
-
-The following diagram shows the reference platform resource topology as declared in the HAL Feature Profiles. Actual platforms may differ; the HFP YAML is the authoritative source for each platform's resource set.
+## Context
 
 ```mermaid
 flowchart LR
-    subgraph Decoders["AudioDecoder"]
-        DEC0["Decoder 0<br/>(secure)"]
-        DEC1["Decoder 1<br/>(secure)"]
+    subgraph Sources["Audio sources"]
+        ES["Elementary streams<br/>(broadcast, OTT)"]
+        PCM["Clear PCM<br/>(apps, TTS, system sounds)"]
+        HDMIIN["HDMI input"]
+        CVBS["Composite input"]
     end
 
-    subgraph Sinks["AudioSink"]
-        SINK0["Sink 0<br/>(secure)"]
-        SINK1["Sink 1<br/>(non-secure)"]
+    subgraph MW["RDK middleware"]
+        AM["Audio manager<br/>(owns mixer and port controllers)"]
+        PIPE["Playback pipelines<br/>(own decoder, sink, clock)"]
+        VOICE["Voice / analysis service<br/>(owns capture port)"]
     end
 
-    subgraph Mixers["AudioMixer"]
-        subgraph MIX0["Mixer 0 (secure)"]
-            M0_main["main"]
-            M0_assoc["assoc"]
-            M0_pcm1["pcm1"]
-            M0_pcm2["pcm2"]
-        end
-        subgraph MIX1["Mixer 1 (non-secure)"]
-            M1_main["main"]
-            M1_aux["aux"]
-        end
+    subgraph HAL["HAL services"]
+        DEC["Audio Decoder"]
+        SINK["Audio Sink"]
+        CLK["AV Clock"]
+        BUF["AV Buffer"]
+        MIX["Audio Mixer"]
     end
 
-    subgraph Ports["Output Ports"]
-        HDMI["HDMI<br/>(PCM, AC3, EAC3, MAT)"]
-        SPDIF["SPDIF<br/>(PCM, AC3)"]
+    subgraph Out["Physical outputs"]
+        TV["HDMI / ARC / eARC sink"]
+        AVR["S/PDIF / optical AVR"]
+        SPK["Speakers / line out"]
+        BT["Bluetooth"]
     end
 
-    DEC0 --> SINK0
-    DEC1 --> SINK1
-    SINK0 --> M0_main
-    SINK1 --> M1_main
-    MIX0 --> HDMI
-    MIX0 --> SPDIF
-    MIX1 --> HDMI
-    MIX1 --> SPDIF
+    ES --> PIPE
+    PCM --> PIPE
+    PIPE --> DEC
+    PIPE --> SINK
+    PIPE --> CLK
+    PIPE --> BUF
+    AM --> MIX
+    VOICE --> MIX
+    HDMIIN --> MIX
+    CVBS --> MIX
+    MIX --> TV
+    MIX --> AVR
+    MIX --> SPK
+    MIX --> BT
 
     classDef blue fill:#1565C0,stroke:#E0E0E0,stroke-width:2px,color:#E0E0E0;
     classDef wheat fill:#FFB74D,stroke:#424242,stroke-width:2px,color:#000000;
     classDef green fill:#4CAF50,stroke:#E0E0E0,stroke-width:2px,color:#FFFFFF;
-    classDef default fill:#1E1E1E,stroke:#E0E0E0,stroke-width:1px,color:#E0E0E0;
-
-    DEC0:::blue
-    DEC1:::blue
-    SINK0:::wheat
-    SINK1:::wheat
-    M0_main:::wheat
-    M0_assoc:::wheat
-    M0_pcm1:::wheat
-    M0_pcm2:::wheat
-    M1_main:::wheat
-    M1_aux:::wheat
-    HDMI:::green
-    SPDIF:::green
+    class AM,PIPE,VOICE blue
+    class DEC,SINK,CLK,BUF,MIX wheat
+    class TV,AVR,SPK,BT green
 ```
 
-### Scenario 1: Single Secure AV Playback (Broadcast)
+## Components
 
-**Resources used:** AudioDecoder 0, AudioSink 0, AudioMixer 0 (secure), AVClock 0
+```mermaid
+flowchart TD
+    MGR["IAudioMixerManager<br/>serviceName = audiomixer"]
+    MIXER["IAudioMixer<br/>(one per IAudioMixer.Id)"]
+    MCTRL["IAudioMixerController<br/>(exclusive, from open)"]
+    PORT["IAudioOutputPort<br/>(per mixer, by int id)"]
+    PCTRL["IAudioOutputPortController<br/>(exclusive, from open)"]
+    DAP["IDolbyMs12_2_6_Dap"]
+    CAP["IAudioCapture"]
+    MLIS["IAudioMixerEventListener"]
+    PLIS["IAudioOutputPortListener"]
+    PCLIS["IAudioOutputPortControllerListener"]
+    CLIS["IAudioCaptureListener"]
 
-- AVClock configured with `ClockMode.PCR`, linking AudioSink 0 and VideoSink 0
-- Input routing: `routing[0] = {AUDIO_SINK, 0}` (maps Sink 0 to mixer input "main")
-- AudioDecoder operates in tunnelled mode; decoded audio flows internally to the mixer
-- Mixer outputs to HDMI and SPDIF simultaneously
+    MGR -->|getAudioMixer| MIXER
+    MIXER -->|"open(secure, listener)"| MCTRL
+    MIXER -->|getAudioOutputPort| PORT
+    PORT -->|"open(listener)"| PCTRL
+    PCTRL -->|getDolbyMs12_2_6_Dap| DAP
+    PCTRL -->|"getAudioCapture(listener)"| CAP
+    MIXER -.->|events| MLIS
+    PORT -.->|onPropertyChanged| PLIS
+    PCTRL -.->|onStateChanged| PCLIS
+    CAP -.->|data and state| CLIS
 
-### Scenario 2: Single Non-Secure AV Playback (IP/OTT)
+    classDef wheat fill:#FFB74D,stroke:#424242,stroke-width:2px,color:#000000;
+    classDef green fill:#4CAF50,stroke:#E0E0E0,stroke-width:2px,color:#FFFFFF;
+    class MGR,MIXER,MCTRL,PORT,PCTRL,DAP,CAP wheat
+    class MLIS,PLIS,PCLIS,CLIS green
+```
 
-**Resources used:** AudioDecoder 1, AudioSink 1, AudioMixer 1 (non-secure), AVClock 0
+| Component | Responsibility |
+|---|---|
+| `IAudioMixerManager` | Lists the mounted mixers (`getAudioMixerIds()`), stable for the life of the process. |
+| `IAudioMixer` | Read side of one mixer: capabilities, properties, current routing and codecs, output port enumeration, listener registration. |
+| `IAudioMixerController` | Write side of one mixer: routing, per-input volume, mixer properties, start/stop/flush/discontinuity/end-of-stream. |
+| `IAudioOutputPort` | Read side of one output port: capabilities, state, properties, listener registration. |
+| `IAudioOutputPortController` | Write side of one port: port properties, and the only way to reach DAP and capture for that port. |
+| `IDolbyMs12_2_6_Dap` | MS12 2.6 DAP runtime commands for the port it was obtained from. |
+| `IAudioCapture` | Streams a copy of the port's output through a shared-memory ring buffer. |
 
-- AVClock configured with `ClockMode.AUTO` (uses AUDIO_MASTER)
-- Input routing: `routing[0] = {AUDIO_SINK, 1}` (maps Sink 1 to mixer input "main")
-- AudioDecoder operates in non-tunnelled mode; decoded PCM passed to middleware, queued via AudioSink
-- Mixer outputs to HDMI and SPDIF
+The interface-by-interface surface, the mixer state machine and the capture lifecycle are in [AudioMixer HAL](audio_mixer.md).
 
-### Scenario 3: Concurrent Secure + Non-Secure Playback
+## Assumptions and Constraints
 
-**Resources used:** Both decoders, both sinks, both mixers, both clocks
+- **One writer per mixer.** `IAudioMixer.open()` throws `EX_ILLEGAL_STATE` unless the mixer is `CLOSED`, so a single client (the audio manager) holds each `IAudioMixerController`. Any number of observers may attach with `registerEventListener()`.
+- **One writer per port.** `IAudioOutputPort.open()` throws `EX_ILLEGAL_STATE` while another client holds the controller. DAP and capture are reachable only through that controller, so the port owner also owns that port's AQ settings and capture.
+- **Secure mode is fixed per session.** It is chosen in `IAudioMixer.open(secure, …)`. Changing it means `stop()`, `close()` and `open()` again. The AIDL does not say whether a mixer opened with `secure = true` accepts non-secure sources.
+- **Mixer-to-port topology is fixed.** Each mixer reports its own ports through `getAudioOutputPortIds()`, and no call connects a mixer to a different port. "Rerouting" an output means changing port properties (`ENABLED`, `MUTE`, `VOLUME`) on ports that the mixer already drives.
+- **Only `MixingMode.NORMAL` is specified.** The other `MixingMode` values have no defined semantics, so priority between inputs is expressed with per-input volume (`setInputVolumeRamp()`), not with `MIXING_MODE`.
+- **Crash cleanup is implicit.** If a controller's client dies, the HAL performs `stop()` and `close()` on a mixer, and `close()` on a port.
+
+## End-to-End Data Flow
+
+```mermaid
+flowchart LR
+    subgraph SRC["Source"]
+        DECT["Audio Decoder<br/>(tunnelled)"]
+        DECN["Audio Decoder<br/>(non-tunnelled)"]
+        CLEAR["Clear PCM"]
+        HIN["HDMI input"]
+        CIN["Composite input"]
+        APP["Application audio"]
+    end
+
+    subgraph SNK["Audio Sink"]
+        S0["IAudioSinkController<br/>queue, pace, sink volume"]
+    end
+
+    subgraph MIXI["Mixer instance"]
+        IN["Mixer input i<br/>InputRouting{sourceType, sourceIndex}"]
+        VOL["Per-input volume<br/>setInputVolume / Ramp"]
+        FAD["FADER_LEVEL<br/>(main vs assoc)"]
+        SUM["Mix bus + headroom limiter"]
+        MUTE["Mixer MUTE"]
+    end
+
+    subgraph PORTS["Output port p"]
+        AQ["AQ: DOLBY_MS12_AUDIO_PROFILE<br/>IDolbyMs12_2_6_Dap"]
+        FMT["OUTPUT_FORMAT"]
+        PV["VOLUME / MUTE / DELAY_MS / ENABLED"]
+        CAPT["Capture tap<br/>IAudioCapture"]
+    end
+
+    PHY["Physical output"]
+
+    DECT -->|"vendor-internal<br/>(setAudioDecoder)"| S0
+    DECN -->|"onFrameOutput → queueAudioFrame"| S0
+    CLEAR -->|"queueAudioFrame<br/>(Id.EXTERNAL)"| S0
+    S0 -->|AUDIO_SINK| IN
+    HIN -->|HDMI_INPUT| IN
+    CIN -->|COMPOSITE_INPUT| IN
+    APP -->|APPLICATION_AUDIO| IN
+    IN --> VOL --> FAD --> SUM --> MUTE
+    MUTE --> AQ --> FMT --> PV --> PHY
+    PV -.-> CAPT
+
+    classDef blue fill:#1565C0,stroke:#E0E0E0,stroke-width:2px,color:#E0E0E0;
+    classDef wheat fill:#FFB74D,stroke:#424242,stroke-width:2px,color:#000000;
+    classDef green fill:#4CAF50,stroke:#E0E0E0,stroke-width:2px,color:#FFFFFF;
+    class DECT,DECN,CLEAR,HIN,CIN,APP blue
+    class S0,IN,VOL,FAD,SUM,MUTE wheat
+    class AQ,FMT,PV,CAPT,PHY green
+```
+
+### Source to mixer input
+
+A mixer input is selected by array position in `IAudioMixerController.setInputRouting(InputRouting[])`: `routing[i]` configures input `i`, and input `i` is described by `Capabilities.inputs[i]` (`MixerInput.supportedCodecs`, `supportedContentTypes`, `name`). `AudioSourceType.NONE` disconnects an input. An input already mapped to a different source must be disconnected before it is remapped, otherwise the call returns `false`.
+
+| Path | Source side | Mixer routing |
+|---|---|---|
+| Tunnelled decode | `IAudioDecoder.open(codec, secure, …)` with `getCurrentOperationalMode() == TUNNELLED`; the sink is bound with `IAudioSinkController.setAudioDecoder(decoderId)` and decoded audio moves decoder → sink inside the vendor layer. | `{AUDIO_SINK, sinkIndex}` |
+| Non-tunnelled decode | Decoder returns PCM handles in `onFrameOutput()`; middleware queues them with `IAudioSinkController.queueAudioFrame()`. | `{AUDIO_SINK, sinkIndex}` |
+| Clear PCM | Middleware fills an AV Buffer and queues it on a sink bound to `IAudioDecoder.Id.EXTERNAL`. | `{AUDIO_SINK, sinkIndex}` |
+| HDMI input | No decoder or sink. | `{HDMI_INPUT, hdmiPort}` |
+| Composite input | No decoder or sink. | `{COMPOSITE_INPUT, port}` |
+| Application audio | No decoder or sink. | `{APPLICATION_AUDIO, index}` |
+
+The AIDL does not define what produces `APPLICATION_AUDIO` or how its `sourceIndex` is allocated. The sink side of each path is specified in [Audio Sink](../audiosink/audio_sink.md) and [Audio Decoder](../audiodecoder/audio_decoder.md).
+
+### Mixing
+
+Per-input volume, `FADER_LEVEL`, the headroom guarantee and mute are specified in [AudioMixer HAL — Mixing, Volume, and Ducking](audio_mixer.md#mixing-volume-and-ducking). `setInputVolumeRamp()` is the only attenuation control that works on every source type, including HDMI and Composite inputs that bypass the Audio Sink.
+
+### Output port to physical output
+
+Every port of a mixer receives that mixer's mix. Per port, middleware sets `OUTPUT_FORMAT` (`PCM_STEREO`, `PCM_MULTICHANNEL`, `AC3`, `EAC3`, `MAT`, `TRUEHD`, `DTS`, `DTS_HD`, `PASSTHROUGH` or `AUTO`), AQ processing, `VOLUME`, `MUTE`, `DELAY_MS` and `ENABLED`, each only if listed in `OutputPortCapabilities.supportedProperties` and `supportedOutputFormats`. Encoding to AC3 or EAC3 is selected through `OUTPUT_FORMAT`; there is no separate transcode property. The AIDL does not define the order in which a port applies AQ, encoding, volume and delay.
+
+`OutputFormat.PASSTHROUGH` carries a compressed bitstream to the port unchanged. The AIDL does not say which mixer input supplies the bitstream when several inputs carry compressed audio, nor how other inputs are treated on that port.
+
+## Timing and Buffer Ownership
 
 ```mermaid
 sequenceDiagram
-    box rgb(30,136,229) Middleware
-        participant MW as Resource Manager
-    end
-    box rgb(249,168,37) Pipeline 1 (Secure - Broadcast)
-        participant DEC0 as AudioDecoder 0
-        participant DCTRL0 as AudioDecoderController 0
-        participant SINK0 as AudioSink 0
-        participant MIX0 as AudioMixer 0
-        participant MCTRL0 as AudioMixerController 0
-        participant CLK0 as AVClock 0
-    end
-    box rgb(67,160,71) Pipeline 2 (Non-Secure - App)
-        participant DEC1 as AudioDecoder 1
-        participant DCTRL1 as AudioDecoderController 1
-        participant SINK1 as AudioSink 1
-        participant MIX1 as AudioMixer 1
-        participant MCTRL1 as AudioMixerController 1
-        participant CLK1 as AVClock 1
-    end
+    participant MW as Playback pipeline
+    participant BUF as IAVBuffer
+    participant DEC as IAudioDecoderController
+    participant SNK as IAudioSinkController
+    participant MIX as Mixer input (vendor)
+    participant CAP as IAudioCapture
+    participant VS as Capture client
 
-    Note over MW,CLK1: Setup Phase
-
-    MW->>MIX0: open(secure=true, listener)
-    MIX0-->>MW: IAudioMixerController
-    MW->>MCTRL0: setInputRouting([{AUDIO_SINK, 0}])
-    MW->>CLK0: setAudioSink(0), setVideoSink(0)
-    MW->>CLK0: setClockMode(PCR)
-    MW->>DEC0: open(codec, secure=true, listener)
-    DEC0-->>MW: IAudioDecoderController
-
-    MW->>MIX1: open(secure=false, listener)
-    MIX1-->>MW: IAudioMixerController
-    MW->>MCTRL1: setInputRouting([{AUDIO_SINK, 1}])
-    MW->>CLK1: setAudioSink(1)
-    MW->>CLK1: setClockMode(AUTO)
-    MW->>DEC1: open(codec, secure=false, listener)
-    DEC1-->>MW: IAudioDecoderController
-
-    Note over MW,CLK1: Playback Phase
-
-    MW->>MCTRL0: start()
-    MW->>DCTRL0: start()
-    MW->>MCTRL1: start()
-    MW->>DCTRL1: start()
-
-    Note over MIX0,MIX1: Both mixers output to HDMI and SPDIF independently
+    MW->>BUF: alloc(pool, size)
+    BUF-->>MW: bufferHandle
+    MW->>DEC: decodeBufferWithMetadata(bufferHandle, metadata)
+    Note right of DEC: true → decoder owns and frees the input
+    DEC-->>MW: onFrameOutput(nsPresentationTime, frameAVBufferHandle, metadata)
+    Note right of MW: non-tunnelled only, middleware owns frame
+    MW->>SNK: queueAudioFrame(nsPresentationTime, bufferHandle, metadata)
+    Note right of SNK: true → sink owns the frame
+    SNK->>MIX: samples at presentation time (AV Clock paced)
+    SNK->>BUF: free(bufferHandle) once consumed
+    Note over MIX: Mixer holds no handles and no PTS
+    MIX-->>CAP: copy of port output into ring buffer
+    CAP-->>VS: onDataAvailable(offsetBytes, lengthBytes, metadata)
+    VS->>CAP: releaseData(offsetBytes, lengthBytes)
+    Note right of VS: region returns to the HAL
 ```
 
-!!! note
-    How two mixer outputs combine onto the same physical output port is a vendor implementation detail. The HAL does not prescribe the mixing strategy at the output stage. Vendors must ensure that both mixers can drive the same output ports without conflict.
+| Stage | Owner | Rule |
+|---|---|---|
+| Compressed input buffer | Middleware until `decodeBufferWithMetadata()` returns `true`, then the decoder | [Audio Decoder](../audiodecoder/audio_decoder.md) |
+| Decoded frame (non-tunnelled) | Middleware from `onFrameOutput()` until `queueAudioFrame()` returns `true`, then the sink | [Audio Sink — Audio Buffers](../audiosink/audio_sink.md#audio-buffers) |
+| Decoded audio (tunnelled) | Vendor layer throughout; `frameAVBufferHandle` is `-1` | [Audio Decoder](../audiodecoder/audio_decoder.md) |
+| Mixer inputs, mix bus, port output | Vendor layer; no handle crosses the AIDL | — |
+| Capture ring buffer | HAL owns the ring from `getSharedMemory()` to `releaseSharedMemory()`; each region signalled by `onDataAvailable()` is lent to the client until `releaseData()` with the same tuple | [AudioMixer HAL — Shared-Memory Offset/Length Usage](audio_mixer.md#shared-memoryoffsetlength-usage) |
 
-### Scenario 4: Main Audio + TTS Overlay
+Presentation timing exists only upstream of the mixer. Audio Sink consumes frames at `nsPresentationTime` against the AV Clock bound with `attachClock()`, and the clock's `ClockMode` (`AUTO`, `PCR`, `AUDIO_MASTER`, `VIDEO_MASTER`) selects the timebase; see [AV Clock](../avclock/av_clock.md). Downstream of the sink the AIDL exposes these timing values:
 
-**Resources used:** AudioDecoder 0, AudioSink 0 (main), AudioSink 1 (TTS), AudioMixer 0
+| Value | Where | Meaning |
+|---|---|---|
+| `Property.LATENCY_MS` | `IAudioMixer.getProperty()` | Current mixer latency, ms, read-only. |
+| `OutputPortProperty.DELAY_MS` | port | Added output delay, ms, range implementation-defined. |
+| `OutputPortProperty.METRIC_UNDERFLOWS` / `METRIC_OVERFLOWS` | port | Starvation and overrun counts since the port was enabled. |
+| `AudioCaptureData.timestampUs` | capture | Monotonic system clock, µs, per captured frame. |
+
+The AIDL does not say whether AV Clock compensates for `LATENCY_MS` or `DELAY_MS` when aligning audio with video. `IAudioMixerController.signalDiscontinuity()` tells the mixer that input PTS or format has broken (source switch, seek); `flush(reset)` discards buffered mixer data; `signalEndOfStream()` drains all inputs and returns the mixer to `READY`.
+
+## Middleware / HAL Responsibility Split
 
 ```mermaid
-sequenceDiagram
-    box rgb(30,136,229) Middleware
-        participant MW as Resource Manager
-        participant TTS as TTS Engine
+flowchart TD
+    subgraph MW["Middleware (policy)"]
+        DISC["Discovery and allocation"]
+        ROUTE["Routing and priority"]
+        PORTPOL["Port policy (format, AQ, volume, failover)"]
     end
-    box rgb(249,168,37) HAL Services
-        participant SINK0 as AudioSink 0 (main)
-        participant SINK1 as AudioSink 1 (TTS)
-        participant MIX as AudioMixer 0
-        participant CTRL as AudioMixerController 0
+    subgraph AIDL["AIDL boundary"]
+        CTRL["Controllers (writes)"]
+        LIS["Listeners (notifications)"]
     end
+    subgraph VEN["Vendor HAL (execution)"]
+        EXEC["Injection, mixing, headroom,<br/>AQ, encoding, port I/O, capture"]
+    end
+    DISC --> CTRL
+    ROUTE --> CTRL
+    PORTPOL --> CTRL
+    CTRL --> EXEC
+    EXEC --> LIS
+    LIS --> ROUTE
+    LIS --> PORTPOL
 
-    Note over MW,CTRL: Setup
-
-    MW->>MIX: open(secure=true, listener)
-    MIX-->>MW: IAudioMixerController
-    MW->>CTRL: setInputRouting([{AUDIO_SINK, 0}, {AUDIO_SINK, 1}])
-    Note right of CTRL: Sink 0 → input "main"<br/>Sink 1 → input "pcm1"
-    MW->>CTRL: start()
-
-    Note over MW,MIX: Main content playing
-
-    MW->>SINK0: queueAudioFrame(pts, handle, metadata)
-    SINK0->>MIX: Deliver to "main" input
-
-    Note over MW,MIX: TTS triggered
-
-    TTS->>SINK1: queueAudioFrame(pts, handle, metadata)
-    SINK1->>MIX: Deliver to "pcm1" input
-
-    Note over MIX: Mixer combines both inputs<br/>(MixingMode.NORMAL)
+    classDef blue fill:#1565C0,stroke:#E0E0E0,stroke-width:2px,color:#E0E0E0;
+    classDef wheat fill:#FFB74D,stroke:#424242,stroke-width:2px,color:#000000;
+    classDef green fill:#4CAF50,stroke:#E0E0E0,stroke-width:2px,color:#FFFFFF;
+    class DISC,ROUTE,PORTPOL blue
+    class CTRL,LIS wheat
+    class EXEC green
 ```
 
-In future, `MixingMode.DUCKED` will enable automatic attenuation of the main stream while TTS is active.
+| Responsibility | Owner | Mechanism |
+|---|---|---|
+| Resource discovery | Middleware | `IAudioMixerManager.getAudioMixerIds()`, `IAudioMixer.getAudioOutputPortIds()`, `getCapabilities()` on mixer and port |
+| Mixer selection and secure mode | Middleware | `IAudioMixer.open(secure, listener)` |
+| Source → mixer input | Middleware | `IAudioMixerController.setInputRouting()` |
+| Source priority, ducking | Middleware | `setInputVolume()`, `setInputVolumeRamp()` |
+| Main / associated balance | Middleware | `setProperty(FADER_LEVEL, …)` |
+| Per-stream volume (sink-fed sources) | Middleware | `IAudioSinkController.setVolume()`, `setVolumeRamp()` |
+| Output format per port | Middleware | `IAudioOutputPortController.setProperty(OUTPUT_FORMAT, …)` |
+| AQ profile and DAP settings per port | Middleware | `setProperty(DOLBY_MS12_AUDIO_PROFILE, …)`, `IDolbyMs12_2_6_Dap` |
+| Master volume, mute, delay, enable per port | Middleware | `setProperty(VOLUME / MUTE / DELAY_MS / ENABLED, …)` |
+| Failover when a port disconnects | Middleware | Reacts to `onPropertyChanged(CONNECTION_STATE, …)` |
+| Stream injection and pacing | HAL | Audio Sink and AV Clock |
+| Mixing and clipping prevention | HAL | Vendor implementation |
+| AQ processing, encoding, port output | HAL | Vendor implementation |
+| Capture | HAL produces, client consumes | `IAudioCapture`, `IAudioCaptureListener` |
+| Client-crash cleanup | HAL | Implicit `stop()` / `close()` on binder death |
 
-### Scenario 5: Main Audio + Supplementary Audio (Audio Description)
+Notifications from HAL to middleware:
 
-**Resources used:** AudioDecoder 0 (main), AudioDecoder 1 (AD), AudioSink 0 (main), AudioSink 1 (AD), AudioMixer 0, AVClock 0
+| Event | Listener | Fires when |
+|---|---|---|
+| `onStateChanged(oldState, newState)` | `IAudioMixerEventListener` | Mixer lifecycle transition |
+| `onInputCodecChanged(inputIndex, codec, contentType)` | `IAudioMixerEventListener` | Codec or content type on an input changes |
+| `onError(errorCode, message)` | `IAudioMixerEventListener` | Mixer runtime error |
+| `onPropertyChanged(property, newValue)` | `IAudioOutputPortListener` | Any port property changes, including `CONNECTION_STATE`, `OUTPUT_FORMAT`, `SUPPORTED_AUDIO_FORMATS`, `DOLBY_ATMOS_SUPPORT` |
+| `onStateChanged(oldState, newState)` | `IAudioOutputPortControllerListener` | Port open / close transition |
+| `onStarted()`, `onStopped()`, `onDataAvailable()`, `onError(AudioCaptureError, message)` | `IAudioCaptureListener` | Capture session events |
 
-- Both decoders decode from the same broadcast multiplex
-- AVClock links both sinks: `setAudioSink(0)` for primary, `setSupplementaryAudioSink(1)` for AD
-- Input routing: `routing[0] = {AUDIO_SINK, 0}` for "main", `routing[1] = {AUDIO_SINK, 1}` for "assoc"
-- Both streams share the same PCR-driven clock from the broadcast stream
-- Mixer combines main and associated audio for output
+No event reports a routing change, a resource becoming free, or the end of a mixer drain other than the `READY` state transition. `errorCode` in `IAudioMixerEventListener.onError()` has no defined enumeration.
 
-### Scenario 6: HDMI / Composite Input Audio
+## Multi-Playback and Multi-View
 
-**Resources used:** AudioMixer 0 (or 1)
+### Reference topology
 
-- Input routing: `routing[0] = {HDMI_INPUT, 0}` or `{COMPOSITE_INPUT, 0}`
-- No AudioDecoder or AudioSink involved — the mixer receives audio directly from the platform audio source
-- The mixer handles format detection and mixing internally
+The reference profile in `hfp-audiomixer.yaml` declares two mixers and three ports:
 
-### Resource Contention and Priority
+```mermaid
+flowchart LR
+    subgraph M0["MIXER_SYSTEM (id 0), supportsSecure = true"]
+        I00["0 main<br/>AC3, EAC3, PCM, AAC_LC"]
+        I01["1 assoc<br/>AC3, EAC3, PCM, AAC_LC"]
+        I02["2 pcm1<br/>PCM: STREAM, CLIP, TTS"]
+        I03["3 pcm2<br/>PCM: STREAM, CLIP, TTS"]
+    end
+    subgraph M1["MIX1 (id 1), supportsSecure = false"]
+        I10["0 main<br/>PCM, AAC_LC"]
+        I11["1 aux<br/>PCM: CLIP, TTS"]
+    end
+    subgraph P["Output ports"]
+        P0["0 HDMI (HDMI)<br/>AUTO, PCM_STEREO, AC3, EAC3<br/>DOLBY_MS12_2_6"]
+        P1["1 SPDIF (SPDIF)<br/>PCM_STEREO, AC3"]
+        P2["2 PCM_CAPTURE (INTERNAL)<br/>PCM_STEREO, PCM_MULTICHANNEL<br/>supportsAudioCapture"]
+    end
+    M0 --> P0
+    M0 --> P1
+    M0 --> P2
+    M1 -.-> P0
+    M1 -.-> P1
 
-The HAL does not define audio priority or pre-emption policy. When resources are exhausted (all decoders in use, all sinks open, all mixer inputs routed), the **middleware resource manager** is responsible for:
+    classDef wheat fill:#FFB74D,stroke:#424242,stroke-width:2px,color:#000000;
+    classDef green fill:#4CAF50,stroke:#E0E0E0,stroke-width:2px,color:#FFFFFF;
+    class I00,I01,I02,I03,I10,I11 wheat
+    class P0,P1,P2 green
+```
 
-- Deciding which streams to stop or pre-empt
-- Releasing resources before allocating them to new streams
-- Implementing an audio focus model (e.g., TTS pre-empts background music)
+The profile declares `outputPorts` once, not per mixer. The AIDL does not say whether two mixers that report the same port id share one `IAudioOutputPort` (and so one controller), nor how two mixers' outputs combine on one physical port; the dashed links show that assumption is unresolved.
 
-In these HALs, `open()` does not use `null` as the sole signal for resource contention. Invalid state or invalid arguments are reported via Binder exceptions (for example, `EX_ILLEGAL_STATE`), while a `null` return from `open()` indicates that the requested resource could not be opened — for example because the request is unsupported or the operation otherwise failed, including resource exhaustion. Likewise, if `start()` is invoked when a resource is unavailable or not in a valid state, failure is reported via a Binder exception rather than a boolean return value.
+### Scenarios
 
----
+| Scenario | Mixers | Inputs used | Use case |
+|---|---|---|---|
+| Single OTT stream | `MIXER_SYSTEM`, non-secure | main | [UC-AM-01 Stream playback](use_cases.md#uc-am-01-stream-playback) |
+| Broadcast with audio description | `MIXER_SYSTEM`, secure | main + assoc, `FADER_LEVEL` | [UC-AM-02 Broadcast routing with audio description](use_cases.md#uc-am-02-broadcast-routing-with-audio-description) |
+| Stream plus system tone or TTS | `MIXER_SYSTEM` | main + pcm1, ducking | [UC-AM-05 Multi-source mix](use_cases.md#uc-am-05-multi-source-mix) |
+| HDMI input to outputs | `MIXER_SYSTEM` | main from `HDMI_INPUT` | [UC-AM-07 HDMI input routing](use_cases.md#uc-am-07-hdmi-input-routing) |
+| Multi-view audio follow | `MIXER_SYSTEM` | main swapped between two sinks, or main + pcm1 | [UC-AM-08 Multi-view audio switch](use_cases.md#uc-am-08-multi-view-audio-switch) |
+| Secure broadcast plus non-secure app | `MIXER_SYSTEM` secure and `MIX1` non-secure | one per mixer | [UC-AM-09 Concurrent mixers and contention](use_cases.md#uc-am-09-concurrent-mixers-and-contention) |
+| Capture during playback | `MIXER_SYSTEM` | port 2 capture | [UC-AM-03 Capture of the output mix](use_cases.md#uc-am-03-capture-of-the-output-mix) |
 
-## Output Port Configuration
+### Coordinating mixer instances
 
-Each output port is independently configurable via `IAudioOutputPort.setProperty()`. The three output modes are:
+Each mixer is an independent session with its own controller, secure mode, routing, properties and ports. Secure and non-secure content run concurrently by opening one mixer of each kind (`MIXER_SYSTEM` with `secure = true`, `MIX1` with `secure = false` in the reference profile). The AIDL does not say whether one source (for example sink 0) may be routed to inputs on two mixers at once.
 
-| Mode | Property | Description |
-|------|----------|-------------|
-| **Decode + Mix** | `OUTPUT_FORMAT = PCM` | Default. Compressed audio is decoded, mixed with other inputs, and output as uncompressed PCM. |
-| **Transcode** | `TRANSCODE_FORMAT = DOLBY_AC3` | Mixed PCM is re-encoded to AC3 (or other format) for S/PDIF or legacy AVR compatibility. |
-| **Passthrough** | `OUTPUT_FORMAT = PASSTHROUGH` | Compressed bitstream bypasses decoding and mixing entirely. Only one compressed source can pass through; other inputs are muted or mixed separately. |
+### Multi-view
 
-Output ports are independent: HDMI can be in MAT mode while SPDIF uses AC3 transcode. Each port's supported formats and transcode capabilities are declared in the HFP YAML and queryable via `IAudioOutputPort.getCapabilities()`.
+Multi-view runs one decoder → sink chain per view against a shared AV Clock and routes the chain whose audio is wanted. Because an unrouted sink keeps consuming at clock rate ([Audio Sink — Audio Mixer Input Routing](../audiosink/audio_sink.md#audio-mixer-input-routing)), switching the audible view is a routing change: disconnect the old sink with `NONE`, then route the new one. Hearing two views at once uses two inputs of one mixer, balanced with `setInputVolume()`.
 
----
+### Contention, priority and pre-emption
 
-## AV Synchronisation
+| Request | HAL response |
+|---|---|
+| Second `IAudioMixer.open()` on a mixer already open | `EX_ILLEGAL_STATE` |
+| `open(secure = true)` on a mixer with `supportsSecure = false` | `null` |
+| Second `IAudioOutputPort.open()` on a held port | `EX_ILLEGAL_STATE` |
+| `setInputRouting()` naming the same source twice | `false` |
+| `setInputRouting()` remapping an input that already has a different source | `false` |
+| `getAudioMixer()` on a defined `IAudioMixer.Id` that is not mounted | `null` |
 
-The AVClock HAL establishes synchronisation between audio and video through sync groups. A sync group links one or more AudioSinks and a VideoSink to a shared clock.
+The HAL arbitrates nothing beyond these rejections. Which stream wins, when a stream is pre-empted, and how much a background input is attenuated are middleware decisions, carried out with routing and per-input volume.
 
-| Clock Mode | Source | Use Case |
-|------------|--------|----------|
-| `AUTO` | AUDIO_MASTER if audio present, else VIDEO_MASTER | Default for IP/OTT playback |
-| `PCR` | Program Clock Reference from broadcast transport stream | Live broadcast, DVR |
-| `AUDIO_MASTER` | Crash-locked to first audio sample PTS | Audio-led playback |
-| `VIDEO_MASTER` | Crash-locked to first video frame PTS | Video-led playback |
+## Platform Consistency
 
-The AudioSink uses presentation timestamps (PTS) from `queueAudioFrame()` to schedule audio delivery to the mixer. The AVClock paces this delivery against the selected clock source. For broadcast, middleware delivers PCR samples via `notifyPCRSample()` to maintain phase lock.
+`hfp-audiomixer.yaml` declares each platform's mixers and ports. Runtime queries must return what the profile declares:
 
-For full details, see the [AV Clock HAL documentation](../../av_clock/current/av_clock.md).
+| HFP key | Runtime query |
+|---|---|
+| `resources[].id` | `IAudioMixerManager.getAudioMixerIds()` |
+| `resources[].supportsSecure` | `Capabilities.supportsSecure` |
+| `resources[].supportedProperties` | `Capabilities.supportedProperties` |
+| `resources[].inputs[]` (order, `name`, codecs, content types) | `Capabilities.inputs[]` |
+| `outputPorts[].id` | `IAudioMixer.getAudioOutputPortIds()` |
+| `outputPorts[].portName`, `portType` | `OutputPortCapabilities.portName`, `portType` |
+| `outputPorts[].supportedProperties`, `supportedOutputFormats` | `OutputPortCapabilities.supportedProperties`, `supportedOutputFormats` |
+| `outputPorts[].supportedAQProcessors[].id` | `OutputPortCapabilities.supportedAQProcessors` |
+| `outputPorts[].supportedAQProcessors[].setFunctions.*.supports*` | `IDolbyMs12_2_6_Dap.getCapabilities()` |
+| `outputPorts[].dolbyMs12AudioProfiles` | `OutputPortCapabilities.dolbyMs12AudioProfiles` |
+| `outputPorts[].supportsAudioCapture` | `OutputPortCapabilities.supportsAudioCapture` |
 
----
+Three profile keys have no runtime query: `resources[].supportedSourceTypes`, `outputPorts[].supportedChannelLayouts` and the `range` / `default` values under `setFunctions`. Conformance tests read these from the profile.
 
-## Platform Consistency Guidelines
+Rules that hold on every SoC:
 
-### HFP as the Contract
-
-The HAL Feature Profile YAML is the authoritative declaration of a platform's audio capabilities. Implementations must satisfy the following:
-
-- `getCapabilities()` at runtime must match the HFP declarations
-- Resource IDs returned by `getXxxIds()` must correspond to HFP entries
-- Supported codecs, content types, output formats, and AQ parameters must be consistent between HFP and runtime queries
-- VTS test suites validate conformance against HFP declarations
-
-### Cross-SoC Implementation Guidance
-
-| Requirement | Guidance |
-|-------------|----------|
-| **Buffer ownership** | Non-negotiable. All implementations must follow the ownership transfer rules defined in this document. |
-| **State machine transitions** | Must follow the standard lifecycle (CLOSED → OPENING → READY → STARTING → STARTED). Transitory states must emit state change events. |
-| **PCM format** | Declared via `PlatformCapabilities`. Middleware adapts to the platform's native format (e.g., S16LE at 48 kHz). |
-| **Tunnelled vs non-tunnelled** | Vendor decides per codec, but behaviour must be consistent across calls for the same codec and configuration. |
-| **AQ parameter semantics** | Parameter IDs are fixed. Interpretation may vary by vendor (e.g., scale ranges), but IDs must not be repurposed. |
-| **Client crash cleanup** | HAL must detect Binder death and automatically `stop()` + `close()` the affected resource. |
-
----
-
-## API Extensibility Roadmap
-
-### Current TODO Items
-
-The following items are defined in the AIDL interfaces but not yet fully specified:
-
-| Item | Location | Status |
-|------|----------|--------|
-| `MixingMode.MUTED` | `MixingMode.aidl` | Defined, semantics TBD |
-| `MixingMode.DUCKED` | `MixingMode.aidl` | Defined, semantics TBD (attenuation dB, ramp curve) |
-| `MixingMode.SOLO` | `MixingMode.aidl` | Defined, semantics TBD (which stream is priority) |
-| `MixingMode.MIXED_OVERRIDE` | `MixingMode.aidl` | Defined, semantics TBD |
-| `Property.MIXING_MODE` | `Property.aidl` | Read-write, depends on MixingMode completion |
-| Additional event callbacks | `IAudioMixerEventListener.aidl` | `onResourceAvailable()`, `onEndOfStream()` planned |
-| Audio metrics | `audiosink/Property.aidl` | `METRIC_xxxx = 1000` placeholder defined |
-
-!!! warning
-    Vendors should not implement `MixingMode` values beyond `NORMAL` until their semantics are fully specified in a future interface version.
-
-### Planned Additions
-
-The following capabilities are under consideration for future interface versions:
-
-- **Audio focus / priority model** — Middleware-driven audio focus that maps to `MixingMode` changes
-- **Bluetooth audio output** — New output port type for BT audio sinks
-- **Internal speaker output** — Output port type for TV panel speakers
-- **ARC / eARC** — Specialised HDMI output port behaviour for audio return channel
-- **Audio metrics and observability** — Latency histograms, underflow counts, decode statistics
-- **Multi-room audio** — Distribution of mixed audio to multiple endpoints
-
-### Versioning Strategy
-
-AIDL stable interfaces follow additive-only versioning:
-
-- New enum values, methods, and parcelable fields can be added
-- Existing interfaces are never modified or removed
-- Breaking changes require a new interface version with a migration path
-
-See the [HAL Delivery & Versioning SOP](../../../governance/versioning-sop.md) and [HAL API Deprecation Governance](../../key_concepts/hal/hal_api_deprecation_governance.md) for full details.
-
----
-
-## Open Issues
-
-The following items are known gaps or design questions that require resolution in future iterations:
-
-| Issue | Description |
-|-------|-------------|
-| **MixingMode semantics** | `DUCKED`, `SOLO`, and `MIXED_OVERRIDE` are defined but lack detailed semantics (attenuation levels, ramp curves, priority rules). |
-| **Multi-mixer output combining** | How two mixer instances' outputs combine onto one physical output port is not specified by the HAL. This is currently a vendor implementation detail. |
-| **Free-running mode** | Behaviour when PCR and PTS diverge significantly is not fully defined. |
-| **BT / Speaker / ARC output** | No output port types exist for Bluetooth, internal speakers, or ARC/eARC. |
-| **Low-latency mode** | `PlatformCapabilities.supportsLowLatency` exists but the associated requirements and behaviour are not documented. |
-| **Audio passthrough constraints** | Interaction between passthrough on one port and decode+mix on another needs further specification. |
+- Middleware branches on `OutputPortType`, never on `portName`.
+- An operation on a property, format, AQ processor or DAP function the profile does not declare fails the way the AIDL specifies (`false`, `EX_ILLEGAL_ARGUMENT` or `EX_UNSUPPORTED_OPERATION`); it is never silently ignored.
+- Vendor differences are expressed in the profile, or in `OutputPortProperty.VENDOR_EXTENSION`, never in a different call sequence.
+- Each scenario in [AudioMixer Use Cases](use_cases.md) is a conformance scenario, run against the platform's own profile.
