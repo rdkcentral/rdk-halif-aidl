@@ -4359,7 +4359,8 @@ fi
 # class attributed to it. Its label is raised to that, and lowered only when
 # every component it changed is attributed to it — a PR sharing a component
 # with others may own the higher class, so it is never lowered on a guess.
-# The Interface Effect follows the label (project-interface-effect-reconcile).
+# The Interface Effect follows the label: each PR relabelled here is synced to
+# the project at once, under the caller's gh login (#970).
 # Each changed PR gets one comment listing its components' released classes.
 
 _SYNC_LABEL=([3]="Major Change" [2]="Minor Change" [1]="documentation")
@@ -4452,6 +4453,9 @@ run_sync_labels() {
         done
         gh api -X POST "repos/${GH_REPO}/issues/${pr}/labels" -f "labels[]=${_SYNC_LABEL[$want]}" >/dev/null \
             || { warn "#${pr}: could not set '${_SYNC_LABEL[$want]}'"; continue; }
+        GH_TOKEN="${GH_TOKEN:-$(gh auth token)}" GITHUB_REPOSITORY="${GH_REPO}" \
+            python3 "${REPO_ROOT}/scripts/project_interface_effect.py" sync-item --number "${pr}" >/dev/null \
+            || warn "#${pr}: label set, Interface Effect sync failed"
         if ! gh api --paginate "repos/${GH_REPO}/issues/${pr}/comments" --jq '.[].body' 2>/dev/null | grep -qF "${marker}"; then
             gh api "repos/${GH_REPO}/issues/${pr}/comments" -f body="${marker}
 Release ${release_version} labels this pull request **${_SYNC_LABEL[$want]}**, the class its components were released at:
@@ -4465,7 +4469,7 @@ The AIDL compiler classifies each component at the cut (\`release.sh\`); a confi
     if [[ "${changed}" -eq 0 ]]; then
         log "✓ Every attributable PR's label already matches the release."
     elif [[ "${SYNC_WRITE}" -eq 1 ]]; then
-        log "✓ ${changed} PR label(s) updated; the Interface Effect follows within 15 minutes."
+        log "✓ ${changed} PR label(s) updated, with their Interface Effect."
     else
         log "ℹ️  ${changed} PR label(s) to change. Apply with: ./release.sh --sync-labels --write"
     fi

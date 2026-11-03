@@ -55,8 +55,8 @@ can be edited, so the sync has to work out which one moved rather than assuming.
     when that is genuinely wanted.
 
 Subcommands:
-  sync-item  --number N   one ticket, for a labeled/unlabeled event
-  reconcile               every ticket, both directions (the scheduled sweep)
+  sync-item  --number N   one ticket and its linked issues (configure_pr.sh, merge_pr.sh)
+  reconcile               every ticket, both directions (a full sweep, run by hand)
   check                   fail if the field options or labels have drifted
 
 Auth: GH_TOKEN must hold `project` scope. The Actions GITHUB_TOKEN cannot read

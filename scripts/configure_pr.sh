@@ -31,7 +31,10 @@
 #                    metadata.yaml, mapped to GitHub team slugs. A PR always
 #                    requests the relevant teams regardless of the metadata
 #                    baseline review status.
-#   * Project      — sets the halif_aidl project Status to "Under Review".
+#   * Project      — sets the halif_aidl project Status to "Under Review",
+#                    and syncs its Interface Effect field (and the PR's linked
+#                    issues) from the labels via project_interface_effect.py,
+#                    under the caller's own gh login (#970).
 #
 # Usage:
 #   scripts/configure_pr.sh <PR_NUMBER> [--dry-run]
@@ -326,13 +329,29 @@ else: print("    ")
     fi
 }
 
+# Interface Effect follows the labels just set: the PR's field, its linked
+# issues' labels and fields, and their milestones (#970). There is no
+# PROJECTS_TOKEN for a workflow to do this, so it runs here, as the caller.
+sync_interface_effect() {
+    local pr="$1"
+    local args=(sync-item --number "$pr")
+    $DRY_RUN && args+=(--dry-run)
+    echo "  interface effect:"
+    if ! GH_TOKEN="${GH_TOKEN:-$(gh auth token)}" GITHUB_REPOSITORY="$REPO" \
+         python3 "${REPO_ROOT}/scripts/project_interface_effect.py" "${args[@]}"; then
+        echo "    WARN: Interface Effect sync failed" >&2
+        WARN_COUNT=$((WARN_COUNT + 1))
+    fi
+}
+
 # --- Main -------------------------------------------------------------------
 if [ "$PR_ARG" = "--all" ]; then
     PRS=$(gh pr list --repo "$REPO" --state open --limit 200 --json number --jq '.[].number')
     echo "Configuring $(echo "$PRS" | wc -w) open PR(s)"
-    for pr in $PRS; do configure_one_pr "$pr"; done
+    for pr in $PRS; do configure_one_pr "$pr"; sync_interface_effect "$pr"; done
 else
     configure_one_pr "$PR_ARG"
+    sync_interface_effect "$PR_ARG"
 fi
 echo "──────────────────────────────────────────────────────────────"
 $DRY_RUN && echo "Dry run complete — re-run without --dry-run to apply." || echo "Done."
