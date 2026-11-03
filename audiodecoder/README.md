@@ -55,8 +55,8 @@ No further `onFrameOutput()` is delivered until `flush()` or `stop()` + `start()
 5. Decoder remains in `State::STARTED` but is drained.
 
 A decode session is the interval from `start()` to the next `stop()` or
-`flush(reset=true)`. A `flush(reset=false)` drops buffered input and any
-pending EOS callback but does not end the session.
+`flush(reset=true)`. A `flush(reset=false)` drops buffered input
+but does not end the session.
 
 ## Use cases
 
