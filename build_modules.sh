@@ -688,12 +688,9 @@ if [[ "$VERSION" != "current" ]]; then
     # BINDER_SDK_DIR alone resolves both.
     echo "$SNAPSHOT_DIR -B $SNAPSHOT_BUILD_DIR"
     cmake -S "$ROOT_DIR" -B "$SNAPSHOT_BUILD_DIR" \
-        -DCMAKE_CXX_FLAGS_INIT="${WARNING_SUPPRESSION_FLAGS}" \
         -DINTERFACE_TARGET="$MODULE" \
         -DINTERFACE_VERSION="$VERSION" \
-        -DCMAKE_INSTALL_PREFIX="$ROOT_DIR/out/target" \
-        -DCMAKE_INSTALL_LIBDIR="lib/rdk-halif-aidl" \
-        -DBUILD_SHARED_LIBS=ON || {
+        -DBUILD_MODULES_MODE=ON || {
             echo "❌ Snapshot CMake configuration failed"; exit 1; }
 
     cmake --build "$SNAPSHOT_BUILD_DIR" -j"$JOBS" || {
@@ -737,14 +734,9 @@ echo "⚙️  Configuring CMake..."
 echo ""
 
 if [[ "$MODULE" == "all" ]]; then
-    cmake -S "$ROOT_DIR" -B "$BUILD_DIR" \
-        -DBUILD_SHARED_LIBS=ON \
-        -DCMAKE_CXX_FLAGS_INIT="${WARNING_SUPPRESSION_FLAGS}"
+    cmake -S "$ROOT_DIR" -B "$BUILD_DIR" -DBUILD_MODULES_MODE=ON
 else
-    cmake -S "$ROOT_DIR" -B "$BUILD_DIR" \
-        -DBUILD_SHARED_LIBS=ON \
-        -DCMAKE_CXX_FLAGS_INIT="${WARNING_SUPPRESSION_FLAGS}" \
-        -DINTERFACE_TARGET="$MODULE"
+    cmake -S "$ROOT_DIR" -B "$BUILD_DIR" -DBUILD_MODULES_MODE=ON -DINTERFACE_TARGET="$MODULE"
 fi
 if [[ $? -ne 0 ]]; then
     echo ""

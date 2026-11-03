@@ -45,8 +45,15 @@ project(RDK_HAL_AIDL_Modules LANGUAGES CXX C VERSION 0.23.0)
 # BUILD_SHARED_LIBS is a cmake default option. just adding it to make it more explicit.
 option(BUILD_SHARED_LIBS "Build shared libraries" OFF)
 
+option(BUILD_MODULES_MODE "Set this when calling CMake from within build_modules.sh" OFF)
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/CMakeModules/")
+
+if(BUILD_MODULES_MODE)
+    message(STATUS "Build modules mode enabled")
+    include(BuildModulesMode)
+endif()
+
 include(HandleModules)
 
 find_package(Binder REQUIRED)
