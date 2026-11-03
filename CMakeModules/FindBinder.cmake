@@ -32,17 +32,8 @@ if(PkgConfig_FOUND)
 endif()
 
 # Binder
-find_path(
-    Binder_INCLUDE_DIR
-    NAMES binder/Binder.h
-    HINTS ${PC_Binder_INCLUDE_DIRS} "${CMAKE_CURRENT_SOURCE_DIR}/out/build/include/binder_sdk"
-    PATH_SUFFIXES binder
-)
-find_library(
-    Binder_LIBRARY
-    NAMES binder
-    HINTS ${PC_Binder_LIBRARY_DIRS} "${CMAKE_CURRENT_SOURCE_DIR}/out/target/lib/binder"
-)
+find_path(Binder_INCLUDE_DIR NAMES Binder.h PATH_SUFFIXES binder)
+find_library(Binder_LIBRARY NAMES binder PATH_SUFFIXES binder)
 find_package_handle_standard_args(
     Binder
     REQUIRED_VARS Binder_INCLUDE_DIR Binder_LIBRARY

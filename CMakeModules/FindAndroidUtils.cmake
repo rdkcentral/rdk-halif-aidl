@@ -29,19 +29,17 @@ if(PkgConfig_FOUND)
 endif()
 
 # Utils
-find_library(
-    AndroidUtils_LIBRARY
-    NAMES utils
-    HINTS ${PC_AndroidUtils_LIBRARY_DIRS} "${CMAKE_CURRENT_SOURCE_DIR}/out/target/lib/binder"
-)
+find_path(AndroidUtils_INCLUDE_DIR NAMES android/binder_to_string.h)
+find_library(AndroidUtils_LIBRARY NAMES utils PATH_SUFFIXES binder)
 find_package_handle_standard_args(
     AndroidUtils
-    REQUIRED_VARS AndroidUtils_LIBRARY
+    REQUIRED_VARS AndroidUtils_INCLUDE_DIR AndroidUtils_LIBRARY
     VERSION_VAR AndroidUtils_VERSION
 )
 
 if(AndroidUtils_FOUND)
     set(AndroidUtils_LIBRARIES ${AndroidUtils_LIBRARY})
+    set(AndroidUtils_INCLUDE_DIRS ${AndroidUtils_INCLUDE_DIR})
     set(AndroidUtils_COMPILE_OPTIONS ${PC_AndroidUtils_CFLAGS_OTHER})
     set(AndroidUtils_LINK_OPTIONS ${PC_AndroidUtils_LDFLAGS_OTHER})
 endif()
@@ -51,6 +49,7 @@ if(AndroidUtils_FOUND AND NOT TARGET AndroidUtils::AndroidUtils)
     set_target_properties(
         AndroidUtils::AndroidUtils PROPERTIES
         IMPORTED_LOCATION "${AndroidUtils_LIBRARY}"
+        INTERFACE_INCLUDE_DIRECTORIES "${AndroidUtils_INCLUDE_DIR}"
         INTERFACE_COMPILE_OPTIONS "${AndroidUtils_COMPILE_OPTIONS}"
         INTERFACE_LINK_OPTIONS "${AndroidUtils_LINK_OPTIONS}"
     )
