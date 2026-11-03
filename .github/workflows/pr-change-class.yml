@@ -19,6 +19,9 @@ on:
     types: [opened, synchronize, reopened, labeled, unlabeled]
     paths:
       - "**/current/**"
+      - "scripts/aidl_compat.py"
+      - "scripts/pr_change_class.py"
+      - "tests/scripts/**"
 
 concurrency:
   group: change-class-${{ github.event.pull_request.number }}
@@ -52,6 +55,9 @@ jobs:
           if [[ ! -x build-tools/linux_binder_idl/out/host/bin/aidl ]]; then
             ./build_binder.sh
           fi
+
+      - name: "Test the classifier"
+        run: python3 -m unittest discover -v -s tests/scripts
 
       - name: "Check out the base"
         run: git worktree add --detach "${RUNNER_TEMP}/base" "${{ github.event.pull_request.base.sha }}"
