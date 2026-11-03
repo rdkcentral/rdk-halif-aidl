@@ -205,15 +205,26 @@ def _strip_block(text, start_re):
 def declarations(path):
     """A header's declarations, normalised: comments, preprocessor lines and
     the boilerplate aidl derives from an enum's value list are dropped, so an
-    added enum value reads as one added declaration, not a rewritten array."""
+    added enum value reads as one added declaration, not a rewritten array.
+
+    The same goes for what aidl derives from a parcelable's field list (the
+    comparison operators' std::tie and toString()), so an appended field
+    reads as one added member, and for the deprecation attribute aidl writes
+    for @deprecated, so deprecating a declaration does not read as removing
+    it."""
     with open(path, errors="replace") as fh:
         text = fh.read()
     text = re.sub(r"/\*.*?\*/", " ", text, flags=re.S)
     text = re.sub(r"//[^\n]*", " ", text)
     text = re.sub(r"^\s*#.*$", " ", text, flags=re.M)
+    text = re.sub(r'__attribute__\s*\(\(\s*deprecated\s*(\(\s*"(?:[^"\\]|\\.)*"\s*\))?\s*\)\)', " ", text)
+    text = re.sub(r'\[\[\s*deprecated\s*(\(\s*"(?:[^"\\]|\\.)*"\s*\))?\s*\]\]', " ", text)
     text = _strip_block(text, r"static\s+inline\s+std::string\s+toString\s*\(")
     text = _strip_block(text, r"constexpr\s+inline\s+std::array<[^=]*=\s*\{")
+    text = _strip_block(text, r"inline\s+bool\s+operator\s*(?:==|!=|<=|>=|<|>)\s*\([^)]*\)\s*const\s*\{")
+    text = _strip_block(text, r"inline\s+std::string\s+toString\s*\(\s*\)\s*const\s*\{")
     text = re.sub(r"\s+", " ", text)
+    text = re.sub(r" (?=[;,)])", "", text)
     # Commas split too: an enum body and a template argument list are one
     # statement, and a single added value must not read as a rewrite.
     parts = re.split(r"(?<=[;{},])", text)
