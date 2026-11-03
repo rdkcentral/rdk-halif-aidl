@@ -357,7 +357,7 @@ This is distinct from `stop()` and `flush()`, which abruptly discard any held fr
 
 **Output side:** after the final `onFrameOutput()` of the drained session, the HAL fires `IAudioDecoderControllerListener.onEndOfStream()` exactly once. It is delivered on the same listener and ordered in-band - it follows the last frame on the same ordered callback channel. After this callback the decoder remains in `State::STARTED` but is drained; no further `onFrameOutput()` is delivered until `flush()` or `stop()` + `start()`.
 
-**Flush during a pending EOS:** if the client calls `flush()` after `signalEndOfStream()` but before `onEndOfStream()` has fired - for example a flushing seek that arrives while the decoder is still draining - the flush takes effect normally: input buffers not yet decoded are freed and any held frames are discarded rather than drained, so no `onFrameOutput()` is delivered for the pre-flush segment. The requested end-of-stream is still honoured: the HAL fires `onEndOfStream()` exactly once after the flush completes and the decoder has returned to `State::STARTED`.
+**Flush during a pending EOS:** if the client calls `flush()` after `signalEndOfStream()` but before `onEndOfStream()` has fired - for example a flushing seek that arrives while the decoder is still draining - the flush takes effect normally: input buffers not yet decoded are freed and any held frames are discarded rather than drained, so no `onFrameOutput()` is delivered for the pre-flush segment. The requested end-of-stream is still honoured: the HAL fires `onEndOfStream()` exactly once after the flush completes and the decoder transitions back to `State::STARTED` when reset=false and to `State::READY` when reset=true.
 
 Behaviour is identical in tunnelled and non-tunnelled modes. In tunnelled mode the decoder→sink data flow is vendor-internal, so the vendor propagates the EOS signal from decoder to sink. The middleware observes the same sequencing in both modes: `decoder.onEndOfStream()` (decode complete) followed by `sink.onEndOfStream(nsPresentationTime)` (presentation complete) with the correct presentation timing.
 
@@ -577,25 +577,25 @@ The sequence diagram below shows the behavior of the callbacks.
 ```mermaid
 sequenceDiagram
     %% --- RDK Audio Decoder ---
-    box rgb(30,136,229) RDK Audio Decoder 
+    box rgb(30,136,229) RDK Audio Decoder
         participant Client as RDK Client
         participant IAudioDecoderEventListener as IAudioDecoderEventListener
         participant IAudioDecoderControllerListener as IAudioDecoderControllerListener
     end
-    
+
     %% --- Audio Decoder Server ---
     box rgb(249,168,37) Audio Decoder Server
         participant ADC as IAudioDecoder
         participant Controller as IAudioDecoderController
     end
-    
+
     %% --- Audio AV Buffer ---
     box rgb(67,160,71) Audio AV Buffer
         participant IAVBuffer as IAVBuffer
     end
 
     Client->>ADC: registerEventListener(IAudioDecoderEventListener)
-    
+
     Note over ADC: open() transitions from CLOSED → OPENING → READY
     Client->>ADC: open(IAudioDecoderControllerListener)
     ADC-->>IAudioDecoderEventListener: onStateChanged(CLOSED → OPENING)

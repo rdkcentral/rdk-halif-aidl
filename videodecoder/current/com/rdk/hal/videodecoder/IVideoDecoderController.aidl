@@ -164,7 +164,8 @@ interface IVideoDecoderController {
      * reorder/DPB tail is discarded rather than drained, so none of those
      * frames are emitted via `onFrameOutput()`. The requested end-of-stream is
      * still honoured: the HAL fires `onEndOfStream()` exactly once after the
-     * flush completes and the decoder has returned to `STARTED`.
+     * flush completes and the decoder transitions back to `STARTED` when reset=false
+     * and to `READY` when reset=true.
      *
      * @param[in] reset - When true, the internal Video Decoder state is fully reset back to its opened `READY` state.
      *

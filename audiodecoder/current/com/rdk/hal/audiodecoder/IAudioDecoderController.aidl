@@ -158,8 +158,8 @@ interface IAudioDecoderController {
      * proceeds normally - input buffers not yet decoded are freed and any held
      * frames are discarded rather than drained, so none are emitted via
      * `onFrameOutput()`. The requested end-of-stream is still honoured: the HAL
-     * fires `onEndOfStream()` exactly once after the flush completes and the
-     * decoder has returned to `STARTED`.
+     * fires `onEndOfStream()` exactly once after the flush completes and the decoder
+     * transitions back to `STARTED` when reset=false and to `READY` when reset=true.
      *
      * @param[in] reset     When true, the internal audio decoder state is fully reset back to its opened READY state.
      *
