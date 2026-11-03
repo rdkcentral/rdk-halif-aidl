@@ -136,7 +136,7 @@ def main(argv):
     else:
         lines.append("✅ The label covers what the compiler found.")
     new_comps = [c for c, k, _e in rows if k == "new"]
-    if new_comps and not new_iface:
+    if new_comps and not new_iface and "major" not in (need, have):
         lines.append("")
         lines.append("ℹ️ Adds a new component (%s): label this pull request **New Interface**."
                      % ", ".join("`%s`" % c for c in new_comps))
