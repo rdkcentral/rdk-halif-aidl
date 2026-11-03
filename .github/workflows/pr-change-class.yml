@@ -62,8 +62,16 @@ jobs:
       - name: "Test the classifier"
         run: python3 -m unittest discover -v -s tests/scripts
 
+      # The checkout is the pull request merged onto the base branch as it is
+      # now; its first parent is that base. pull_request.base.sha is not: it
+      # is the base as of the last push to the pull request, so comparing with
+      # it blames every change merged to the base since then on the PR (#971).
       - name: "Check out the base"
-        run: git worktree add --detach "${RUNNER_TEMP}/base" "${{ github.event.pull_request.base.sha }}"
+        id: base
+        run: |
+          base="$(git rev-parse HEAD^1)"
+          echo "sha=${base}" >> "${GITHUB_OUTPUT}"
+          git worktree add --detach "${RUNNER_TEMP}/base" "${base}"
 
       - name: "Compare the label with the compiler"
         env:
@@ -72,6 +80,6 @@ jobs:
           python3 scripts/pr_change_class.py \
             --aidl "${PWD}/build-tools/linux_binder_idl/out/host/bin/aidl" \
             --base "${RUNNER_TEMP}/base" \
-            --base-ref "${{ github.event.pull_request.base.sha }}" \
+            --base-ref "${{ steps.base.outputs.sha }}" \
             --labels "${LABELS}" \
             --summary "${GITHUB_STEP_SUMMARY}"
