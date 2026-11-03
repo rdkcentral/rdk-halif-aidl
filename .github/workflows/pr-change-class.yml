@@ -22,6 +22,9 @@ on:
       - "scripts/aidl_compat.py"
       - "scripts/pr_change_class.py"
       - "tests/scripts/**"
+      - ".github/workflows/pr-change-class.yml"
+      - "build_binder.sh"
+      - "binder_sdk.version"
 
 concurrency:
   group: change-class-${{ github.event.pull_request.number }}
