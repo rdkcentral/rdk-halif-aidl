@@ -575,8 +575,8 @@ interface IDrmPlugin {
      * the same moment and their quotient is a mean that existed.
      *
      * Unlike getMetrics(), what these keys mean is fixed: each is declared in
-     * drm/kvc/current/drm.kvc with a unit and a kind that form part of its
-     * identifier, so a consumer comparing two products is comparing the same
+     * drm/kvc/drm.kvc with a unit and a kind that form part of its
+     * identity, so a consumer comparing two products is comparing the same
      * figure. A key this product cannot measure, or an identifier it does not
      * know, reports `MetricStatus::NOT_SUPPORTED` rather than 0 or -1.
      *

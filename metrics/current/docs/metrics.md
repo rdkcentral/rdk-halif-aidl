@@ -100,7 +100,7 @@ void onMetricEvent(in MetricEvent event);
 
 ## The Key Value Contract
 
-A component's keys are declared once, in `<component>/kvc/current/<component>.kvc`. It is the single source for everything that names them: `scripts/kvcc.py` takes every identifier from it, writes the component's AIDL enums and its metrics page, and fails where two fields share an id, an id reuses a retired one, a frozen id changes name, unit or kind, or a key carries no description. `scripts/kvcc.py --check` fails where committed output has drifted from its declaration.
+A component's keys are declared once, in `<component>/kvc/<component>.kvc`. It is the single source for everything that names them: `scripts/kvcc.py` takes every identifier from it, writes the component's AIDL enums and its metrics page, and fails where two fields share an id, an id reuses a retired one, a frozen id changes name, unit or kind, or a key carries no description. `scripts/kvcc.py --check` fails where committed output has drifted from its declaration.
 
 A new key is a new member of the component's generated `Metric` enum, which is an additive interface change. A caller built against a later vocabulary than a product serves is answered `NOT_SUPPORTED` for keys the product does not have.
 

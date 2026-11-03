@@ -24,7 +24,7 @@ Metric definitions span many modules: video and audio decoders, sinks, the AV cl
 
 ## What a contract declares
 
-One file per module, `<module>/kvc/current/<module>.kvc`. Each key states:
+One file per module, `<module>/kvc/<module>.kvc`. Each key states:
 
 | Field | Example | Purpose |
 |---|---|---|
@@ -35,7 +35,7 @@ One file per module, `<module>/kvc/current/<module>.kvc`. Each key states:
 | `description` | "Compressed frames the decoder has decoded…" | The definition a vendor implements and a test asserts; mandatory |
 | `values` | `bitstream_error = 1`, … | The closed set of values a classification key carries |
 
-Events — occurrences pushed at the instant they happen — are declared the same way, with the attributes that describe each occurrence. [`videodecoder.kvc`](https://github.com/rdkcentral/rdk-halif-aidl/blob/develop/videodecoder/kvc/current/videodecoder.kvc) is a complete example: seven keys and one event.
+Events — occurrences pushed at the instant they happen — are declared the same way, with the attributes that describe each occurrence. [`videodecoder.kvc`](https://github.com/rdkcentral/rdk-halif-aidl/blob/develop/videodecoder/kvc/videodecoder.kvc) is a complete example: seven keys and one event.
 
 ## How it works
 

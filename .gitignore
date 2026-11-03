@@ -40,12 +40,11 @@ Makefile
 # toolchain on every build. Never committed for current/; only committed
 # under <module>/<version>/ when ./release.sh freezes a cohort.
 #
-# A leading-* pattern matches a single path segment, so */current/include/
-# reaches <module>/current/include/ but not <module>/kvc/current/include/.
-# The ** form covers a vocabulary's current/ as well, which follows the same
-# rule: a frozen revision commits its generated output, current/ does not.
 **/current/include/
 **/current/src/
+
+# The C key header scripts/kvcc.py generates beside each vocabulary.
+*/kvc/include/
 
 # Generated presentations
 *.pdf
