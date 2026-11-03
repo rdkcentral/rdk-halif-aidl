@@ -130,7 +130,8 @@ print(" ".join(sorted(comps)))
     #                     (breaking => major bump)
     #   New Interface   — the PR carries `New Interface` and is not breaking:
     #                     it is the class, and no other class label is added
-    #                     (a new component releases at 0.1.0.0, #973)
+    #                     (a new component releases at 0.1.0.0, #973). With
+    #                     `Major Change` already on it, Major stays.
     #   documentation   — every changed file is doc-like (else branch;
     #                     bugfix bump)
     #   Minor Change    — fallback when neither predicate matches
@@ -149,6 +150,11 @@ print(" ".join(sorted(comps)))
     if [[ ",${current_labels}," == *",CR,"* ]]; then
         change_class="Major Change"
     elif [[ "$title" =~ ^[a-z]+(\([^\)]*\))?!: ]]; then
+        change_class="Major Change"
+    elif [[ ",${current_labels}," == *",New Interface,"* ]] && \
+         [[ ",${current_labels}," == *",Major Change,"* ]]; then
+        # A new component that also breaks an existing one: the Major
+        # Change the change-class check asked for stays (#973).
         change_class="Major Change"
     elif [[ ",${current_labels}," == *",New Interface,"* ]]; then
         change_class="New Interface"
@@ -182,7 +188,10 @@ print("yes" if fs and all(is_doc(p) for p in fs) else "no")
     # never leaves duplicates behind during the #712 transition.
     local remove_labels=()
     local cls
-    for cls in "Major Change" "New Interface" "Minor Change" "documentation" "Breaking Change"; do
+    # New Interface is never removed here: it records that the PR adds a
+    # component, which this script cannot tell from the title, and it can sit
+    # beside Major Change.
+    for cls in "Major Change" "Minor Change" "documentation" "Breaking Change"; do
         [ "$cls" = "$change_class" ] && continue
         if [[ ",${current_labels}," == *",${cls},"* ]]; then remove_labels+=("$cls"); fi
     done
