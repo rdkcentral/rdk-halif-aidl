@@ -137,16 +137,16 @@ echo ""
 # `Breaking Change`). It does NOT affect the version bump; `release.sh` never
 # reads it.
 #
-# `New Interface` marks a brand-new interface surface and is orthogonal in the
-# same way: it says *what kind* of change this is, while `Major Change` still
-# carries the bump. Both are mirrored to the project's `Interface Effect`
-# field by scripts/project_interface_effect.py, which writes them alongside
-# the change class rather than in place of it.
+# `New Interface` marks a brand-new interface surface (a new component). It is
+# a change class of its own, below Major and above Minor: adding a component
+# breaks nothing, and a new component releases at 0.1.0.0 whatever the label
+# (#973). Both are mirrored to the project's `Interface Effect` field by
+# scripts/project_interface_effect.py; CR is written alongside `Major Change`.
 # ---------------------------------------------------------------------------
 
 echo "Process / governance labels:"
 create_label "CR"                    "5319e7" "Change Request — ABI change needing wider review sign-off + separate release scheduling"
-create_label "New Interface"         "d93f0b" "Brand-new interface surface (new component / new AIDL) — major effect; carries Major Change for the bump"
+create_label "New Interface"         "d93f0b" "Brand-new interface surface (new component) — its own change class, not Major; the component releases at 0.1.0.0"
 
 echo ""
 
