@@ -46,6 +46,21 @@ Events — occurrences pushed at the instant they happen — are declared the sa
 
 A new key is one entry in the `.kvc`, a regeneration, and an additive member of the module's `Metric` enum.
 
+## Versioning and compatibility
+
+A KVC has no release of its own. It is the input to its module's AIDL generation, so it versions with that module's interface: a new key is an additive member in the next interface version, and freezing the interface freezes its keys.
+
+The frozen AIDL is the compatibility record. The AIDL compatibility check catches a renamed or renumbered member, but not a changed unit or kind, because those live in the member's Doxygen. `kvcc.py` reads the newest frozen interface's generated enums back and fails where an id now carries a different name, unit or kind.
+
+A field that must change takes a new id. Its old id is listed under `retired`, in the space it came from, and is never reissued:
+
+```yaml
+retired:
+  keys: [2]
+  events: []
+  attributes: []
+```
+
 ## Options considered
 
 | | Hand-written AIDL and docs | AIDL as the source | KVC as the source |
