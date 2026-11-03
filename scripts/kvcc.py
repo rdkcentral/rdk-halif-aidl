@@ -36,18 +36,21 @@ header all come from it, so a key is defined once and checked the same way
 in every module. A new key is a new member of the module's generated AIDL
 enums, which is an additive interface change.
 
-An identifier is the first 8 bytes of SHA-256 over the composed path and the
-terms that give it meaning, big-endian signed 64-bit with the sign bit cleared.
-Nothing allocates one and there is no registry, so a layer computes it rather
-than being told it, and a key means the same thing wherever it is declared.
+Identity is two levels. The element is the only global identifier: the
+first 8 bytes of SHA-256 over "<domain>.<component>", big-endian signed 64-bit
+with the sign bit cleared, so a group or event forwarded out of its HAL still
+says where it came from. Everything inside the element is scoped by it and
+carries the small integer `id` its .kvc declares:
 
-    key        "<domain>.<component>.<name>|<unit>|<kind>"
-    attribute  "<domain>.<component>.<event>.<name>|<unit>"
-    element    "<domain>.<component>"
-    event      "<domain>.<component>.<event>"
+    element    SHA-256("<domain>.<component>")       MetricGroup.id
+    key        id, unique among the element's keys     MetricValue.id
+    event      id, unique among the element's events   MetricEvent.eventId
+    attribute  id, unique among the element's event fields; 0 is `instance`
 
-An attribute takes no kind term: it dimensions an occurrence rather than
-measuring anything, so it has no aggregation semantics to state.
+An id is never derived from position and never reused: removing a field moves
+its id to `retired`. A field's name, unit and kind are its identity, so
+changing any of them on an id an earlier frozen interface carries is refused —
+the field takes a new id and the old one is retired.
 
 Emits, per module:
 
@@ -109,10 +112,16 @@ AIDL_LICENCE = """/*
 
 KIND_ORDER = ["counter", "current", "high_water", "config"]
 
+# Attribute 0 in every element is the instance a group or event reports. It is
+# MetricGroup.ATTRIBUTE_INSTANCE in the envelope, so no .kvc declares it.
+INSTANCE_ID = 0
+ID_MAX = 0x7FFFFFFF
+FROZEN = re.compile(r"^\d+\.\d+\.\d+\.\d+$")
 
-def kvc_id(*terms: str) -> int:
-    """First 8 bytes of SHA-256 over the terms joined by '|', sign bit cleared."""
-    digest = hashlib.sha256("|".join(terms).encode("utf-8")).digest()
+
+def element_hash(path: str) -> int:
+    """First 8 bytes of SHA-256 over the element path, sign bit cleared."""
+    digest = hashlib.sha256(path.encode("utf-8")).digest()
     return struct.unpack(">q", digest[:8])[0] & 0x7FFFFFFFFFFFFFFF
 
 
@@ -152,6 +161,9 @@ class Vocabulary:
         self.cadence_ms = doc.get("captureCadenceMs")
         self.keys = doc.get("keys") or []
         self.events = doc.get("events") or []
+        retired = doc.get("retired") or {}
+        self.retired = {space: set(retired.get(space) or [])
+                        for space in ("keys", "events", "attributes")}
         self.base = f"{self.domain}.{self.component}"
         self._validate()
 
@@ -165,29 +177,55 @@ class Vocabulary:
                 raise SystemExit(
                     f"{self.path}: key '{key['name']}' has no description, so "
                     f"nothing states what a vendor implements or a test asserts")
-        seen: dict[int, str] = {}
-        for name, ident in self.every_id():
-            if ident in seen and seen[ident] != name:
-                raise SystemExit(
-                    f"{self.path}: '{name}' and '{seen[ident]}' collide on "
-                    f"{ident:#018x}")
-            seen[ident] = name
+        for space, fields in self.spaces().items():
+            seen: dict[int, str] = {}
+            for name, field in fields:
+                ident = field.get("id")
+                if not isinstance(ident, int) or isinstance(ident, bool) or \
+                        not 1 <= ident <= ID_MAX:
+                    raise SystemExit(
+                        f"{self.path}: '{name}' needs an id from 1 to {ID_MAX} "
+                        f"(0 is reserved for instance in attributes)")
+                if ident in seen:
+                    raise SystemExit(
+                        f"{self.path}: '{name}' and '{seen[ident]}' share "
+                        f"{space} id {ident}")
+                if ident in self.retired[space]:
+                    raise SystemExit(
+                        f"{self.path}: '{name}' reuses retired {space} id "
+                        f"{ident}; a retired id is never reissued")
+                seen[ident] = name
 
     def element_id(self) -> int:
-        return kvc_id(self.base)
+        return element_hash(self.base)
 
     def key_id(self, key: dict) -> int:
-        return kvc_id(f"{self.base}.{key['name']}", key["unit"], key["kind"])
+        return key["id"]
 
     def event_id(self, event: dict) -> int:
-        return kvc_id(f"{self.base}.{event['name']}")
+        return event["id"]
 
     def attribute_id(self, event: dict, attr: dict) -> int:
-        return kvc_id(f"{self.base}.{event['name']}.{attr['name']}", attr["unit"])
+        return attr["id"]
 
     def event_value_id(self, event: dict, value: dict) -> int:
-        return kvc_id(f"{self.base}.{event['name']}.{value['name']}",
-                      value["unit"], value["kind"])
+        return value["id"]
+
+    def spaces(self) -> dict[str, list[tuple[str, dict]]]:
+        """Each id space the element scopes, as (path, field) pairs."""
+        return {
+            "keys": [(f"{self.base}.{k['name']}", k) for k in self.keys],
+            "events": [(f"{self.base}.{e['name']}", e) for e in self.events],
+            "attributes": [(f"{self.base}.{e['name']}.{f['name']}", f)
+                           for e, f in self.attributes() + self.event_values()],
+        }
+
+    def identities(self) -> dict[str, dict[int, str]]:
+        """Each id space as id -> "<path>|<unit>|<kind>", the identity an id
+        keeps once frozen. An attribute has no kind, so its term is empty."""
+        return {space: {f["id"]: f"{path}|{f.get('unit', '')}|{f.get('kind', '')}"
+                        for path, f in fields}
+                for space, fields in self.spaces().items()}
 
     def attributes(self) -> list[tuple[dict, dict]]:
         return [(e, a) for e in self.events for a in e.get("attributes") or []]
@@ -208,36 +246,82 @@ class Vocabulary:
 
     def every_id(self):
         yield self.base, self.element_id()
-        for key in self.keys:
-            yield f"{self.base}.{key['name']}", self.key_id(key)
-        for event in self.events:
-            yield f"{self.base}.{event['name']}", self.event_id(event)
-        for event, attr in self.attributes():
-            yield (f"{self.base}.{event['name']}.{attr['name']}",
-                   self.attribute_id(event, attr))
-        for event, value in self.event_values():
-            yield (f"{self.base}.{event['name']}.{value['name']}",
-                   self.event_value_id(event, value))
+        for fields in self.spaces().values():
+            for path, field in fields:
+                yield path, field["id"]
+
+
+# Each generated enum, the id space it carries, and how its members read the
+# kind: a key's doc line is "`<path>` — <unit>, <kind>...", an attribute's
+# "`<path>` — <unit>. ...", an event's "`<path>` — ...".
+FROZEN_ENUMS = {"Metric.aidl": "keys", "MetricEventKind.aidl": "events",
+                "MetricEventAttribute.aidl": "attributes"}
+MEMBER = re.compile(
+    r"/\*\*\s*\*\s*`(?P<path>[^`]+)` — (?P<terms>.*?)\*/\s*"
+    r"[A-Z0-9_]+ = (?P<id>\d+),", re.S)
+
+
+def frozen_identities(v: "Vocabulary") -> tuple[str, dict[str, dict[int, str]]]:
+    """The identities the newest frozen interface carries, read back from its
+    generated enums, so a field's meaning is held to what was released."""
+    versions = sorted((d for d in (REPO / v.module).iterdir()
+                       if d.is_dir() and FROZEN.match(d.name)),
+                      key=lambda d: tuple(int(x) for x in d.name.split(".")))
+    for version in reversed(versions):
+        root = version / "com" / "rdk" / "hal" / v.package
+        if not (root / "Metric.aidl").exists():
+            continue
+        found: dict[str, dict[int, str]] = {}
+        for name, space in FROZEN_ENUMS.items():
+            found[space] = {}
+            if not (root / name).exists():
+                continue
+            for m in MEMBER.finditer((root / name).read_text()):
+                terms = [t.strip() for t in
+                         " ".join(m["terms"].replace("*", " ").split())
+                         .split(".")[0].split(",")]
+                unit = terms[0] if space != "events" else ""
+                kind = terms[1] if space != "events" and len(terms) > 1 and \
+                    terms[1] in KIND_ORDER else ""
+                found[space][int(m["id"])] = f"{m['path']}|{unit}|{kind}"
+        return version.name, found
+    return "", {}
+
+
+def check_frozen(v: "Vocabulary") -> None:
+    version, frozen = frozen_identities(v)
+    current = v.identities()
+    for space, ids in frozen.items():
+        for ident, identity in ids.items():
+            if ident in v.retired[space]:
+                continue
+            if current[space].get(ident) != identity:
+                raise SystemExit(
+                    f"{v.path}: {space} id {ident} is '{identity}' in frozen "
+                    f"{version} but '{current[space].get(ident, 'absent')}' now. "
+                    f"Give the changed field a new id and add {ident} to "
+                    f"retired.{space}")
 
 
 def aidl_enum(v: Vocabulary, name: str, brief: str, intro: str,
-              members: list[tuple[str, int, str]]) -> str:
+              members: list[tuple[str, int, str]], backing: str = "int") -> str:
     out = [AIDL_LICENCE, f"package com.rdk.hal.{v.package};", ""]
     out += ["/**", f" * @brief     {brief}", " * @author    Gerald Weatherup",
             " *",
             f" * THIS FILE IS GENERATED by scripts/kvcc.py from",
             f" * {v.module}/kvc/current/{v.module}.kvc (vocabulary {v.version},",
             f" * schema {v.schema}). Do not edit: declare the key there and",
-            f" * regenerate, so an identifier is derived rather than typed.",
+            f" * regenerate, so an identifier is declared in one place.",
             " */", ""]
     out += ["/**", f" * @brief {brief}", " *"]
     out += [f" * {ln}".rstrip() for ln in textwrap.wrap(flow(intro), width=74)]
-    out += [" */", "", "@VintfStability", '@Backing(type="long")',
+    out += [" */", "", "@VintfStability", f'@Backing(type="{backing}")',
             f"enum {name}", "{"]
     for member, value, description in members:
         out.append("")
         out += block(description, "    ")
-        out.append(f"    {member} = {value:#018x},")
+        out.append(f"    {member} = "
+                   + (f"{value:#018x}," if backing == "long" else f"{value},"))
     out += ["}", ""]
     return "\n".join(out)
 
@@ -248,21 +332,23 @@ def aidl_files(v: Vocabulary) -> dict[Path, str]:
         root / "MetricElement.aidl": aidl_enum(
             v, "MetricElement",
             f"Identifier of the element {v.module} reports.",
-            "MetricGroup.id carries this. The instance is not part of it, "
-            "because how many are live is a property of the moment rather "
-            "than of the contract; it is carried as an attribute instead.",
+            "MetricGroup.id and MetricEvent.groupId carry this. It is the "
+            "one global identifier: every key, event and attribute id is "
+            "scoped by it. The instance is not part of it, because how many "
+            "are live is a property of the moment rather than of the "
+            "contract; it is carried as an attribute instead.",
             [(const(v.component), v.element_id(),
               f"`{v.base}` — {v.instances} instance(s)"
               + (f", captured no slower than every {v.cadence_ms} ms"
-                 if v.cadence_ms else "") + ".")]),
+                 if v.cadence_ms else "") + ".")], backing="long"),
         root / "Metric.aidl": aidl_enum(
             v, "Metric",
             f"The figures {v.module} measures.",
-            "A value carries aggregation semantics, so its identifier "
-            "composes with its kind as well as its unit. Serving one in the "
-            "wrong unit, or reading it on the wrong cadence for its kind, is "
-            "then a mismatch a consumer can detect rather than a plausible "
-            "wrong number.",
+            "MetricValue.id carries one of these, scoped by the element in "
+            "MetricGroup.id. A key's name, unit and kind are its identity: "
+            "once frozen, an id never changes any of them, so a changed "
+            "figure takes a new id rather than a plausible wrong number "
+            "answering to the old one.",
             [(const(k["name"]), v.key_id(k),
               f"`{v.base}.{k['name']}` — {k['unit']}, {k['kind']}"
               f"{', writable' if k.get('access') == 'readwrite' else ''}. "
@@ -272,7 +358,8 @@ def aidl_files(v: Vocabulary) -> dict[Path, str]:
         files[root / "MetricEventKind.aidl"] = aidl_enum(
             v, "MetricEventKind",
             f"The occurrences {v.module} raises.",
-            "MetricEvent.eventId carries one of these. An occurrence is "
+            "MetricEvent.eventId carries one of these, scoped by the element "
+            "in MetricEvent.groupId. An occurrence is "
             "pushed because a read cannot carry it: a condition that began "
             "and ended between two reads is invisible to a reader however "
             "fast it polls.",
@@ -290,9 +377,10 @@ def aidl_files(v: Vocabulary) -> dict[Path, str]:
             v, "MetricEventAttribute",
             f"What describes an occurrence {v.module} raised.",
             "An attribute locates and classifies an occurrence rather than "
-            "measuring it, so its identifier composes without a kind term. A "
-            "value an occurrence measured does carry a kind. Both appear in "
-            "MetricEvent, in the array that says which it is.",
+            "measuring it, so it has no kind. A value an occurrence measured "
+            "does carry a kind. Both appear in MetricEvent, in the array that "
+            "says which it is, and share one id space scoped by the element, "
+            "in which 0 is MetricGroup.ATTRIBUTE_INSTANCE.",
             members)
     return files
 
@@ -328,31 +416,35 @@ def header(v: Vocabulary) -> str:
     out.append(f"static const int64_t KVC_{const(v.component)}_ELEMENT = "
                f"{v.element_id():#018x};")
     out.append("")
+    out.append("/* Attribute 0 in every element: the instance reported. */")
+    out.append(f"static const int32_t KVC_{const(v.component)}_INSTANCE = "
+               f"{INSTANCE_ID};")
+    out.append("")
 
     for key in v.keys:
         out += [f"/* {v.base}.{key['name']} — int64, {key['unit']}, "
                 f"{key['kind']}, {key.get('access', 'read')}. */"]
-        out.append(f"static const int64_t "
+        out.append(f"static const int32_t "
                    f"KVC_{const(v.component)}_{const(key['name'])} = "
-                   f"{v.key_id(key):#018x};")
+                   f"{v.key_id(key)};")
     out.append("")
 
     for event in v.events:
         out.append(f"/* {v.base}.{event['name']} — event. */")
-        out.append(f"static const int64_t "
+        out.append(f"static const int32_t "
                    f"KVC_{const(v.component)}_EVENT_{const(event['name'])} = "
-                   f"{v.event_id(event):#018x};")
+                   f"{v.event_id(event)};")
     if v.events:
         out.append("")
 
     for event, attr in v.attributes():
-        out.append(f"static const int64_t KVC_{const(v.component)}_"
+        out.append(f"static const int32_t KVC_{const(v.component)}_"
                    f"{const(event['name'])}_{const(attr['name'])} = "
-                   f"{v.attribute_id(event, attr):#018x};")
+                   f"{v.attribute_id(event, attr)};")
     for event, value in v.event_values():
-        out.append(f"static const int64_t KVC_{const(v.component)}_"
+        out.append(f"static const int32_t KVC_{const(v.component)}_"
                    f"{const(event['name'])}_{const(value['name'])} = "
-                   f"{v.event_value_id(event, value):#018x};")
+                   f"{v.event_value_id(event, value)};")
     out.append("")
 
     for owner, members in v.vocabularies():
@@ -368,7 +460,7 @@ def header(v: Vocabulary) -> str:
 
     out += ["/* Every key in this vocabulary, so an identifier seen in a log "
             "or a", " * diagnostic can be resolved back to the name it came "
-            "from. */", "typedef struct {", "    int64_t     id;",
+            "from. */", "typedef struct {", "    int32_t     id;",
             "    const char *name;", "    const char *unit;",
             "    KvcKind     kind;", "} KvcKeyDescriptor;", "",
             f"static const KvcKeyDescriptor "
@@ -385,7 +477,7 @@ def header(v: Vocabulary) -> str:
     for ident, name, unit, kind in rows:
         quoted_name = '"{}",'.format(name)
         quoted_unit = '"{}",'.format(unit)
-        out.append("    {{ {:#018x}, {:<{}} {:<{}} {} }},".format(
+        out.append("    {{ {:>3}, {:<{}} {:<{}} {} }},".format(
             ident, quoted_name, width, quoted_unit, unit_w, kind))
     out += ["};", f"#define KVC_{const(v.component)}_KEY_COUNT {len(rows)}", "",
             f"#endif /* {guard} */", ""]
@@ -444,10 +536,10 @@ def markdown(v: Vocabulary) -> str:
         out.append(f"|**Capture cadence**|no slower than {v.cadence_ms} ms|")
     out += [f"|**Vocabulary**|{v.version}, schema {v.schema}|", "",
             "## Keys", "",
-            "| Key | Unit | Kind | Access | Identifier | Definition |",
+            "| Key | Unit | Kind | Access | Id | Definition |",
             "|---|---|---|---|---|---|"]
     out += [f"| `{k['name']}` | {k['unit']} | {k['kind']} | "
-            f"{k.get('access', 'read')} | `{v.key_id(k):#018x}` | "
+            f"{k.get('access', 'read')} | {v.key_id(k)} | "
             f"{cell(k['description'])} |" for k in v.keys]
     out.append("")
     for k in v.keys:
@@ -458,21 +550,21 @@ def markdown(v: Vocabulary) -> str:
         out += ["## Events", ""]
     for e in v.events:
         out += [f"### `{e['name']}`", "",
-                f"Identifier `{v.event_id(e):#018x}`. {flow(e['description'])}", ""]
+                f"Id {v.event_id(e)}. {flow(e['description'])}", ""]
         attrs = e.get("attributes") or []
         if attrs:
-            out += ["| Attribute | Unit | Identifier | Definition |",
+            out += ["| Attribute | Unit | Id | Definition |",
                     "|---|---|---|---|"]
             out += [f"| `{a['name']}` | {a['unit']} | "
-                    f"`{v.attribute_id(e, a):#018x}` | {cell(a['description'])} |"
+                    f"{v.attribute_id(e, a)} | {cell(a['description'])} |"
                     for a in attrs]
             out.append("")
         values = e.get("values") or []
         if values:
-            out += ["| Value | Unit | Kind | Identifier | Definition |",
+            out += ["| Value | Unit | Kind | Id | Definition |",
                     "|---|---|---|---|---|"]
             out += [f"| `{x['name']}` | {x['unit']} | {x['kind']} | "
-                    f"`{v.event_value_id(e, x):#018x}` | {cell(x['description'])} |"
+                    f"{v.event_value_id(e, x)} | {cell(x['description'])} |"
                     for x in values]
             out.append("")
         for a in attrs:
@@ -498,6 +590,7 @@ def main() -> int:
     for source in sources:
         module = source.parent.parent.parent.name
         v = Vocabulary(module, source)
+        check_frozen(v)
         outputs = aidl_files(v)
         outputs[doc_path(v)] = markdown(v)
         # The header is generated, not committed, so a clean checkout has

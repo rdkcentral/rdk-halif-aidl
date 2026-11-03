@@ -1,6 +1,6 @@
 # Key Value Contracts
 
-Every metric a HAL serves is declared once, in its module's Key Value Contract (KVC). `scripts/kvcc.py` generates the module's AIDL, its metrics documentation and its C constants from that declaration, and applies the same checks to every module. A metric's name, unit, meaning and identifier therefore cannot drift between modules, between code and documentation, or between SoCs.
+Every metric a HAL serves is declared once, in its module's Key Value Contract (KVC). The KVC exists for two things: the same rules applied to every interface that measures, and identifiers generated consistently with the documentation that defines them. `scripts/kvcc.py` generates the module's AIDL, its metrics documentation and its C constants from that declaration, and applies the same checks to every module. A metric's name, unit, meaning and identifier therefore cannot drift between modules, between code and documentation, or between SoCs.
 
 ```mermaid
 flowchart LR
@@ -29,6 +29,7 @@ One file per module, `<module>/kvc/current/<module>.kvc`. Each key states:
 | Field | Example | Purpose |
 |---|---|---|
 | `name` | `frames_decoded` | Composed with the domain and component into `av.video_decoder.frames_decoded` |
+| `id` | `3` | The key's identifier within its element; never reused |
 | `unit` | `frames` | Part of the key's identity |
 | `kind` | `counter` | How it is read: `counter`, `current`, `high_water` or `config`; part of its identity |
 | `description` | "Compressed frames the decoder has decoded…" | The definition a vendor implements and a test asserts; mandatory |
@@ -38,9 +39,9 @@ Events — occurrences pushed at the instant they happen — are declared the sa
 
 ## How it works
 
-1. **The identifier is derived, never allocated.** It is the first 8 bytes of SHA-256 over `<domain>.<component>.<name>|<unit>|<kind>`. There is no registry, and the module name in the path keeps one module's keys from colliding with another's. A product that serves a key in the wrong unit serves a different identifier, so the consumer sees a mismatch rather than a figure a thousand times wrong.
+1. **Identity is scoped by the element.** The element's identifier is the first 8 bytes of SHA-256 over `<domain>.<component>`, the only identifier that is global. Each key, event and event field carries the small `id` the contract declares, unique within the element. A removed field's id goes to `retired` and is never reissued; a field whose unit or kind changes after its interface is frozen takes a new id, so a consumer sees `NOT_SUPPORTED` rather than a figure a thousand times wrong.
 2. **The generator is the only author.** `kvcc.py` writes the AIDL enums, with each key's unit, kind and definition as its Doxygen comment, and the module's metrics page. Nobody edits either by hand.
-3. **One check covers every module.** `kvcc.py` fails where two keys collide or a key has no definition; `kvcc.py --check` fails where committed AIDL or documentation has drifted from its declaration.
+3. **One check covers every module.** `kvcc.py` fails where two fields share an id, a retired id is reissued, a frozen id changes name, unit or kind, or a key has no definition; `kvcc.py --check` fails where committed AIDL or documentation has drifted from its declaration.
 4. **Absence is a status, not a number.** Every value carries `SUPPORTED`, `NOT_SUPPORTED` or `NOT_AVAILABLE`; a product never reports `0` or `-1` for a figure it cannot measure.
 
 A new key is one entry in the `.kvc`, a regeneration, and an additive member of the module's `Metric` enum.

@@ -38,10 +38,20 @@ import com.rdk.hal.metrics.MetricValue;
 parcelable MetricGroup {
 
     /**
-     * Identifier of the element this group reports.
+     * Attribute id of the instance a group or event reports, in every element.
+     * No Key Value Contract declares it, and no field takes it.
+     */
+    const int ATTRIBUTE_INSTANCE = 0;
+
+    /**
+     * Identifier of the element this group reports, and the scope of every
+     * `MetricValue.id` in it.
      *
-     * SHA-256 over "<domain>.<element>", truncated as `MetricValue.id` is. The
-     * instance is not part of it — see `attributes`.
+     * The first 8 bytes of SHA-256 over "<domain>.<element>", sign bit cleared:
+     * the one identifier that is global, so a group forwarded out of the HAL
+     * that served it still says where it came from. The component's generated
+     * `MetricElement` enum names it. The instance is not part of it — see
+     * `attributes`.
      */
     long id;
 
@@ -52,7 +62,8 @@ parcelable MetricGroup {
      * of it, so it carries no aggregation semantics and its identifier composes
      * without a kind term.
      *
-     * `instance` is the attribute every group carries, and the only one today.
+     * `instance`, id `ATTRIBUTE_INSTANCE`, is the attribute every group
+     * carries, and the only one today.
      * It is an attribute rather than a segment of the element's name because
      * how many decoders are live is a property of the moment rather than of the
      * contract — a second decoder exists only while a second session does, and
@@ -64,9 +75,9 @@ parcelable MetricGroup {
      * What this element measured.
      *
      * A value carries aggregation semantics — counter, current, high_water or
-     * config — and its identifier composes with that kind, so a consumer that
-     * would read a gauge on a counter's cadence can be caught rather than
-     * quietly producing plausible wrong numbers.
+     * config — and its kind is part of its identity, so a field whose kind
+     * changes takes a new id rather than being read on the wrong cadence under
+     * the old one.
      *
      * Every value here was latched at the one instant its enclosing
      * `MetricSnapshot` records.

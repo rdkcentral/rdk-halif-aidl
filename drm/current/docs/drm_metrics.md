@@ -14,8 +14,8 @@ The figures `drm` serves through `getMetrics()`, generated from its Key Value Co
 
 ## Keys
 
-| Key | Unit | Kind | Access | Identifier | Definition |
+| Key | Unit | Kind | Access | Id | Definition |
 |---|---|---|---|---|---|
-| `decrypt_count` | operations | counter | read | `0x01c6bee68b39b413` | Decrypt operations completed, summed across the key sessions this media session holds. The denominator for mean decrypt latency. |
-| `decrypt_errors` | events | counter | read | `0x5db0ea33fec21035` | Decrypt operations that failed on a key already held. Distinct from a licence that was never obtained, which is not vendor-observable and is not counted here. |
-| `decrypt_latency_sum_us` | us | counter | read | `0x6663f481e5048044` | Sum of decrypt operation latency. Paired with decrypt_count, so the mean decrypt latency is this divided by that. |
+| `decrypt_count` | operations | counter | read | 1 | Decrypt operations completed, summed across the key sessions this media session holds. The denominator for mean decrypt latency. |
+| `decrypt_errors` | events | counter | read | 2 | Decrypt operations that failed on a key already held. Distinct from a licence that was never obtained, which is not vendor-observable and is not counted here. |
+| `decrypt_latency_sum_us` | us | counter | read | 3 | Sum of decrypt operation latency. Paired with decrypt_count, so the mean decrypt latency is this divided by that. |

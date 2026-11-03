@@ -13,15 +13,15 @@ The figures `audiodecoder` serves through `getMetrics()` and raises through `onM
 
 ## Keys
 
-| Key | Unit | Kind | Access | Identifier | Definition |
+| Key | Unit | Kind | Access | Id | Definition |
 |---|---|---|---|---|---|
-| `frames_decoded` | frames | counter | read | `0x23c94a86f7865005` | Audio access units decoded and emitted at the decoder output, one per emitted access unit. Counted from instance creation and never reset on flush or seek. |
-| `frames_dropped` | frames | counter | read | `0x748c7fd20b15139d` | Audio frames discarded before output, whether through an xrun or because they were undecodable. Decoder-internal, and excluded from frames_decoded. |
-| `decode_errors` | events | counter | read | `0x577de621243f5a94` | Audio decode-error occurrences. A distinct axis from frames_dropped, exactly as on av.video_decoder: an error need not drop a frame, and a drop need not be an error. |
-| `decode_latency_sum_us` | us | counter | read | `0x1b3e9a9b42d47872` | Running sum of per-frame audio decode latency, from the access unit being queued at the input to the frame being emitted at the output. Paired with frames_decoded. |
-| `last_decode_error_pts_ms` | ms | current | read | `0x5d4a1b8bfa10cbbe` | Stream PTS at detection of the most recent audio decode error, within one frame interval. Read with decode_errors. Left undeclared where no PTS is derivable, and never served as -1. |
-| `last_decode_error_reason` | none | current | read | `0x10596fb80be50427` | Classification of the most recent audio decode error. This is the value a consumer branches on, and what makes the fault comparable across SoCs. |
-| `last_decode_error_vendor_code` | none | current | read | `0x7129e447242c26d5` | The SoC's own code for the same fault, carried through uninterpreted. For vendor diagnosis, and never branched on. |
+| `frames_decoded` | frames | counter | read | 1 | Audio access units decoded and emitted at the decoder output, one per emitted access unit. Counted from instance creation and never reset on flush or seek. |
+| `frames_dropped` | frames | counter | read | 2 | Audio frames discarded before output, whether through an xrun or because they were undecodable. Decoder-internal, and excluded from frames_decoded. |
+| `decode_errors` | events | counter | read | 3 | Audio decode-error occurrences. A distinct axis from frames_dropped, exactly as on av.video_decoder: an error need not drop a frame, and a drop need not be an error. |
+| `decode_latency_sum_us` | us | counter | read | 4 | Running sum of per-frame audio decode latency, from the access unit being queued at the input to the frame being emitted at the output. Paired with frames_decoded. |
+| `last_decode_error_pts_ms` | ms | current | read | 5 | Stream PTS at detection of the most recent audio decode error, within one frame interval. Read with decode_errors. Left undeclared where no PTS is derivable, and never served as -1. |
+| `last_decode_error_reason` | none | current | read | 6 | Classification of the most recent audio decode error. This is the value a consumer branches on, and what makes the fault comparable across SoCs. |
+| `last_decode_error_vendor_code` | none | current | read | 7 | The SoC's own code for the same fault, carried through uninterpreted. For vendor diagnosis, and never branched on. |
 
 **`last_decode_error_reason` values**
 
@@ -38,13 +38,13 @@ The figures `audiodecoder` serves through `getMetrics()` and raises through `onM
 
 ### `decode_error`
 
-Identifier `0x729c96e4f02a2297`. Raised at detection of a decode fault, once per fault. A fault that also discards a frame raises this and advances frames_dropped; a fault that does not raises this alone. The two are separate axes.
+Id 1. Raised at detection of a decode fault, once per fault. A fault that also discards a frame raises this and advances frames_dropped; a fault that does not raises this alone. The two are separate axes.
 
-| Attribute | Unit | Identifier | Definition |
+| Attribute | Unit | Id | Definition |
 |---|---|---|---|
-| `reason` | none | `0x4bfe867a2243933d` | Classification of this fault, from the same closed vocabulary as last_decode_error_reason. The value a consumer branches on. |
-| `vendor_code` | none | `0x325de10b0e58ab3d` | The SoC's own error code for this fault, carried through uninterpreted. For vendor diagnosis, and never branched on. |
-| `pts_ms` | ms | `0x49f15b1beb3932c4` | Stream PTS at detection, within one frame interval. Absent where the SoC cannot derive a PTS at all, and NOT_AVAILABLE where it can but could not at this instant. Never sent as -1. |
+| `reason` | none | 1 | Classification of this fault, from the same closed vocabulary as last_decode_error_reason. The value a consumer branches on. |
+| `vendor_code` | none | 2 | The SoC's own error code for this fault, carried through uninterpreted. For vendor diagnosis, and never branched on. |
+| `pts_ms` | ms | 3 | Stream PTS at detection, within one frame interval. Absent where the SoC cannot derive a PTS at all, and NOT_AVAILABLE where it can but could not at this instant. Never sent as -1. |
 
 **`reason` values**
 

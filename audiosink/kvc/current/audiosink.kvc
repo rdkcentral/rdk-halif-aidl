@@ -25,9 +25,11 @@
 # Metric and its sibling enums, so a new key is an additive interface
 # change. Never edit the generated .aidl: change this file and regenerate.
 #
-# A key absent here is ABSENT at runtime — never 0, never -1. unit and kind are
-# part of a key's identity. A counter is monotonic from resource creation and is
-# never reset on open(), flush(), stop() or seek. Every value is int64.
+# A key absent here is ABSENT at runtime — never 0, never -1. Each key, event
+# and event field carries an id unique within this element, never renumbered or
+# reused; unit and kind are part of its identity. A counter is monotonic from
+# resource creation and is never reset on open(), flush(), stop() or seek. Every
+# value is int64.
 #
 # SILENCE AND STARVATION ARE DIFFERENT FAULTS. Starvation is the sink having
 # nothing to play; silence is it playing something that happens to be silent.
@@ -48,6 +50,7 @@ keys:
 
   # av.audio_sink.underflowed
   - name: underflowed
+    id: 1
     type: int64
     unit: episodes
     kind: counter
@@ -61,6 +64,7 @@ keys:
 
   # av.audio_sink.underflow_duration_ms
   - name: underflow_duration_ms
+    id: 2
     type: int64
     unit: ms
     kind: counter
@@ -72,6 +76,7 @@ keys:
 
   # av.audio_sink.silence_duration_ms
   - name: silence_duration_ms
+    id: 3
     type: int64
     unit: ms
     kind: counter
@@ -84,6 +89,7 @@ keys:
 
   # av.audio_sink.silence_event_count
   - name: silence_event_count
+    id: 4
     type: int64
     unit: events
     kind: counter
@@ -96,6 +102,7 @@ keys:
 
   # av.audio_sink.buffer_depth_ms
   - name: buffer_depth_ms
+    id: 5
     type: int64
     unit: ms
     kind: current
@@ -109,6 +116,7 @@ keys:
 
   # av.audio_sink.last_underflow_trigger
   - name: last_underflow_trigger
+    id: 6
     type: int64
     unit: none
     kind: current
@@ -147,6 +155,7 @@ keys:
 
   # av.audio_sink.last_underflow_duration_ms
   - name: last_underflow_duration_ms
+    id: 7
     type: int64
     unit: ms
     kind: current
@@ -158,6 +167,7 @@ keys:
 
   # av.audio_sink.last_silence_duration_ms
   - name: last_silence_duration_ms
+    id: 8
     type: int64
     unit: ms
     kind: current
@@ -169,6 +179,7 @@ keys:
 
   # av.audio_sink.silence_threshold_ms
   - name: silence_threshold_ms
+    id: 9
     type: int64
     unit: ms
     kind: config
@@ -187,6 +198,7 @@ events:
 
   # av.audio_sink.underflow
   - name: underflow
+    id: 1
     description: >
       Raised at the START of a starvation episode, the instant there is nothing
       to present at render time. Exactly one underflow_end closes it.
@@ -194,6 +206,7 @@ events:
 
       # av.audio_sink.underflow.trigger
       - name: trigger
+        id: 1
         type: int64
         unit: none
         description: >
@@ -227,6 +240,7 @@ events:
 
   # av.audio_sink.underflow_end
   - name: underflow_end
+    id: 2
     description: >
       Raised when presentation resumes, closing the episode the preceding
       underflow opened.
@@ -234,6 +248,7 @@ events:
 
       # av.audio_sink.underflow_end.duration_ms
       - name: duration_ms
+        id: 2
         type: int64
         unit: ms
         kind: current
@@ -243,6 +258,7 @@ events:
 
   # av.audio_sink.silence
   - name: silence
+    id: 3
     description: >
       Raised when digital silence has continued for silence_threshold_ms, NOT
       when it began. Silence is ordinary output, so the threshold is what
@@ -253,6 +269,7 @@ events:
 
       # av.audio_sink.silence.elapsed_ms
       - name: elapsed_ms
+        id: 3
         type: int64
         unit: ms
         kind: current
@@ -264,6 +281,7 @@ events:
 
   # av.audio_sink.silence_end
   - name: silence_end
+    id: 4
     description: >
       Raised when audio resumes, closing the period the preceding silence
       opened. A period that never crossed the threshold raises neither.
@@ -271,6 +289,7 @@ events:
 
       # av.audio_sink.silence_end.duration_ms
       - name: duration_ms
+        id: 4
         type: int64
         unit: ms
         kind: current

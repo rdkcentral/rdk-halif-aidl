@@ -593,5 +593,5 @@ interface IDrmPlugin {
      *
      * @see getMetrics()
      */
-    MetricSnapshot getDeclaredMetrics(in @nullable long[] metricIds);
+    MetricSnapshot getDeclaredMetrics(in @nullable int[] metricIds);
 }

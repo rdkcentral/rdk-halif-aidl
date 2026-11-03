@@ -35,31 +35,23 @@ import com.rdk.hal.metrics.MetricStatus;
 parcelable MetricValue {
 
     /**
-     * Identifier of the field this value carries.
+     * Identifier of the field this value carries, scoped by its element.
      *
-     * The first 8 bytes of SHA-256 over the field's composed path together with
-     * the terms that give it meaning:
+     * The `id` the producing component's Key Value Contract declares for the
+     * field: a member of its generated `Metric` enum for a value, or of its
+     * `MetricEventAttribute` enum for an event field or attribute. It is unique
+     * only within the element that `MetricGroup.id` or `MetricEvent.groupId`
+     * names, so a consumer that flattens values out of their group carries the
+     * pair.
      *
-     *   value      "<domain>.<element>.<field>|<unit>|<kind>"
-     *   attribute  "<domain>.<element>.<field>|<unit>"
+     * A field's name, unit and kind are its identity. Once frozen, an id never
+     * changes any of them: a field served in a new unit takes a new id, so a
+     * consumer built against the old one is answered `NOT_SUPPORTED` rather
+     * than handed a figure a thousand times wrong.
      *
-     * Nothing allocates an identifier and there is no registry to consult, so a
-     * layer computes it rather than being told it. Two consequences follow, and
-     * both are the point.
-     *
-     * The unit is part of the identity, so a product that declares a field in
-     * microseconds and populates milliseconds yields a different identifier —
-     * its consumer sees a hard mismatch rather than a figure that is quietly a
-     * thousand times wrong.
-     *
-     * The identifier does not depend on which file declares the field, so
-     * moving a declaration between modules renames nothing.
-     *
-     * The width is a requirement rather than a preference: a 32-bit space puts
-     * a birthday collision at the tens of thousands of keys, and a collision
-     * here is two measurements answering to one identifier.
+     * In `attributes`, id `MetricGroup.ATTRIBUTE_INSTANCE` is the instance.
      */
-    long id;
+    int id;
 
     /**
      * The value, signed 64-bit.

@@ -25,9 +25,11 @@
 # Metric and its sibling enums, so a new key is an additive interface
 # change. Never edit the generated .aidl: change this file and regenerate.
 #
-# A key absent here is ABSENT at runtime — never 0, never -1. unit and kind are
-# part of a key's identity. A counter is monotonic from resource creation and is
-# never reset on open(), flush(), stop() or seek. Every value is int64.
+# A key absent here is ABSENT at runtime — never 0, never -1. Each key, event
+# and event field carries an id unique within this element, never renumbered or
+# reused; unit and kind are part of its identity. A counter is monotonic from
+# resource creation and is never reset on open(), flush(), stop() or seek. Every
+# value is int64.
 #
 # THE THREE DROP AXES ARE SEPARATE and a frame belongs to exactly one:
 # frames_dropped_late missed its deadline, frames_dropped_frc was decimated by
@@ -48,6 +50,7 @@ keys:
 
   # av.video_sink.frames_received
   - name: frames_received
+    id: 1
     type: int64
     unit: frames
     kind: counter
@@ -58,6 +61,7 @@ keys:
 
   # av.video_sink.frames_presented
   - name: frames_presented
+    id: 2
     type: int64
     unit: frames
     kind: counter
@@ -69,6 +73,7 @@ keys:
 
   # av.video_sink.frames_dropped_late
   - name: frames_dropped_late
+    id: 3
     type: int64
     unit: frames
     kind: counter
@@ -81,6 +86,7 @@ keys:
 
   # av.video_sink.frames_dropped_frc
   - name: frames_dropped_frc
+    id: 4
     type: int64
     unit: frames
     kind: counter
@@ -92,6 +98,7 @@ keys:
 
   # av.video_sink.frames_repeated_frc
   - name: frames_repeated_frc
+    id: 5
     type: int64
     unit: frames
     kind: counter
@@ -104,6 +111,7 @@ keys:
 
   # av.video_sink.frames_repeated_missing_frame
   - name: frames_repeated_missing_frame
+    id: 6
     type: int64
     unit: frames
     kind: counter
@@ -116,6 +124,7 @@ keys:
 
   # av.video_sink.underflowed
   - name: underflowed
+    id: 7
     type: int64
     unit: episodes
     kind: counter
@@ -128,6 +137,7 @@ keys:
 
   # av.video_sink.underflow_duration_ms
   - name: underflow_duration_ms
+    id: 8
     type: int64
     unit: ms
     kind: counter
@@ -140,6 +150,7 @@ keys:
 
   # av.video_sink.freeze_duration_ms
   - name: freeze_duration_ms
+    id: 9
     type: int64
     unit: ms
     kind: counter
@@ -153,6 +164,7 @@ keys:
 
   # av.video_sink.freeze_event_count
   - name: freeze_event_count
+    id: 10
     type: int64
     unit: events
     kind: counter
@@ -164,6 +176,7 @@ keys:
 
   # av.video_sink.max_freeze_duration_ms
   - name: max_freeze_duration_ms
+    id: 11
     type: int64
     unit: ms
     kind: high_water
@@ -179,6 +192,7 @@ keys:
 
   # av.video_sink.render_latency_sum_us
   - name: render_latency_sum_us
+    id: 12
     type: int64
     unit: us
     kind: counter
@@ -190,6 +204,7 @@ keys:
 
   # av.video_sink.buffer_depth_ms
   - name: buffer_depth_ms
+    id: 13
     type: int64
     unit: ms
     kind: current
@@ -204,6 +219,7 @@ keys:
 
   # av.video_sink.last_underflow_trigger
   - name: last_underflow_trigger
+    id: 14
     type: int64
     unit: none
     kind: current
@@ -241,6 +257,7 @@ keys:
 
   # av.video_sink.last_underflow_duration_ms
   - name: last_underflow_duration_ms
+    id: 15
     type: int64
     unit: ms
     kind: current
@@ -252,6 +269,7 @@ keys:
 
   # av.video_sink.last_dropped_frame_pts_ms
   - name: last_dropped_frame_pts_ms
+    id: 16
     type: int64
     unit: ms
     kind: current
@@ -264,6 +282,7 @@ keys:
 
   # av.video_sink.last_freeze_pts_ms
   - name: last_freeze_pts_ms
+    id: 17
     type: int64
     unit: ms
     kind: current
@@ -276,6 +295,7 @@ keys:
 
   # av.video_sink.last_freeze_duration_ms
   - name: last_freeze_duration_ms
+    id: 18
     type: int64
     unit: ms
     kind: current
@@ -288,6 +308,7 @@ keys:
 
   # av.video_sink.first_frame_presented_pts_ms
   - name: first_frame_presented_pts_ms
+    id: 19
     type: int64
     unit: ms
     kind: current
@@ -303,6 +324,7 @@ events:
 
   # av.video_sink.underflow
   - name: underflow
+    id: 1
     description: >
       Raised at the START of a starvation episode, the instant there is nothing
       to present at render time. Exactly one underflow_end closes it.
@@ -310,6 +332,7 @@ events:
 
       # av.video_sink.underflow.trigger
       - name: trigger
+        id: 1
         type: int64
         unit: none
         description: >
@@ -343,6 +366,7 @@ events:
 
   # av.video_sink.underflow_end
   - name: underflow_end
+    id: 2
     description: >
       Raised when presentation resumes, closing the episode the preceding
       underflow opened.
@@ -350,6 +374,7 @@ events:
 
       # av.video_sink.underflow_end.duration_ms
       - name: duration_ms
+        id: 2
         type: int64
         unit: ms
         kind: current
@@ -359,6 +384,7 @@ events:
 
   # av.video_sink.first_frame_presented
   - name: first_frame_presented
+    id: 3
     description: >
       Raised when the first frame reaches presentation, once at session start
       and again after each seek or flush.
@@ -366,6 +392,7 @@ events:
 
       # av.video_sink.first_frame_presented.pts_ms
       - name: pts_ms
+        id: 3
         type: int64
         unit: ms
         description: >
@@ -374,6 +401,7 @@ events:
 
   # av.video_sink.quality_threshold_crossed
   - name: quality_threshold_crossed
+    id: 4
     description: >
       Raised when a quality counter crosses its declared threshold. Only the
       sink knows whether it shed a frame or repeated one, so which counter moved
@@ -382,6 +410,7 @@ events:
 
       # av.video_sink.quality_threshold_crossed.metric
       - name: metric
+        id: 4
         type: int64
         unit: none
         description: Which counter crossed its threshold.
@@ -395,6 +424,7 @@ events:
 
       # av.video_sink.quality_threshold_crossed.pts_ms
       - name: pts_ms
+        id: 5
         type: int64
         unit: ms
         description: >
@@ -403,6 +433,7 @@ events:
 
       # av.video_sink.quality_threshold_crossed.count
       - name: count
+        id: 6
         type: int64
         unit: frames
         kind: current

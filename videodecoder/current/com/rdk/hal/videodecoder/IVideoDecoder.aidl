@@ -307,5 +307,5 @@ interface IVideoDecoder
      * @exception binder::Status::Exception::EX_NONE             Success.
      * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT An empty (but non-null) list.
      */
-    MetricSnapshot getMetrics(in @nullable long[] metricIds);
+    MetricSnapshot getMetrics(in @nullable int[] metricIds);
 }

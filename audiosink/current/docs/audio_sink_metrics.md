@@ -13,17 +13,17 @@ The figures `audiosink` serves through `getMetrics()` and raises through `onMetr
 
 ## Keys
 
-| Key | Unit | Kind | Access | Identifier | Definition |
+| Key | Unit | Kind | Access | Id | Definition |
 |---|---|---|---|---|---|
-| `underflowed` | episodes | counter | read | `0x142f899619c8c4a9` | Count of audio buffer-underflow episodes, one per episode start, where an episode starts when there is no decoded audio to present and ends when output resumes. The counterpart of av.video_sink.underflowed — without it an audio underflow rate cannot be computed at all. |
-| `underflow_duration_ms` | ms | counter | read | `0x4ce68288bc2f93b2` | Cumulative time the audio path was starved of decoded data. Paired with underflowed, so the mean episode length is this divided by that. |
-| `silence_duration_ms` | ms | counter | read | `0x09fdcdf6715ef048` | Cumulative emitted digital silence, counting only periods that reached silence_threshold_ms. Distinguishes an unexpected absence of audio output from starvation, which is underflow_duration_ms. |
-| `silence_event_count` | events | counter | read | `0x357a57be2601412e` | Count of completed digital-silence periods that reached silence_threshold_ms. Paired with silence_duration_ms, so the mean silence length is that divided by this. |
-| `buffer_depth_ms` | ms | current | read | `0x1aea4fc8a27262b7` | Buffered decoded audio ahead of the play position now. A live sample re-read each capture rather than a cumulative figure. This is SoC- and use-case-specific, so compare it against itself over time rather than across products. |
-| `last_underflow_trigger` | none | current | read | `0x40771a4a2b2ee087` | Cause of the most recent audio underflow episode, from the same vocabulary as av.video_sink.last_underflow_trigger. |
-| `last_underflow_duration_ms` | ms | current | read | `0x638f410fc657c525` | Length of the most recent completed audio underflow episode. Read with underflowed and underflow_duration_ms, which give the count and the total. |
-| `last_silence_duration_ms` | ms | current | read | `0x1cf88c9352312e83` | Length of the most recent completed digital-silence period. Read with silence_event_count and silence_duration_ms. |
-| `silence_threshold_ms` | ms | config | read | `0x02c4359649749c70` | Shortest digital-silence period that counts as one. Silence is normal output — a gap between programmes, a muted stream, a silent passage — so this is the line between that and a fault worth reporting. Default 500 ms, and set by product configuration rather than over this interface. Reading it is what the key is for: silence_duration_ms and silence_event_count count only periods that reached it, so neither is interpretable without it. |
+| `underflowed` | episodes | counter | read | 1 | Count of audio buffer-underflow episodes, one per episode start, where an episode starts when there is no decoded audio to present and ends when output resumes. The counterpart of av.video_sink.underflowed — without it an audio underflow rate cannot be computed at all. |
+| `underflow_duration_ms` | ms | counter | read | 2 | Cumulative time the audio path was starved of decoded data. Paired with underflowed, so the mean episode length is this divided by that. |
+| `silence_duration_ms` | ms | counter | read | 3 | Cumulative emitted digital silence, counting only periods that reached silence_threshold_ms. Distinguishes an unexpected absence of audio output from starvation, which is underflow_duration_ms. |
+| `silence_event_count` | events | counter | read | 4 | Count of completed digital-silence periods that reached silence_threshold_ms. Paired with silence_duration_ms, so the mean silence length is that divided by this. |
+| `buffer_depth_ms` | ms | current | read | 5 | Buffered decoded audio ahead of the play position now. A live sample re-read each capture rather than a cumulative figure. This is SoC- and use-case-specific, so compare it against itself over time rather than across products. |
+| `last_underflow_trigger` | none | current | read | 6 | Cause of the most recent audio underflow episode, from the same vocabulary as av.video_sink.last_underflow_trigger. |
+| `last_underflow_duration_ms` | ms | current | read | 7 | Length of the most recent completed audio underflow episode. Read with underflowed and underflow_duration_ms, which give the count and the total. |
+| `last_silence_duration_ms` | ms | current | read | 8 | Length of the most recent completed digital-silence period. Read with silence_event_count and silence_duration_ms. |
+| `silence_threshold_ms` | ms | config | read | 9 | Shortest digital-silence period that counts as one. Silence is normal output — a gap between programmes, a muted stream, a silent passage — so this is the line between that and a fault worth reporting. Default 500 ms, and set by product configuration rather than over this interface. Reading it is what the key is for: silence_duration_ms and silence_event_count count only periods that reached it, so neither is interpretable without it. |
 
 **`last_underflow_trigger` values**
 
@@ -40,11 +40,11 @@ The figures `audiosink` serves through `getMetrics()` and raises through `onMetr
 
 ### `underflow`
 
-Identifier `0x04bd3affe9b839b9`. Raised at the START of a starvation episode, the instant there is nothing to present at render time. Exactly one underflow_end closes it.
+Id 1. Raised at the START of a starvation episode, the instant there is nothing to present at render time. Exactly one underflow_end closes it.
 
-| Attribute | Unit | Identifier | Definition |
+| Attribute | Unit | Id | Definition |
 |---|---|---|---|
-| `trigger` | none | `0x09a5326ee175d8ec` | What caused this episode, which is what distinguishes an expected starvation from a defect. |
+| `trigger` | none | 1 | What caused this episode, which is what distinguishes an expected starvation from a defect. |
 
 **`trigger` values**
 
@@ -59,24 +59,24 @@ Identifier `0x04bd3affe9b839b9`. Raised at the START of a starvation episode, th
 
 ### `underflow_end`
 
-Identifier `0x345a8515da6f3c17`. Raised when presentation resumes, closing the episode the preceding underflow opened.
+Id 2. Raised when presentation resumes, closing the episode the preceding underflow opened.
 
-| Value | Unit | Kind | Identifier | Definition |
+| Value | Unit | Kind | Id | Definition |
 |---|---|---|---|---|
-| `duration_ms` | ms | current | `0x6ca9e3e276c7ece3` | Length of the episode this closes, from start to resume. Not cumulative — underflow_duration_ms carries the running total. |
+| `duration_ms` | ms | current | 2 | Length of the episode this closes, from start to resume. Not cumulative — underflow_duration_ms carries the running total. |
 
 ### `silence`
 
-Identifier `0x2f6b025842e93317`. Raised when digital silence has continued for silence_threshold_ms, NOT when it began. Silence is ordinary output, so the threshold is what separates a gap between programmes from a fault, and below it nothing is raised. Raising at the crossing rather than at the close is what makes a silence that is still going reportable while it is still going.
+Id 3. Raised when digital silence has continued for silence_threshold_ms, NOT when it began. Silence is ordinary output, so the threshold is what separates a gap between programmes from a fault, and below it nothing is raised. Raising at the crossing rather than at the close is what makes a silence that is still going reportable while it is still going.
 
-| Value | Unit | Kind | Identifier | Definition |
+| Value | Unit | Kind | Id | Definition |
 |---|---|---|---|---|
-| `elapsed_ms` | ms | current | `0x25e863e9bb2888c4` | Silence already elapsed at the crossing, which is silence_threshold_ms within one detection interval. Present so a consumer need not assume the threshold it was configured with is the one in force. |
+| `elapsed_ms` | ms | current | 3 | Silence already elapsed at the crossing, which is silence_threshold_ms within one detection interval. Present so a consumer need not assume the threshold it was configured with is the one in force. |
 
 ### `silence_end`
 
-Identifier `0x7d6df873d14dbb94`. Raised when audio resumes, closing the period the preceding silence opened. A period that never crossed the threshold raises neither.
+Id 4. Raised when audio resumes, closing the period the preceding silence opened. A period that never crossed the threshold raises neither.
 
-| Value | Unit | Kind | Identifier | Definition |
+| Value | Unit | Kind | Id | Definition |
 |---|---|---|---|---|
-| `duration_ms` | ms | current | `0x0292d87cd65e7240` | Length of the whole period this closes, from the onset of silence rather than from the crossing. Not cumulative — silence_duration_ms carries the running total. |
+| `duration_ms` | ms | current | 4 | Length of the whole period this closes, from the onset of silence rather than from the crossing. Not cumulative — silence_duration_ms carries the running total. |

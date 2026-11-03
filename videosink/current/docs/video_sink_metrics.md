@@ -13,27 +13,27 @@ The figures `videosink` serves through `getMetrics()` and raises through `onMetr
 
 ## Keys
 
-| Key | Unit | Kind | Access | Identifier | Definition |
+| Key | Unit | Kind | Access | Id | Definition |
 |---|---|---|---|---|---|
-| `frames_received` | frames | counter | read | `0x524c81ef37d81082` | Decoded frames received from the decoder to be presented. |
-| `frames_presented` | frames | counter | read | `0x7f36b75533d5db3a` | Frames handed to display scanout for presentation, one per successful render. |
-| `frames_dropped_late` | frames | counter | read | `0x7682bfb371ecc4d5` | Frames dropped because their PTS deadline against the render clock had passed by more than one display frame interval at the sink render check — too late to show. Sink render-decision internal. |
-| `frames_dropped_frc` | frames | counter | read | `0x6c43fb5584823d18` | Frames dropped by frame-rate conversion when the source rate exceeds the display rate, which is cadence decimation rather than lateness. |
-| `frames_repeated_frc` | frames | counter | read | `0x72b9db4bfce6f2ab` | Frames held for more than one display interval by frame-rate conversion when the source rate is below the display rate. Normal content cadence, and not a freeze. |
-| `frames_repeated_missing_frame` | frames | counter | read | `0x5a652c2dcf72deac` | Frames repeated to cover a missing next frame — the sink had no new decoded frame ready at render time. This is starvation cover, and it is what freeze_duration_ms integrates. |
-| `underflowed` | episodes | counter | read | `0x6804c05ae6533181` | Count of video buffer-underflow episodes. One per episode start, where an episode starts when there is no frame to present at render time and ends when a new frame is presented. |
-| `underflow_duration_ms` | ms | counter | read | `0x23e55a88f5bbbd94` | Cumulative wall-clock time across all video underflow episodes. Paired with underflowed, so the mean episode length is this divided by that. An underflow episode manifests on screen as a freeze. |
-| `freeze_duration_ms` | ms | counter | read | `0x1c86c5dfa4db5108` | Cumulative on-screen time the same frame was held to cover a missing frame, which is the customer-visible freeze — the time integral of frames_repeated_missing_frame. Excludes frame-rate-conversion cadence repeats, which are not freezes. |
-| `freeze_event_count` | events | counter | read | `0x5196f6826e91a801` | Count of freeze episodes, one per episode start. Paired with freeze_duration_ms, so the mean freeze length is that divided by this. |
-| `max_freeze_duration_ms` | ms | high_water | read | `0x088d619c00c1c539` | Longest single freeze episode observed. A monotone non-decreasing high-water mark over the life of the resource, and read-only: a maximum cannot be recovered by differencing two maxima, so a consumer wanting the worst freeze within its own reporting window tracks that itself from last_freeze_duration_ms rather than resetting a figure other readers share. |
-| `render_latency_sum_us` | us | counter | read | `0x75f862796424b00d` | Running sum of per-frame render latency, from a frame arriving at the sink input to being presented to scanout. Paired with frames_presented. |
-| `buffer_depth_ms` | ms | current | read | `0x111d82c20cb9e693` | Buffered decoded media ahead of the present position now — the sum of presentation durations of frames queued but not yet presented. A live sample re-read each capture rather than a cumulative figure. This is SoC- and use-case-specific, so compare it against itself over time rather than across products. |
-| `last_underflow_trigger` | none | current | read | `0x03210d8159685756` | Cause of the most recent underflow episode, which is what distinguishes an expected starvation from a defect. |
-| `last_underflow_duration_ms` | ms | current | read | `0x7b1ed4a908e8ef1b` | Length of the most recent completed underflow episode. Read with underflowed and underflow_duration_ms, which give the count and the total. |
-| `last_dropped_frame_pts_ms` | ms | current | read | `0x0e6d081eed2918dd` | Stream PTS of the most recently dropped frame, within one frame interval, whichever drop axis it fell on. This is what turns a drop count into a locatable defect. Left undeclared where no PTS is derivable. |
-| `last_freeze_pts_ms` | ms | current | read | `0x42cfffc003874fd4` | Stream PTS at which the most recent freeze episode began, within one frame interval. Does for a freeze what last_dropped_frame_pts_ms does for a drop. Left undeclared where no PTS is derivable. |
-| `last_freeze_duration_ms` | ms | current | read | `0x3e53a4af6a16f1ce` | Length of the most recent completed freeze episode. Read with freeze_event_count and freeze_duration_ms for the count and the total, and with max_freeze_duration_ms for the worst. |
-| `first_frame_presented_pts_ms` | ms | current | read | `0x56eaeb10709bcdd8` | PTS of the first frame to reach presentation, set at session start and re-set after each seek or flush. This is the hardware's contribution to time-to-first-frame; whatever elapsed above the HAL before decode began is observed by the party that started the session. |
+| `frames_received` | frames | counter | read | 1 | Decoded frames received from the decoder to be presented. |
+| `frames_presented` | frames | counter | read | 2 | Frames handed to display scanout for presentation, one per successful render. |
+| `frames_dropped_late` | frames | counter | read | 3 | Frames dropped because their PTS deadline against the render clock had passed by more than one display frame interval at the sink render check — too late to show. Sink render-decision internal. |
+| `frames_dropped_frc` | frames | counter | read | 4 | Frames dropped by frame-rate conversion when the source rate exceeds the display rate, which is cadence decimation rather than lateness. |
+| `frames_repeated_frc` | frames | counter | read | 5 | Frames held for more than one display interval by frame-rate conversion when the source rate is below the display rate. Normal content cadence, and not a freeze. |
+| `frames_repeated_missing_frame` | frames | counter | read | 6 | Frames repeated to cover a missing next frame — the sink had no new decoded frame ready at render time. This is starvation cover, and it is what freeze_duration_ms integrates. |
+| `underflowed` | episodes | counter | read | 7 | Count of video buffer-underflow episodes. One per episode start, where an episode starts when there is no frame to present at render time and ends when a new frame is presented. |
+| `underflow_duration_ms` | ms | counter | read | 8 | Cumulative wall-clock time across all video underflow episodes. Paired with underflowed, so the mean episode length is this divided by that. An underflow episode manifests on screen as a freeze. |
+| `freeze_duration_ms` | ms | counter | read | 9 | Cumulative on-screen time the same frame was held to cover a missing frame, which is the customer-visible freeze — the time integral of frames_repeated_missing_frame. Excludes frame-rate-conversion cadence repeats, which are not freezes. |
+| `freeze_event_count` | events | counter | read | 10 | Count of freeze episodes, one per episode start. Paired with freeze_duration_ms, so the mean freeze length is that divided by this. |
+| `max_freeze_duration_ms` | ms | high_water | read | 11 | Longest single freeze episode observed. A monotone non-decreasing high-water mark over the life of the resource, and read-only: a maximum cannot be recovered by differencing two maxima, so a consumer wanting the worst freeze within its own reporting window tracks that itself from last_freeze_duration_ms rather than resetting a figure other readers share. |
+| `render_latency_sum_us` | us | counter | read | 12 | Running sum of per-frame render latency, from a frame arriving at the sink input to being presented to scanout. Paired with frames_presented. |
+| `buffer_depth_ms` | ms | current | read | 13 | Buffered decoded media ahead of the present position now — the sum of presentation durations of frames queued but not yet presented. A live sample re-read each capture rather than a cumulative figure. This is SoC- and use-case-specific, so compare it against itself over time rather than across products. |
+| `last_underflow_trigger` | none | current | read | 14 | Cause of the most recent underflow episode, which is what distinguishes an expected starvation from a defect. |
+| `last_underflow_duration_ms` | ms | current | read | 15 | Length of the most recent completed underflow episode. Read with underflowed and underflow_duration_ms, which give the count and the total. |
+| `last_dropped_frame_pts_ms` | ms | current | read | 16 | Stream PTS of the most recently dropped frame, within one frame interval, whichever drop axis it fell on. This is what turns a drop count into a locatable defect. Left undeclared where no PTS is derivable. |
+| `last_freeze_pts_ms` | ms | current | read | 17 | Stream PTS at which the most recent freeze episode began, within one frame interval. Does for a freeze what last_dropped_frame_pts_ms does for a drop. Left undeclared where no PTS is derivable. |
+| `last_freeze_duration_ms` | ms | current | read | 18 | Length of the most recent completed freeze episode. Read with freeze_event_count and freeze_duration_ms for the count and the total, and with max_freeze_duration_ms for the worst. |
+| `first_frame_presented_pts_ms` | ms | current | read | 19 | PTS of the first frame to reach presentation, set at session start and re-set after each seek or flush. This is the hardware's contribution to time-to-first-frame; whatever elapsed above the HAL before decode began is observed by the party that started the session. |
 
 **`last_underflow_trigger` values**
 
@@ -50,11 +50,11 @@ The figures `videosink` serves through `getMetrics()` and raises through `onMetr
 
 ### `underflow`
 
-Identifier `0x4491e54076c1719e`. Raised at the START of a starvation episode, the instant there is nothing to present at render time. Exactly one underflow_end closes it.
+Id 1. Raised at the START of a starvation episode, the instant there is nothing to present at render time. Exactly one underflow_end closes it.
 
-| Attribute | Unit | Identifier | Definition |
+| Attribute | Unit | Id | Definition |
 |---|---|---|---|
-| `trigger` | none | `0x13e2fbe05ae793e6` | What caused this episode, which is what distinguishes an expected starvation from a defect. |
+| `trigger` | none | 1 | What caused this episode, which is what distinguishes an expected starvation from a defect. |
 
 **`trigger` values**
 
@@ -69,32 +69,32 @@ Identifier `0x4491e54076c1719e`. Raised at the START of a starvation episode, th
 
 ### `underflow_end`
 
-Identifier `0x7e41035d13fd0087`. Raised when presentation resumes, closing the episode the preceding underflow opened.
+Id 2. Raised when presentation resumes, closing the episode the preceding underflow opened.
 
-| Value | Unit | Kind | Identifier | Definition |
+| Value | Unit | Kind | Id | Definition |
 |---|---|---|---|---|
-| `duration_ms` | ms | current | `0x2045159af585515b` | Length of the episode this closes, from start to resume. Not cumulative — underflow_duration_ms carries the running total. |
+| `duration_ms` | ms | current | 2 | Length of the episode this closes, from start to resume. Not cumulative — underflow_duration_ms carries the running total. |
 
 ### `first_frame_presented`
 
-Identifier `0x75678b7f05b24f8f`. Raised when the first frame reaches presentation, once at session start and again after each seek or flush.
+Id 3. Raised when the first frame reaches presentation, once at session start and again after each seek or flush.
 
-| Attribute | Unit | Identifier | Definition |
+| Attribute | Unit | Id | Definition |
 |---|---|---|---|
-| `pts_ms` | ms | `0x781403dd60990bb7` | PTS of the frame that reached presentation. Absent where the SoC cannot derive a PTS. |
+| `pts_ms` | ms | 3 | PTS of the frame that reached presentation. Absent where the SoC cannot derive a PTS. |
 
 ### `quality_threshold_crossed`
 
-Identifier `0x2cc173c80cf52746`. Raised when a quality counter crosses its declared threshold. Only the sink knows whether it shed a frame or repeated one, so which counter moved is carried rather than inferred.
+Id 4. Raised when a quality counter crosses its declared threshold. Only the sink knows whether it shed a frame or repeated one, so which counter moved is carried rather than inferred.
 
-| Attribute | Unit | Identifier | Definition |
+| Attribute | Unit | Id | Definition |
 |---|---|---|---|
-| `metric` | none | `0x118b55b16b7e25dd` | Which counter crossed its threshold. |
-| `pts_ms` | ms | `0x3f8d8a1a4f44786a` | Stream PTS at the crossing. Absent where no PTS is derivable. |
+| `metric` | none | 4 | Which counter crossed its threshold. |
+| `pts_ms` | ms | 5 | Stream PTS at the crossing. Absent where no PTS is derivable. |
 
-| Value | Unit | Kind | Identifier | Definition |
+| Value | Unit | Kind | Id | Definition |
 |---|---|---|---|---|
-| `count` | frames | current | `0x09ec7999c4c03f17` | How many frames the crossing covered. |
+| `count` | frames | current | 6 | How many frames the crossing covered. |
 
 **`metric` values**
 

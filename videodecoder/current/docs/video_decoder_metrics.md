@@ -14,15 +14,15 @@ The figures `videodecoder` serves through `getMetrics()` and raises through `onM
 
 ## Keys
 
-| Key | Unit | Kind | Access | Identifier | Definition |
+| Key | Unit | Kind | Access | Id | Definition |
 |---|---|---|---|---|---|
-| `frames_decoded` | frames | counter | read | `0x63c81c7efbe7e743` | Compressed frames the decoder has decoded and emitted at its output, post-decode and pre-sink. One per emitted frame, counted from instance creation and never reset on flush or seek. |
-| `frames_dropped` | frames | counter | read | `0x2c67d98cc76e6fb7` | Frames the decoder discarded before output — undecodable through corruption or unsupported format, or shed under decode overload. Excludes presentation-side drops, which belong to the video sink. A frame counted here is not also in frames_decoded. |
-| `decode_errors` | events | counter | read | `0x070bb5fa11ef497b` | Decode-error occurrences such as a bitstream or NAL parse failure or a codec fault. Decoder-internal, and a distinct axis from frames_dropped: an error need not drop a frame, and a drop need not be an error. |
-| `decode_latency_sum_us` | us | counter | read | `0x4e69bac967d540b7` | Running sum of per-frame decode latency, measured from the compressed access unit being queued to the decoder input until the frame is emitted at its output. Mean latency is this divided by frames_decoded. |
-| `last_decode_error_pts_ms` | ms | current | read | `0x14debdd0bbd63a14` | Stream PTS at detection of the most recent decode error, within one frame interval. Read with decode_errors, which says how many there were while this says where the newest one was. Left undeclared where the SoC cannot derive a PTS, and never served as -1. |
-| `last_decode_error_reason` | none | current | read | `0x4fda2a3cf3d7dc09` | Classification of the most recent decode error. This is the value a consumer branches on, and what makes the fault comparable across SoCs. |
-| `last_decode_error_vendor_code` | none | current | read | `0x26d18e085c02dfd4` | The SoC's own error code for the same fault, carried through uninterpreted. For vendor diagnosis, and never branched on. |
+| `frames_decoded` | frames | counter | read | 1 | Compressed frames the decoder has decoded and emitted at its output, post-decode and pre-sink. One per emitted frame, counted from instance creation and never reset on flush or seek. |
+| `frames_dropped` | frames | counter | read | 2 | Frames the decoder discarded before output — undecodable through corruption or unsupported format, or shed under decode overload. Excludes presentation-side drops, which belong to the video sink. A frame counted here is not also in frames_decoded. |
+| `decode_errors` | events | counter | read | 3 | Decode-error occurrences such as a bitstream or NAL parse failure or a codec fault. Decoder-internal, and a distinct axis from frames_dropped: an error need not drop a frame, and a drop need not be an error. |
+| `decode_latency_sum_us` | us | counter | read | 4 | Running sum of per-frame decode latency, measured from the compressed access unit being queued to the decoder input until the frame is emitted at its output. Mean latency is this divided by frames_decoded. |
+| `last_decode_error_pts_ms` | ms | current | read | 5 | Stream PTS at detection of the most recent decode error, within one frame interval. Read with decode_errors, which says how many there were while this says where the newest one was. Left undeclared where the SoC cannot derive a PTS, and never served as -1. |
+| `last_decode_error_reason` | none | current | read | 6 | Classification of the most recent decode error. This is the value a consumer branches on, and what makes the fault comparable across SoCs. |
+| `last_decode_error_vendor_code` | none | current | read | 7 | The SoC's own error code for the same fault, carried through uninterpreted. For vendor diagnosis, and never branched on. |
 
 **`last_decode_error_reason` values**
 
@@ -39,13 +39,13 @@ The figures `videodecoder` serves through `getMetrics()` and raises through `onM
 
 ### `decode_error`
 
-Identifier `0x5b1e6c70f389e805`. Raised at detection of a decode fault, once per fault. A fault that also discards a frame raises this and advances frames_dropped; a fault that does not raises this alone. The two are separate axes.
+Id 1. Raised at detection of a decode fault, once per fault. A fault that also discards a frame raises this and advances frames_dropped; a fault that does not raises this alone. The two are separate axes.
 
-| Attribute | Unit | Identifier | Definition |
+| Attribute | Unit | Id | Definition |
 |---|---|---|---|
-| `reason` | none | `0x1eb66b82bd8ad2f9` | Classification of this fault, from the same closed vocabulary as last_decode_error_reason. The value a consumer branches on. |
-| `vendor_code` | none | `0x44486ad4e1aa81ab` | The SoC's own error code for this fault, carried through uninterpreted. For vendor diagnosis, and never branched on. |
-| `pts_ms` | ms | `0x6f31b4b8fbc5b36b` | Stream PTS at detection, within one frame interval. Absent where the SoC cannot derive a PTS at all, and NOT_AVAILABLE where it can but could not at this instant. Never sent as -1. |
+| `reason` | none | 1 | Classification of this fault, from the same closed vocabulary as last_decode_error_reason. The value a consumer branches on. |
+| `vendor_code` | none | 2 | The SoC's own error code for this fault, carried through uninterpreted. For vendor diagnosis, and never branched on. |
+| `pts_ms` | ms | 3 | Stream PTS at detection, within one frame interval. Absent where the SoC cannot derive a PTS at all, and NOT_AVAILABLE where it can but could not at this instant. Never sent as -1. |
 
 **`reason` values**
 

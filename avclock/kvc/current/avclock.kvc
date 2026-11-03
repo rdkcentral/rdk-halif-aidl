@@ -25,9 +25,10 @@
 # Metric and its sibling enums, so a new key is an additive interface
 # change. Never edit the generated .aidl: change this file and regenerate.
 #
-# A key absent here is ABSENT at runtime — never 0, never -1. unit and kind are
-# part of a key's identity. A counter is monotonic from resource creation and is
-# never reset on open(), flush(), stop() or seek.
+# A key absent here is ABSENT at runtime — never 0, never -1. Each key, event
+# and event field carries an id unique within this element, never renumbered or
+# reused; unit and kind are part of its identity. A counter is monotonic from
+# resource creation and is never reset on open(), flush(), stop() or seek.
 #
 # SIGN IS MEANINGFUL ON THIS ELEMENT. sync_offset_ms is positive when audio
 # leads and negative when video leads: they are opposite directions of one
@@ -51,6 +52,7 @@ keys:
 
   # av.clock.sync_offset_ms
   - name: sync_offset_ms
+    id: 1
     type: int64
     unit: ms
     kind: current
@@ -63,6 +65,7 @@ keys:
 
   # av.clock.sync_max_abs_offset_ms
   - name: sync_max_abs_offset_ms
+    id: 2
     type: int64
     unit: ms
     kind: high_water
@@ -77,6 +80,7 @@ keys:
 
   # av.clock.sync_time_over_threshold_ms
   - name: sync_time_over_threshold_ms
+    id: 3
     type: int64
     unit: ms
     kind: counter
@@ -88,6 +92,7 @@ keys:
 
   # av.clock.sync_threshold_ms
   - name: sync_threshold_ms
+    id: 4
     type: int64
     unit: ms
     kind: config
@@ -104,6 +109,7 @@ keys:
 
   # av.clock.resync_count
   - name: resync_count
+    id: 5
     type: int64
     unit: events
     kind: counter
@@ -115,6 +121,7 @@ keys:
 
   # av.clock.resync_magnitude_sum_ms
   - name: resync_magnitude_sum_ms
+    id: 6
     type: int64
     unit: ms
     kind: counter

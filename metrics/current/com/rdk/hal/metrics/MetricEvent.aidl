@@ -50,12 +50,21 @@ parcelable MetricEvent {
     long timestampNs;
 
     /**
-     * Identifier of the event kind.
+     * Identifier of the element that raised this occurrence, and the scope of
+     * `eventId` and of every field id in it.
      *
-     * SHA-256 over "<domain>.<element>.<event_kind>", truncated as
-     * `MetricValue.id` is.
+     * The value `MetricGroup.id` carries for the same element, so an event
+     * forwarded out of the HAL that raised it still says where it came from.
      */
-    long eventId;
+    long groupId;
+
+    /**
+     * Identifier of the event kind, scoped by `groupId`.
+     *
+     * The `id` the producing component's Key Value Contract declares for the
+     * event, a member of its generated `MetricEventKind` enum.
+     */
+    int eventId;
 
     /**
      * What locates and classifies this occurrence.
@@ -64,7 +73,8 @@ parcelable MetricEvent {
      * occurrence this was and where, rather than measuring anything, so they
      * carry no aggregation semantics.
      *
-     * `instance` is carried here, as it is on `MetricGroup`.
+     * `instance` is carried here, id `MetricGroup.ATTRIBUTE_INSTANCE`, as it
+     * is on `MetricGroup`.
      *
      * A field this product never serves is absent from this array. A field the
      * event kind declares that could not be derived at this instant is present

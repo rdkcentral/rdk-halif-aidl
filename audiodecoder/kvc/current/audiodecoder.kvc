@@ -25,9 +25,11 @@
 # Metric and its sibling enums, so a new key is an additive interface
 # change. Never edit the generated .aidl: change this file and regenerate.
 #
-# A key absent here is ABSENT at runtime — never 0, never -1. unit and kind are
-# part of a key's identity. A counter is monotonic from resource creation and is
-# never reset on open(), flush(), stop() or seek. Every value is int64.
+# A key absent here is ABSENT at runtime — never 0, never -1. Each key, event
+# and event field carries an id unique within this element, never renumbered or
+# reused; unit and kind are part of its identity. A counter is monotonic from
+# resource creation and is never reset on open(), flush(), stop() or seek. Every
+# value is int64.
 #
 # This element mirrors av.video_decoder deliberately: the same four axes mean
 # the same things on both, so a consumer computes a decode error rate the same
@@ -47,6 +49,7 @@ keys:
 
   # av.audio_decoder.frames_decoded
   - name: frames_decoded
+    id: 1
     type: int64
     unit: frames
     kind: counter
@@ -59,6 +62,7 @@ keys:
 
   # av.audio_decoder.frames_dropped
   - name: frames_dropped
+    id: 2
     type: int64
     unit: frames
     kind: counter
@@ -71,6 +75,7 @@ keys:
 
   # av.audio_decoder.decode_errors
   - name: decode_errors
+    id: 3
     type: int64
     unit: events
     kind: counter
@@ -83,6 +88,7 @@ keys:
 
   # av.audio_decoder.decode_latency_sum_us
   - name: decode_latency_sum_us
+    id: 4
     type: int64
     unit: us
     kind: counter
@@ -95,6 +101,7 @@ keys:
 
   # av.audio_decoder.last_decode_error_pts_ms
   - name: last_decode_error_pts_ms
+    id: 5
     type: int64
     unit: ms
     kind: current
@@ -107,6 +114,7 @@ keys:
 
   # av.audio_decoder.last_decode_error_reason
   - name: last_decode_error_reason
+    id: 6
     type: int64
     unit: none
     kind: current
@@ -143,6 +151,7 @@ keys:
 
   # av.audio_decoder.last_decode_error_vendor_code
   - name: last_decode_error_vendor_code
+    id: 7
     type: int64
     unit: none
     kind: current
@@ -156,6 +165,7 @@ events:
 
   # av.audio_decoder.decode_error
   - name: decode_error
+    id: 1
     description: >
       Raised at detection of a decode fault, once per fault. A fault that also
       discards a frame raises this and advances frames_dropped; a fault that
@@ -164,6 +174,7 @@ events:
 
       # av.audio_decoder.decode_error.reason
       - name: reason
+        id: 1
         type: int64
         unit: none
         description: >
@@ -197,6 +208,7 @@ events:
 
       # av.audio_decoder.decode_error.vendor_code
       - name: vendor_code
+        id: 2
         type: int64
         unit: none
         description: >
@@ -205,6 +217,7 @@ events:
 
       # av.audio_decoder.decode_error.pts_ms
       - name: pts_ms
+        id: 3
         type: int64
         unit: ms
         description: >

@@ -41,30 +41,29 @@ One `MetricValue` serves reads and events, so a consumer extracts a field from a
 
 ## Identity
 
-Every identifier is the first 8 bytes of SHA-256 over the composed terms:
+Identity has two levels: the element, and the field within it.
 
-```
-value      SHA-256("<domain>.<element>.<field>|<unit>|<kind>")
-attribute  SHA-256("<domain>.<element>.<field>|<unit>")
-event      SHA-256("<domain>.<element>.<event_kind>")
-```
+| Identifier | Type | Formed from | Unique within | Carried by |
+|---|---|---|---|---|
+| Element | `long` | First 8 bytes of SHA-256 over `<domain>.<element>`, sign bit cleared | Every HAL | `MetricGroup.id`, `MetricEvent.groupId` |
+| Key | `int` | The `id` its Key Value Contract declares | The element's keys | `MetricValue.id` in `values` |
+| Event kind | `int` | The `id` its Key Value Contract declares | The element's events | `MetricEvent.eventId` |
+| Attribute or event field | `int` | The `id` its Key Value Contract declares; `0` is `instance` | The element's attributes and event fields | `MetricValue.id` in `attributes`, and in an event's `values` |
 
-An attribute takes no `kind` term because it has no aggregation semantics to state.
+The element is the only global identifier, so a group or event forwarded out of the HAL that produced it still says where it came from. A consumer that flattens values out of their group carries the pair (element, id).
 
-Unit and kind are part of a key's identity. A product declaring a field in microseconds and populating milliseconds yields a different identifier, so a consumer sees a mismatch rather than a figure a thousand times wrong.
+A field's name, unit and kind are its identity. Once an interface carrying an id is frozen, the id never changes any of them: a field served in a new unit or kind takes a new id, and the old id is retired and never reissued. A consumer built against the old field is then answered `NOT_SUPPORTED`, never handed a figure a thousand times wrong.
 
-The identifier is 64-bit. A 32-bit space puts a birthday collision in the tens of thousands of keys, and a collision here is two measurements answering to one identifier.
+Instance is runtime, not contract: a group carries `instance` in its attributes, id `MetricGroup.ATTRIBUTE_INSTANCE`, and no other identifier composes with it.
 
-Instance is runtime, not contract: a group carries `instance` in its attributes and no identifier composes with it.
-
-Each measuring component declares a `Metric` enum backed by `long` whose member values are the generated identifiers. Position in the enum carries no meaning, so a member is added anywhere and two products that added members in different orders agree on every value.
+Each measuring component's generated `Metric`, `MetricEventKind` and `MetricEventAttribute` enums are backed by `int` and carry the declared ids. An id is declared, never taken from position, so members are added anywhere.
 
 ## Accessors
 
 Each measuring component's resource interface carries:
 
 ```aidl
-MetricSnapshot getMetrics(in @nullable long[] metricIds);
+MetricSnapshot getMetrics(in @nullable int[] metricIds);
 ```
 
 Null asks for every metric the product serves. A list asks for those identifiers, and each comes back with its status — `NOT_SUPPORTED` for one the product cannot measure or does not know. A caller names an identifier by the generated constant for its key.
@@ -91,7 +90,7 @@ void onMetricEvent(in MetricEvent event);
 | **HAL.METRICS.10** | Each read group shall carry the instance it reports as an `instance` attribute, and the component shall serve one group per instance its hardware has, for the life of the service, agreeing with the `instances` its Key Value Contract declares. | An idle resource is still served, so the set is static. |
 | **HAL.METRICS.11** | The implementation shall hold no per-caller state. | Every read is a snapshot of what the component holds now. Any consumer reads at any cadence without affecting another; fan-out is a middleware concern. |
 | **HAL.METRICS.12** | Values shall be presented in canonical units and semantics regardless of the SoC's raw representation. | The implementation is an adapter, not a passthrough. A transform normalises representation; it cannot manufacture information, so where a SoC reports only a combined figure the finer-grained fields are `NOT_SUPPORTED` rather than derived by guesswork. |
-| **HAL.METRICS.13** | Every field returned shall carry the `id` its composed terms hash to. | Nothing allocates it, so it needs no registry. A product serving a name in the wrong unit or with the wrong kind becomes a hard mismatch at the consumer rather than a silently wrong number. |
+| **HAL.METRICS.13** | Every group and event shall carry its element's identifier, and every field returned shall carry the `id` its Key Value Contract declares for it. | A field id is scoped by the element, so the element identifier is what makes it unambiguous once merged with another component's. |
 | **HAL.METRICS.14** | A read shall never be rejected, rate-limited or throttled for arriving sooner than `captureCadenceMs`. | It bounds what is worth reading, not what is allowed. A consumer capturing faster reads the same values again, because nothing refreshed them in between. |
 | **HAL.METRICS.15** | Every declared field's values shall behave as its `kind` states, and shall carry the meaning its Key Value Contract gives that key. | The contract is the definition a test asserts against. `counter` and `high_water` behaviour is HAL.METRICS.4; `current` is a live sample re-read each capture, absolute and never summed; `config` is the present value of a tunable. |
 | **HAL.METRICS.16** | Every event kind an element declares shall be raised at the instant its trigger states, stamped with `CLOCK_MONOTONIC` at detection rather than at delivery, pushed to every listener registered on that component, and shall carry the payload the declaration names. | A burst collapses in the counters; the push is what makes each occurrence individually visible. A payload field the product never serves is absent from the array; one it could not derive at that instant is `NOT_AVAILABLE`. |
@@ -101,7 +100,7 @@ void onMetricEvent(in MetricEvent event);
 
 ## The Key Value Contract
 
-A component's keys are declared once, in `<component>/kvc/current/<component>.kvc`. It is the single source for everything that names them: `scripts/kvcc.py` derives every identifier, writes the component's AIDL enums and its metrics page, and fails where two keys collide or a key carries no description. `scripts/kvcc.py --check` fails where committed output has drifted from its declaration.
+A component's keys are declared once, in `<component>/kvc/current/<component>.kvc`. It is the single source for everything that names them: `scripts/kvcc.py` takes every identifier from it, writes the component's AIDL enums and its metrics page, and fails where two fields share an id, an id reuses a retired one, a frozen id changes name, unit or kind, or a key carries no description. `scripts/kvcc.py --check` fails where committed output has drifted from its declaration.
 
 A new key is a new member of the component's generated `Metric` enum, which is an additive interface change. A caller built against a later vocabulary than a product serves is answered `NOT_SUPPORTED` for keys the product does not have.
 
