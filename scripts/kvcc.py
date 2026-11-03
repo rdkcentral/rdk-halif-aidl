@@ -31,7 +31,7 @@ vocabulary beside its interface versions:
     `-- current/                          generated AIDL lands here
 
 A vocabulary has no revisions of its own. It versions with its module's
-interface, and the frozen interface's generated enums are its record.
+interface, and the frozen interface is its record.
 
 The declaration is the single source: the AIDL, the documentation and the
 header all come from it, so a key is defined once and checked the same way
@@ -49,10 +49,13 @@ carries the small integer `id` its .kvc declares:
     event      id, unique among the element's events   MetricEvent.eventId
     attribute  id, unique among the element's event fields; 0 is `instance`
 
-An id is never derived from position and never reused: removing a field moves
-its id to `retired`. A field's name, unit and kind are its identity, so
-changing any of them on an id an earlier frozen interface carries is refused —
-the field takes a new id and the old one is retired.
+An id is declared, never taken from position. A vocabulary only grows: once
+frozen, a field is never removed, renumbered or redefined, and one whose unit
+or kind must change is marked `deprecated` while a new field takes a new id.
+The AIDL compiler's compatibility check enforces this, with no frozen record
+of its own here: the enums carry the ids, and MetricIdentity carries each
+field's "<path>|<unit>|<kind>" as a constant, so a changed unit or kind is a
+changed constant value.
 
 Emits, per module:
 
@@ -60,6 +63,7 @@ Emits, per module:
                                           Metric.aidl
                                           MetricEventKind.aidl
                                           MetricEventAttribute.aidl
+                                          MetricIdentity.aidl
     <module>/current/docs/<page>_metrics.md
     <module>/kvc/include/<Component>Keys.h
 
@@ -118,7 +122,6 @@ KIND_ORDER = ["counter", "current", "high_water", "config"]
 # MetricGroup.ATTRIBUTE_INSTANCE in the envelope, so no .kvc declares it.
 INSTANCE_ID = 0
 ID_MAX = 0x7FFFFFFF
-FROZEN = re.compile(r"^\d+\.\d+\.\d+\.\d+$")
 
 
 def element_hash(path: str) -> int:
@@ -158,14 +161,10 @@ class Vocabulary:
         self.domain = doc["domain"]
         self.component = doc["component"]
         self.package = doc["package"]
-        self.version = str(doc["version"])
         self.instances = doc.get("instances", 1)
         self.cadence_ms = doc.get("captureCadenceMs")
         self.keys = doc.get("keys") or []
         self.events = doc.get("events") or []
-        retired = doc.get("retired") or {}
-        self.retired = {space: set(retired.get(space) or [])
-                        for space in ("keys", "events", "attributes")}
         self.base = f"{self.domain}.{self.component}"
         self._validate()
 
@@ -192,10 +191,10 @@ class Vocabulary:
                     raise SystemExit(
                         f"{self.path}: '{name}' and '{seen[ident]}' share "
                         f"{space} id {ident}")
-                if ident in self.retired[space]:
+                if "deprecated" in field and not field["deprecated"]:
                     raise SystemExit(
-                        f"{self.path}: '{name}' reuses retired {space} id "
-                        f"{ident}; a retired id is never reissued")
+                        f"{self.path}: '{name}' is deprecated with no reason; "
+                        f"state what replaces it")
                 seen[ident] = name
 
     def element_id(self) -> int:
@@ -222,12 +221,19 @@ class Vocabulary:
                            for e, f in self.attributes() + self.event_values()],
         }
 
-    def identities(self) -> dict[str, dict[int, str]]:
-        """Each id space as id -> "<path>|<unit>|<kind>", the identity an id
-        keeps once frozen. An attribute has no kind, so its term is empty."""
-        return {space: {f["id"]: f"{path}|{f.get('unit', '')}|{f.get('kind', '')}"
-                        for path, f in fields}
-                for space, fields in self.spaces().items()}
+    def identities(self) -> list[tuple[str, str, dict]]:
+        """(constant, "<path>|<unit>[|<kind>]", field) for every key and event
+        field: what an id means, which a frozen interface holds it to. An
+        attribute has no kind, so it states the unit alone."""
+        out = [(f"KEY_{const(k['name'])}",
+                f"{self.base}.{k['name']}|{k['unit']}|{k['kind']}", k)
+               for k in self.keys]
+        for e, f in self.attributes() + self.event_values():
+            terms = [f"{self.base}.{e['name']}.{f['name']}", f["unit"]]
+            terms += [f["kind"]] if "kind" in f else []
+            out.append((f"ATTRIBUTE_{const(e['name'])}_{const(f['name'])}",
+                        "|".join(terms), f))
+        return out
 
     def attributes(self) -> list[tuple[dict, dict]]:
         return [(e, a) for e in self.events for a in e.get("attributes") or []]
@@ -253,77 +259,58 @@ class Vocabulary:
                 yield path, field["id"]
 
 
-# Each generated enum, the id space it carries, and how its members read the
-# kind: a key's doc line is "`<path>` — <unit>, <kind>...", an attribute's
-# "`<path>` — <unit>. ...", an event's "`<path>` — ...".
-FROZEN_ENUMS = {"Metric.aidl": "keys", "MetricEventKind.aidl": "events",
-                "MetricEventAttribute.aidl": "attributes"}
-MEMBER = re.compile(
-    r"/\*\*\s*\*\s*`(?P<path>[^`]+)` — (?P<terms>.*?)\*/\s*"
-    r"[A-Z0-9_]+ = (?P<id>\d+),", re.S)
+def member_doc(description: str, field: dict | None) -> list[str]:
+    """A member's Doxygen, with @deprecated where its field is superseded."""
+    lines = block(description, "    ")
+    if field and field.get("deprecated"):
+        reason = textwrap.wrap(f"@deprecated {flow(field['deprecated'])}",
+                               width=78 - 7)
+        lines[-1:-1] = [f"     * {ln}".rstrip() for ln in [""] + reason]
+    return lines
 
 
-def frozen_identities(v: "Vocabulary") -> tuple[str, dict[str, dict[int, str]]]:
-    """The identities the newest frozen interface carries, read back from its
-    generated enums, so a field's meaning is held to what was released."""
-    versions = sorted((d for d in (REPO / v.module).iterdir()
-                       if d.is_dir() and FROZEN.match(d.name)),
-                      key=lambda d: tuple(int(x) for x in d.name.split(".")))
-    for version in reversed(versions):
-        root = version / "com" / "rdk" / "hal" / v.package
-        if not (root / "Metric.aidl").exists():
-            continue
-        found: dict[str, dict[int, str]] = {}
-        for name, space in FROZEN_ENUMS.items():
-            found[space] = {}
-            if not (root / name).exists():
-                continue
-            for m in MEMBER.finditer((root / name).read_text()):
-                terms = [t.strip() for t in
-                         " ".join(m["terms"].replace("*", " ").split())
-                         .split(".")[0].split(",")]
-                unit = terms[0] if space != "events" else ""
-                kind = terms[1] if space != "events" and len(terms) > 1 and \
-                    terms[1] in KIND_ORDER else ""
-                found[space][int(m["id"])] = f"{m['path']}|{unit}|{kind}"
-        return version.name, found
-    return "", {}
-
-
-def check_frozen(v: "Vocabulary") -> None:
-    version, frozen = frozen_identities(v)
-    current = v.identities()
-    for space, ids in frozen.items():
-        for ident, identity in ids.items():
-            if ident in v.retired[space]:
-                continue
-            if current[space].get(ident) != identity:
-                raise SystemExit(
-                    f"{v.path}: {space} id {ident} is '{identity}' in frozen "
-                    f"{version} but '{current[space].get(ident, 'absent')}' now. "
-                    f"Give the changed field a new id and add {ident} to "
-                    f"retired.{space}")
-
-
-def aidl_enum(v: Vocabulary, name: str, brief: str, intro: str,
-              members: list[tuple[str, int, str]], backing: str = "int") -> str:
+def aidl_preamble(v: Vocabulary, brief: str, intro: str) -> list[str]:
     out = [AIDL_LICENCE, f"package com.rdk.hal.{v.package};", ""]
     out += ["/**", f" * @brief     {brief}", " * @author    Gerald Weatherup",
             " *",
             f" * THIS FILE IS GENERATED by scripts/kvcc.py from",
-            f" * {v.module}/kvc/{v.module}.kvc (vocabulary {v.version},",
-            f" * schema {v.schema}). Do not edit: declare the key there and",
-            f" * regenerate, so an identifier is declared in one place.",
+            f" * {v.module}/kvc/{v.module}.kvc (schema {v.schema}). Do not edit:",
+            f" * declare the key there and regenerate, so an identifier is",
+            f" * declared in one place.",
             " */", ""]
     out += ["/**", f" * @brief {brief}", " *"]
     out += [f" * {ln}".rstrip() for ln in textwrap.wrap(flow(intro), width=74)]
-    out += [" */", "", "@VintfStability", f'@Backing(type="{backing}")',
-            f"enum {name}", "{"]
-    for member, value, description in members:
+    return out + [" */", "", "@VintfStability"]
+
+
+def aidl_enum(v: Vocabulary, name: str, brief: str, intro: str,
+              members: list[tuple], backing: str = "int") -> str:
+    out = aidl_preamble(v, brief, intro)
+    out += [f'@Backing(type="{backing}")', f"enum {name}", "{"]
+    for member, value, description, *field in members:
         out.append("")
-        out += block(description, "    ")
+        out += member_doc(description, field[0] if field else None)
         out.append(f"    {member} = "
                    + (f"{value:#018x}," if backing == "long" else f"{value},"))
+    out += ["}", ""]
+    return "\n".join(out)
+
+
+def aidl_identity(v: Vocabulary) -> str:
+    out = aidl_preamble(
+        v, f"What each {v.module} metric id means.",
+        "One constant per key and per event field, holding the path, unit "
+        "and, for a measurement, kind its id stands for. It exists so the "
+        "AIDL compatibility check can see them: a frozen constant's value "
+        "cannot change, so a field whose unit or kind changes is refused "
+        "and must take a new id. Nothing is served through it. KEY_<NAME> "
+        "describes Metric::<NAME>, and ATTRIBUTE_<NAME> describes "
+        "MetricEventAttribute::<NAME>.")
+    out += ["parcelable MetricIdentity", "{"]
+    for name, identity, field in v.identities():
+        out.append("")
+        out += member_doc(f"`{identity}`", field)
+        out.append(f'    const String {name} = "{identity}";')
     out += ["}", ""]
     return "\n".join(out)
 
@@ -354,7 +341,7 @@ def aidl_files(v: Vocabulary) -> dict[Path, str]:
             [(const(k["name"]), v.key_id(k),
               f"`{v.base}.{k['name']}` — {k['unit']}, {k['kind']}"
               f"{', writable' if k.get('access') == 'readwrite' else ''}. "
-              f"{k['description']}") for k in v.keys]),
+              f"{k['description']}", k) for k in v.keys]),
     }
     if v.events:
         files[root / "MetricEventKind.aidl"] = aidl_enum(
@@ -366,14 +353,15 @@ def aidl_files(v: Vocabulary) -> dict[Path, str]:
             "and ended between two reads is invisible to a reader however "
             "fast it polls.",
             [(const(e["name"]), v.event_id(e),
-              f"`{v.base}.{e['name']}` — {e['description']}")
+              f"`{v.base}.{e['name']}` — {e['description']}", e)
              for e in v.events])
     members = [(const(f"{e['name']}_{a['name']}"), v.attribute_id(e, a),
                 f"`{v.base}.{e['name']}.{a['name']}` — {a['unit']}. "
-                f"{a['description']}") for e, a in v.attributes()]
+                f"{a['description']}", a) for e, a in v.attributes()]
     members += [(const(f"{e['name']}_{x['name']}"), v.event_value_id(e, x),
                  f"`{v.base}.{e['name']}.{x['name']}` — {x['unit']}, "
-                 f"{x['kind']}. {x['description']}") for e, x in v.event_values()]
+                 f"{x['kind']}. {x['description']}", x)
+                for e, x in v.event_values()]
     if members:
         files[root / "MetricEventAttribute.aidl"] = aidl_enum(
             v, "MetricEventAttribute",
@@ -384,6 +372,7 @@ def aidl_files(v: Vocabulary) -> dict[Path, str]:
             "says which it is, and share one id space scoped by the element, "
             "in which 0 is MetricGroup.ATTRIBUTE_INSTANCE.",
             members)
+    files[root / "MetricIdentity.aidl"] = aidl_identity(v)
     return files
 
 
@@ -402,10 +391,9 @@ def header(v: Vocabulary) -> str:
         " * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or "
         "implied.", " * See the License for the specific language governing "
         "permissions and", " * limitations under the License.", " */", "",
-        f"/* Generated by kvcc from {v.module}.kvc — vocabulary {v.version}, "
-        f"schema {v.schema}.", " * Do not edit. Regenerate to change. */",
+        f"/* Generated by kvcc from {v.module}.kvc — schema {v.schema}.",
+        " * Do not edit. Regenerate to change. */",
         f"#ifndef {guard}", f"#define {guard}", "", "#include <stdint.h>", "",
-        f'#define KVC_{const(v.component)}_VOCABULARY "{v.version}"',
         f"#define KVC_{const(v.component)}_SCHEMA     {v.schema}", "",
         "/* Kind decides how a key may legitimately be read. */",
         "typedef enum {",
@@ -490,6 +478,13 @@ def cell(text: str) -> str:
     return flow(text).replace("|", "\\|")
 
 
+def definition(field: dict) -> str:
+    """A field's definition cell, led by its deprecation where it has one."""
+    note = f"**Deprecated.** {flow(field['deprecated'])} " \
+        if field.get("deprecated") else ""
+    return cell(note + field["description"])
+
+
 def values_table(members: list[dict]) -> list[str]:
     out = ["| Name | Value | Meaning |", "|---|---|---|"]
     out += [f"| `{m['name']}` | {m['value']} | {cell(m['description'])} |"
@@ -536,13 +531,13 @@ def markdown(v: Vocabulary) -> str:
            f"|**Instances**|{v.instances}|"]
     if v.cadence_ms:
         out.append(f"|**Capture cadence**|no slower than {v.cadence_ms} ms|")
-    out += [f"|**Vocabulary**|{v.version}, schema {v.schema}|", "",
+    out += [f"|**Schema**|{v.schema}|", "",
             "## Keys", "",
             "| Key | Unit | Kind | Access | Id | Definition |",
             "|---|---|---|---|---|---|"]
     out += [f"| `{k['name']}` | {k['unit']} | {k['kind']} | "
             f"{k.get('access', 'read')} | {v.key_id(k)} | "
-            f"{cell(k['description'])} |" for k in v.keys]
+            f"{definition(k)} |" for k in v.keys]
     out.append("")
     for k in v.keys:
         if k.get("values"):
@@ -558,7 +553,7 @@ def markdown(v: Vocabulary) -> str:
             out += ["| Attribute | Unit | Id | Definition |",
                     "|---|---|---|---|"]
             out += [f"| `{a['name']}` | {a['unit']} | "
-                    f"{v.attribute_id(e, a)} | {cell(a['description'])} |"
+                    f"{v.attribute_id(e, a)} | {definition(a)} |"
                     for a in attrs]
             out.append("")
         values = e.get("values") or []
@@ -566,7 +561,7 @@ def markdown(v: Vocabulary) -> str:
             out += ["| Value | Unit | Kind | Id | Definition |",
                     "|---|---|---|---|---|"]
             out += [f"| `{x['name']}` | {x['unit']} | {x['kind']} | "
-                    f"{v.event_value_id(e, x)} | {cell(x['description'])} |"
+                    f"{v.event_value_id(e, x)} | {definition(x)} |"
                     for x in values]
             out.append("")
         for a in attrs:
@@ -592,7 +587,6 @@ def main() -> int:
     for source in sources:
         module = source.parent.parent.name
         v = Vocabulary(module, source)
-        check_frozen(v)
         outputs = aidl_files(v)
         outputs[doc_path(v)] = markdown(v)
         # The header is generated, not committed, so a clean checkout has
@@ -612,7 +606,7 @@ def main() -> int:
             path.write_text(content)
             written += 1
         if not args.check:
-            print(f"  {module}: vocabulary {v.version}, "
+            print(f"  {module}: "
                   f"{len(v.keys)} keys, {len(v.events)} events, "
                   f"{len(list(v.every_id()))} identifiers")
 

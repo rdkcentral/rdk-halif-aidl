@@ -42,7 +42,6 @@ schema: 1
 domain: av
 component: clock
 package: avclock
-version: 1.0
 
 instances: 1
 

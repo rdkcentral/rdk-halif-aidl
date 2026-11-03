@@ -9,7 +9,7 @@ The figures `audiodecoder` serves through `getMetrics()` and raises through `onM
 |**Element**|`av.audio_decoder`|
 |**Element identifier**|`0x5b588bda5b3084a6`|
 |**Instances**|2|
-|**Vocabulary**|1.0, schema 1|
+|**Schema**|1|
 
 ## Keys
 

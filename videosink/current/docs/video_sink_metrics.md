@@ -9,7 +9,7 @@ The figures `videosink` serves through `getMetrics()` and raises through `onMetr
 |**Element**|`av.video_sink`|
 |**Element identifier**|`0x1f235f0369eac076`|
 |**Instances**|2|
-|**Vocabulary**|1.0, schema 1|
+|**Schema**|1|
 
 ## Keys
 

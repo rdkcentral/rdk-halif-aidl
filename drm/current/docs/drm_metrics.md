@@ -10,7 +10,7 @@ The figures `drm` serves through `getMetrics()`, generated from its Key Value Co
 |**Element identifier**|`0x3be5340700505073`|
 |**Instances**|2|
 |**Capture cadence**|no slower than 50 ms|
-|**Vocabulary**|1.0, schema 1|
+|**Schema**|1|
 
 ## Keys
 

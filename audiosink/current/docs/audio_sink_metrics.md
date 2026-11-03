@@ -9,7 +9,7 @@ The figures `audiosink` serves through `getMetrics()` and raises through `onMetr
 |**Element**|`av.audio_sink`|
 |**Element identifier**|`0x37836ba549d3c210`|
 |**Instances**|1|
-|**Vocabulary**|1.0, schema 1|
+|**Schema**|1|
 
 ## Keys
 

@@ -42,7 +42,6 @@ schema: 1
 domain: av
 component: audio_sink
 package: audiosink
-version: 1.0
 
 instances: 1
 

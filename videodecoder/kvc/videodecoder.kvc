@@ -23,8 +23,7 @@
 #
 # AFTER EDITING, RUN:  scripts/kvcc.py
 # It writes every identifier into the AIDL enums and the C key header, and
-# fails if two fields share an id, a retired id is reissued, a frozen id
-# changes, or a key has no description.
+# fails if two fields share an id or a key has no description.
 #
 # Its keys are generated into this module's AIDL sources, as members of
 # Metric and its sibling enums, so a new key is an additive interface
@@ -39,11 +38,11 @@
 #   * A key absent here is ABSENT at runtime — never served as 0, never as -1.
 #     "This SoC cannot measure it" and "it measured zero" must stay distinct.
 #   * Every key, event and event field carries an id, unique within this
-#     element. Never renumber one and never reuse one: a removed field's id
-#     goes to retired.
+#     element. Once frozen, a field is never removed, renumbered or changed.
 #   * unit and kind are part of a key's IDENTITY, not documentation. Changing
-#     either on a frozen id is refused: the field takes a new id, so the
-#     consumer sees NOT_SUPPORTED rather than a figure a thousand times wrong.
+#     either on a frozen field fails the AIDL compatibility check: deprecate
+#     it and add a field with a new id, so the consumer sees NOT_SUPPORTED
+#     rather than a figure a thousand times wrong.
 #   * A counter is monotonic from resource creation and is NEVER reset on
 #     open(), flush(), stop() or seek. Consumers difference it.
 #   * The instance is runtime, not contract. This file declares the element
@@ -56,7 +55,6 @@ schema: 1
 domain: av
 component: video_decoder
 package: videodecoder
-version: 1.0
 
 # How many of the element the hardware HAS. Every one is served, in use or
 # idle. Must agree with hfp-videodecoder.yaml — a CI-catchable cross-check.

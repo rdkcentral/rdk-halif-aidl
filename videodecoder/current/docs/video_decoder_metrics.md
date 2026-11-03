@@ -10,7 +10,7 @@ The figures `videodecoder` serves through `getMetrics()` and raises through `onM
 |**Element identifier**|`0x67b213285d295b2f`|
 |**Instances**|2|
 |**Capture cadence**|no slower than 20 ms|
-|**Vocabulary**|1.0, schema 1|
+|**Schema**|1|
 
 ## Keys
 

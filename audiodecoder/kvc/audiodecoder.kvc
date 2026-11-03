@@ -41,7 +41,6 @@ schema: 1
 domain: av
 component: audio_decoder
 package: audiodecoder
-version: 1.0
 
 instances: 2
 

@@ -42,7 +42,6 @@ schema: 1
 domain: av
 component: video_sink
 package: videosink
-version: 1.0
 
 instances: 2
 

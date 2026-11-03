@@ -47,7 +47,6 @@ schema: 1
 domain: av
 component: drm
 package: drm
-version: 1.0
 
 # One instance per concurrent media session.
 instances: 2

@@ -52,7 +52,7 @@ Identity has two levels: the element, and the field within it.
 
 The element is the only global identifier, so a group or event forwarded out of the HAL that produced it still says where it came from. A consumer that flattens values out of their group carries the pair (element, id).
 
-A field's name, unit and kind are its identity. Once an interface carrying an id is frozen, the id never changes any of them: a field served in a new unit or kind takes a new id, and the old id is retired and never reissued. A consumer built against the old field is then answered `NOT_SUPPORTED`, never handed a figure a thousand times wrong.
+A field's name, unit and kind are its identity. Once an interface carrying an id is frozen, the id never changes any of them: a field served in a new unit or kind is deprecated and replaced by a field with a new id. The AIDL compatibility check enforces it, through the component's generated `MetricIdentity` constants. A consumer built against the old field is then answered `NOT_SUPPORTED`, never handed a figure a thousand times wrong.
 
 Instance is runtime, not contract: a group carries `instance` in its attributes, id `MetricGroup.ATTRIBUTE_INSTANCE`, and no other identifier composes with it.
 
@@ -100,7 +100,7 @@ void onMetricEvent(in MetricEvent event);
 
 ## The Key Value Contract
 
-A component's keys are declared once, in `<component>/kvc/<component>.kvc`. It is the single source for everything that names them: `scripts/kvcc.py` takes every identifier from it, writes the component's AIDL enums and its metrics page, and fails where two fields share an id, an id reuses a retired one, a frozen id changes name, unit or kind, or a key carries no description. `scripts/kvcc.py --check` fails where committed output has drifted from its declaration.
+A component's keys are declared once, in `<component>/kvc/<component>.kvc`. It is the single source for everything that names them: `scripts/kvcc.py` takes every identifier from it, writes the component's AIDL enums and its metrics page, and fails where two fields share an id or a key carries no description. `scripts/kvcc.py --check` fails where committed output has drifted from its declaration.
 
 A new key is a new member of the component's generated `Metric` enum, which is an additive interface change. A caller built against a later vocabulary than a product serves is answered `NOT_SUPPORTED` for keys the product does not have.
 

@@ -10,7 +10,7 @@ The figures `avclock` serves through `getMetrics()`, generated from its Key Valu
 |**Element identifier**|`0x65246cafe4ce9d4a`|
 |**Instances**|1|
 |**Capture cadence**|no slower than 50 ms|
-|**Vocabulary**|1.0, schema 1|
+|**Schema**|1|
 
 ## Keys
 

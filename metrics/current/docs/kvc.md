@@ -29,19 +29,20 @@ One file per module, `<module>/kvc/<module>.kvc`. Each key states:
 | Field | Example | Purpose |
 |---|---|---|
 | `name` | `frames_decoded` | Composed with the domain and component into `av.video_decoder.frames_decoded` |
-| `id` | `3` | The key's identifier within its element; never reused |
+| `id` | `3` | The key's identifier within its element; never changed once frozen |
 | `unit` | `frames` | Part of the key's identity |
 | `kind` | `counter` | How it is read: `counter`, `current`, `high_water` or `config`; part of its identity |
 | `description` | "Compressed frames the decoder has decoded…" | The definition a vendor implements and a test asserts; mandatory |
 | `values` | `bitstream_error = 1`, … | The closed set of values a classification key carries |
+| `deprecated` | "Superseded by `underflow_duration_us`." | Optional; marks a field that has been replaced, and says by what |
 
 Events — occurrences pushed at the instant they happen — are declared the same way, with the attributes that describe each occurrence. [`videodecoder.kvc`](https://github.com/rdkcentral/rdk-halif-aidl/blob/develop/videodecoder/kvc/videodecoder.kvc) is a complete example: seven keys and one event.
 
 ## How it works
 
-1. **Identity is scoped by the element.** The element's identifier is the first 8 bytes of SHA-256 over `<domain>.<component>`, the only identifier that is global. Each key, event and event field carries the small `id` the contract declares, unique within the element. A removed field's id goes to `retired` and is never reissued; a field whose unit or kind changes after its interface is frozen takes a new id, so a consumer sees `NOT_SUPPORTED` rather than a figure a thousand times wrong.
-2. **The generator is the only author.** `kvcc.py` writes the AIDL enums, with each key's unit, kind and definition as its Doxygen comment, and the module's metrics page. Nobody edits either by hand.
-3. **One check covers every module.** `kvcc.py` fails where two fields share an id, a retired id is reissued, a frozen id changes name, unit or kind, or a key has no definition; `kvcc.py --check` fails where committed AIDL or documentation has drifted from its declaration.
+1. **Identity is scoped by the element.** The element's identifier is the first 8 bytes of SHA-256 over `<domain>.<component>`, the only identifier that is global. Each key, event and event field carries the small `id` the contract declares, unique within the element. A field whose unit or kind must change after its interface is frozen is deprecated and replaced by a field with a new id, so a consumer sees `NOT_SUPPORTED` rather than a figure a thousand times wrong.
+2. **The generator is the only author.** `kvcc.py` writes the AIDL enums, with each key's unit, kind and definition as its Doxygen comment, the `MetricIdentity` constants, and the module's metrics page. Nobody edits either by hand.
+3. **One check covers every module.** `kvcc.py` fails where two fields share an id, an id is out of range, a deprecation gives no reason, or a key has no definition; `kvcc.py --check` fails where committed AIDL or documentation has drifted from its declaration.
 4. **Absence is a status, not a number.** Every value carries `SUPPORTED`, `NOT_SUPPORTED` or `NOT_AVAILABLE`; a product never reports `0` or `-1` for a figure it cannot measure.
 
 A new key is one entry in the `.kvc`, a regeneration, and an additive member of the module's `Metric` enum.
@@ -50,16 +51,29 @@ A new key is one entry in the `.kvc`, a regeneration, and an additive member of 
 
 A KVC has no release of its own. It is the input to its module's AIDL generation, so it versions with that module's interface: a new key is an additive member in the next interface version, and freezing the interface freezes its keys.
 
-The frozen AIDL is the compatibility record. The AIDL compatibility check catches a renamed or renumbered member, but not a changed unit or kind, because those live in the member's Doxygen. `kvcc.py` reads the newest frozen interface's generated enums back and fails where an id now carries a different name, unit or kind.
+The frozen AIDL is the compatibility record, and the AIDL compatibility check — run on every PR and at every freeze — is the only check needed. A vocabulary therefore only grows: a frozen field is never removed, renumbered or redefined.
 
-A field that must change takes a new id. Its old id is listed under `retired`, in the space it came from, and is never reissued:
+| Change to a frozen field | Caught by |
+|---|---|
+| Removed or renamed | Removed enumerator in `Metric`, `MetricEventKind` or `MetricEventAttribute` |
+| Renumbered | Changed enumerator value |
+| Unit or kind changed | Changed constant value in `MetricIdentity`, which holds `"<path>\|<unit>\|<kind>"` for every key and event field |
+
+A field that must change keeps its id and is marked `deprecated`, and its replacement takes a new id:
 
 ```yaml
-retired:
-  keys: [2]
-  events: []
-  attributes: []
+  - name: underflow_duration_ms
+    id: 2
+    unit: ms
+    deprecated: Superseded by underflow_duration_us.
+    ...
+  - name: underflow_duration_us
+    id: 10
+    unit: us
+    ...
 ```
+
+`schema` is the version of the `.kvc` format itself. It increments only when a `.kvc` written for the previous schema would no longer read correctly; an optional new field needs no increment.
 
 ## Options considered
 
