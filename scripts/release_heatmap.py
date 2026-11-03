@@ -24,9 +24,8 @@ Run at any time. It reads the open issues, their labels and milestones, and
 the Priority and Interface Effect fields of project 41, and writes one markdown
 page:
 
-    Heatmap     components (component:* labels) x open milestones
-    Checks      a Major on a patch milestone, labels that disagree with the
-                Interface Effect, tickets with no milestone/priority/effect
+    Heatmap     components (component:* labels) x open milestones, each cell
+                listing the tickets considered for that release
     Milestones  each milestone's tickets, ranked by score
 
 Usage:
@@ -126,12 +125,6 @@ def fetch_milestones():
     return sorted(({"title": m["title"], "due": m["due_on"]} for m in ms), key=key)
 
 
-def is_patch(title):
-    """A patch milestone (x.y.z, z > 0) cannot carry a Major."""
-    m = re.match(r"^(\d+)\.(\d+)\.(\d+)", title)
-    return bool(m and int(m.group(3)) > 0)
-
-
 def project_fields(issue):
     for item in issue["projectItems"]["nodes"]:
         if item["project"]["number"] == PROJECT_NUMBER:
@@ -186,10 +179,14 @@ def heat(n):
 
 
 def cell(tickets):
+    """Heat, count, and every ticket in the cell; a Major is in bold."""
     if not tickets:
         return "·"
-    major = sum(1 for t in tickets if t["effect"] in BREAKING)
-    return "%s %d%s" % (heat(len(tickets)), len(tickets), " (%d major)" % major if major else "")
+    refs = []
+    for t in sorted(tickets, key=lambda t: (-t["score"], t["number"])):
+        ref = "[#%d](%s)" % (t["number"], t["url"])
+        refs.append("**%s**" % ref if t["effect"] in BREAKING else ref)
+    return "%s %d<br>%s" % (heat(len(tickets)), len(tickets), " ".join(refs))
 
 
 def esc(text):
@@ -213,8 +210,8 @@ def render(tickets, milestones, generated):
         "labels and milestones, and project %d. Do not edit by hand: re-run the "
         "script._" % (generated, PROJECT_NUMBER), "",
         "%d open issues. A ticket on several components counts once on each. "
-        "🟨 1–2 · 🟧 3–5 · 🟥 6 or more; _major_ is an Interface Effect of Major "
-        "or CR-Major." % len(tickets), "",
+        "🟨 1–2 · 🟧 3–5 · 🟥 6 or more. Each cell lists its tickets, highest score "
+        "first; a **bold** ticket is breaking (Major or CR-Major)." % len(tickets), "",
         "## Heatmap", "",
         "| Component | " + " | ".join(short[c] for c in cols) + " | Total |",
         "| --- |" + " --- |" * (len(cols) + 1),
@@ -225,31 +222,6 @@ def render(tickets, milestones, generated):
             cell([t for t in row if t["milestone"] == c]) for c in cols), len(row)))
     lines.append("| **Tickets** | %s | **%d** |" % (" | ".join(
         "**%d**" % sum(1 for t in tickets if t["milestone"] == c) for c in cols), len(tickets)))
-
-    # Checks
-    checks = []
-    for t in tickets:
-        if t["effect"] in BREAKING and is_patch(t["milestone"]):
-            checks.append((t, "%s on patch milestone %s: a patch release cannot break"
-                           % (t["effect"], short[t["milestone"]])))
-        if t["field"] and t["label_class"] and t["field"] != t["label_class"]:
-            checks.append((t, "labels say %s, Interface Effect says %s"
-                           % (t["label_class"], t["field"])))
-    gaps = {
-        "no milestone": [t for t in tickets if t["milestone"] == NO_MILESTONE],
-        "no priority": [t for t in tickets if not t["priority"]],
-        "no Interface Effect": [t for t in tickets if not t["effect"]],
-    }
-    lines += ["", "## Checks", ""]
-    if checks:
-        lines += ["| Ticket | Problem |", "| --- | --- |"]
-        lines += ["| %s | %s |" % (link(t), p) for t, p in checks]
-    else:
-        lines.append("No Major on a patch milestone, and every label agrees with its Interface Effect.")
-    lines += ["", "| Gap | Tickets |", "| --- | --- |"]
-    for name, ts in gaps.items():
-        nums = ", ".join("[#%d](%s)" % (t["number"], t["url"]) for t in sorted(ts, key=lambda t: t["number"]))
-        lines.append("| %s (%d) | %s |" % (name, len(ts), nums or "none"))
 
     # Milestones
     lines += ["", "## Milestones", "",

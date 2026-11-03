@@ -87,23 +87,15 @@ class Classify(unittest.TestCase):
         self.assertEqual(t["tier"], "Later")
 
 
-class Checks(unittest.TestCase):
+class Render(unittest.TestCase):
 
-    def test_patch_milestone(self):
-        self.assertTrue(rh.is_patch("0.24.1 - Infrastructure"))
-        self.assertTrue(rh.is_patch("0.23.1"))
-        self.assertFalse(rh.is_patch("0.24.0"))
-        self.assertFalse(rh.is_patch(rh.NO_MILESTONE))
-
-    def test_major_on_patch_is_flagged(self):
-        t = rh.classify(issue(labels=["Major Change"], milestone="0.24.1"), set(), "2026-11-03", None)
-        page = rh.render([t], [{"title": "0.24.1", "due": None}], "now")
-        self.assertIn("a patch release cannot break", page)
-
-    def test_label_field_disagreement_is_flagged(self):
-        t = rh.classify(issue(labels=["Major Change"], effect="Minor", milestone="0.24.0"), set(), "2026-11-03", None)
-        page = rh.render([t], [{"title": "0.24.0", "due": None}], "now")
-        self.assertIn("labels say Major, Interface Effect says Minor", page)
+    def test_cell_lists_tickets_major_in_bold(self):
+        major = rh.classify(issue(1, labels=["Major Change", "component:panel"], milestone="0.24.0"), set(), "2026-11-03", None)
+        minor = rh.classify(issue(2, labels=["Minor Change", "component:panel"], milestone="0.24.0"), set(), "2026-11-03", None)
+        page = rh.render([major, minor], [{"title": "0.24.0", "due": None}], "now")
+        self.assertIn("**[#1](u1)**", page)
+        self.assertIn(" [#2](u2)", page)
+        self.assertNotIn("## Checks", page)
 
     def test_heat(self):
         self.assertEqual([rh.heat(n) for n in (0, 1, 3, 6)], ["·", "🟨", "🟧", "🟥"])
