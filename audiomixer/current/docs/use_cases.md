@@ -292,7 +292,7 @@ sequenceDiagram
 | A setter whose `supports*` capability is `false` | `EX_UNSUPPORTED_OPERATION` |
 | `setAtmosLock(true)`, then port `close()` and `open()` | `getAtmosLock()` still returns `true` |
 
-`OutputPortCapabilities.supportedAQProcessors` names a default processor (the first entry) but no property or method selects another, so swapping processors (for example `DOLBY_MS12_2_6` to `DTS_ULTRA`) at runtime is not expressible, and `DTS_ULTRA` has no runtime command interface ([#448 Task: audiomixer - add DTS AQ Processor Settings](https://github.com/rdkcentral/rdk-halif-aidl/issues/448)). The AIDL does not say whether a profile change resets DAP settings, or whether an `IDolbyMs12_2_6_Dap` stays usable after its port controller is closed.
+`OutputPortCapabilities.supportedAQProcessors` names a default processor (the first entry) but no property or method selects another, so swapping processors (for example `DOLBY_MS12_2_6` to `DTS_ULTRA`) at runtime is not expressible, and `DTS_ULTRA` has no runtime command interface ([#448 Task: audiomixer - add DTS AQ Processor Settings](https://github.com/rdkcentral/rdk-halif-aidl/issues/448)). How processors are selected, and whether each keeps a typed interface like `IDolbyMs12_2_6_Dap` or all share one generic parameter model, is decided by [#840 Trade study: typed per-processor AQ interfaces vs a generic AQ parameter model](https://github.com/rdkcentral/rdk-halif-aidl/issues/840); this use case shows the typed MS12 interface the AIDL has today. The AIDL does not say whether a profile change resets DAP settings, or whether an `IDolbyMs12_2_6_Dap` stays usable after its port controller is closed.
 
 ## UC-AM-05 Multi-source mix
 
