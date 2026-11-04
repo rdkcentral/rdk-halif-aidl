@@ -65,6 +65,13 @@ class Classify(unittest.TestCase):
                          ["(infrastructure)"])
         self.assertEqual(rh.classify(issue(), set(), "2026-11-03", None)["components"], ["(no component)"])
 
+    def test_repo_wide_rows(self):
+        def comps(labels):
+            return rh.classify(issue(labels=labels), set(), "2026-11-03", None)["components"]
+        self.assertEqual(comps(["scope:overview", "documentation"]), ["(overview)"])
+        self.assertEqual(comps(["documentation"]), ["(documentation)"])
+        self.assertEqual(comps(["documentation", "component:panel"]), ["panel"])
+
     def test_labels_win_over_field(self):
         t = rh.classify(issue(labels=["Major Change"], effect="Minor"), set(), "2026-11-03", None)
         self.assertEqual(t["effect"], "Major")

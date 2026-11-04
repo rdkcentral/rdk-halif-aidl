@@ -24,7 +24,9 @@ Run at any time. It reads the open issues, their labels and milestones, and
 the Priority and Interface Effect fields of project 41, and writes one markdown
 page:
 
-    Heatmap     components (component:* labels) x open milestones, each cell
+    Heatmap     components (component:* labels; repo-wide work by its scope:
+                infrastructure, scope:overview or documentation label) x open
+                milestones, each cell
                 listing the tickets considered for that release
     Change class  the same tickets by Interface Effect (Major, New Interface,
                 Minor, Documentation, ...) x open milestones
@@ -68,6 +70,8 @@ PRIORITY_POINTS = {"P0": 5, "P1": 3, "P2": 1, "P3": 0}
 TIERS = [(7, "Do first"), (4, "Next"), (0, "Later")]
 NO_MILESTONE = "No milestone"
 UNCLASSIFIED = "(no change class)"
+REPO_WIDE = [("scope:infrastructure", "(infrastructure)"), ("scope:overview", "(overview)"),
+             ("documentation", "(documentation)")]
 
 
 def gh_json(args):
@@ -147,7 +151,8 @@ def classify(issue, maintainers, today, next_due):
     due = ms["dueOn"][:10] if ms and ms["dueOn"] else None
     comps = sorted(l[len("component:"):] for l in labels if l.startswith("component:"))
     if not comps:
-        comps = ["(infrastructure)"] if "scope:infrastructure" in labels else ["(no component)"]
+        # Repo-wide work has no component: its row comes from the scope or class label.
+        comps = next(([row] for lbl, row in REPO_WIDE if lbl in labels), ["(no component)"])
 
     score, why = 0, []
     if priority in PRIORITY_POINTS and PRIORITY_POINTS[priority]:
