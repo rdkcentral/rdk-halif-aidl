@@ -16,7 +16,7 @@ The mixer exposes no buffers and no timestamps. Data reaches it through a routed
 
 Multi-playback is expressed as several `IAudioMixer` instances, each opened by one client with a fixed secure mode, plus per-input routing and volume within an instance. The HAL defines no priority or pre-emption model, so contention is resolved by the middleware audio manager. Platform differences are declared in `hfp-audiomixer.yaml` and surfaced through `getCapabilities()`, never through divergent APIs.
 
-Interface additions that multi-playback needs are tracked in [#981 Feature: audiomixer API additions for multi-playback](https://github.com/rdkcentral/rdk-halif-aidl/issues/981).
+Interface additions that multi-playback needs are tracked in [#982 Task: audiomixer behaviour and additions for multi-playback](https://github.com/rdkcentral/rdk-halif-aidl/issues/982).
 
 ## Context
 
