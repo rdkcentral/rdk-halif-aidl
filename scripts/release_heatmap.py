@@ -225,10 +225,12 @@ def cell(tickets):
 def render(tickets, milestones, generated):
     used = {t["milestone"] for t in tickets}
     cols = [m["title"] for m in milestones if m["title"] in used]
-    # An open ticket can keep a closed milestone: give it a column rather than drop it.
-    cols += sorted(used - set(cols) - {NO_MILESTONE}, key=version_key)
-    cols += [NO_MILESTONE] if NO_MILESTONE in used else []
+    # An open ticket on a closed milestone is a fault: the work is done and the
+    # ticket was not closed, or the milestone was never moved. Show it, flagged.
+    closed = sorted(used - set(cols) - {NO_MILESTONE}, key=version_key)
+    cols += closed + ([NO_MILESTONE] if NO_MILESTONE in used else [])
     short = {c: (c if c == NO_MILESTONE else c.split(" ")[0]) for c in cols}
+    short.update({c: "⚠️ %s closed" % short[c] for c in closed})
     comps = sorted({c for t in tickets for c in t["components"]},
                    key=lambda c: (c.startswith("("), c))
     lines = [

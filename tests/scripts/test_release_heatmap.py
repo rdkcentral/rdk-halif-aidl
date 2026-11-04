@@ -130,10 +130,10 @@ class Render(unittest.TestCase):
         page = rh.render([t], [{"title": "0.24.0", "due": None}], "now")
         self.assertEqual([l for l in page.splitlines() if l.startswith("#")], ["# Release heatmap"])
 
-    def test_closed_milestone_gets_a_column(self):
+    def test_closed_milestone_is_flagged(self):
         t = rh.classify(issue(1, labels=["component:panel"], milestone="0.22.0"), set(), "2026-11-03", None)
         page = rh.render([t], [{"title": "0.24.0", "due": None}], "now")
-        self.assertIn("| Component | 0.22.0 | Total |", page)
+        self.assertIn("| Component | ⚠️ 0.22.0 closed | Total |", page)
 
     def test_heat(self):
         self.assertEqual([rh.heat(n) for n in (0, 1, 3, 6)], ["·", "🟨", "🟧", "🟥"])
