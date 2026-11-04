@@ -86,12 +86,10 @@ class Classify(unittest.TestCase):
                         {"Ulrond"}, "2026-11-03", None)
         # P0 5 + blocks 3 + raised by other 2 + breaking 2 + overdue 2 + people 1 + refs 1
         self.assertEqual(t["score"], 16)
-        self.assertEqual(t["tier"], "Do first")
 
     def test_next_due_scores_one(self):
         t = rh.classify(issue(milestone="0.25.0", due="2026-11-30T00:00:00Z"), set(), "2026-11-03", "2026-11-30")
         self.assertEqual(t["score"], 1)
-        self.assertEqual(t["tier"], "Later")
 
 
 class Render(unittest.TestCase):
@@ -106,23 +104,20 @@ class Render(unittest.TestCase):
         self.assertIn("[![#3 (no change class)](https://img.shields.io/badge/%233-%3F-d0d7de)](u3)", page)
         self.assertNotIn("## Checks", page)
 
+    def test_unknown_class_badge_shows_its_name(self):
+        t = rh.classify(issue(5, effect="Spike"), set(), "2026-11-03", None)
+        self.assertEqual(rh.badge(t), "[![#5 Spike](https://img.shields.io/badge/%235-Spike-57606a)](u5)")
+
     def test_shield_escapes_dashes_and_spaces(self):
         self.assertEqual(rh.shield("CR", "CR-Major", "8b0000"),
                          "https://img.shields.io/badge/CR-CR--Major-8b0000")
         self.assertEqual(rh.shield("NI", "New Interface", "8250df"),
                          "https://img.shields.io/badge/NI-New%20Interface-8250df")
 
-    def test_change_class_rows(self):
-        def t(n, labels):
-            return rh.classify(issue(n, labels=labels, milestone="0.24.0"), set(), "2026-11-03", None)
-        page = rh.render([t(1, ["Major Change"]), t(2, ["Minor Change"]), t(3, ["documentation"]),
-                          t(4, ["New Interface"]), t(5, [])],
-                         [{"title": "0.24.0", "due": None}], "now")
-        section = page.split("## Change class")[1].split("## Milestones")[0]
-        rows = [l.split(" | ")[0] for l in section.splitlines() if l.startswith("| ") and "---" not in l]
-        self.assertEqual(rows, ["| Change class", "| Major", "| New Interface", "| Minor",
-                                "| Documentation", "| (no change class)"])
-        self.assertIn("| New Interface | 🟨 1<br>[![#4 New Interface](https://img.shields.io/badge/%234-NI-8250df)](u4) | 1 |", section)
+    def test_page_is_only_the_heatmap(self):
+        t = rh.classify(issue(1, labels=["Minor Change"], milestone="0.24.0"), set(), "2026-11-03", None)
+        page = rh.render([t], [{"title": "0.24.0", "due": None}], "now")
+        self.assertEqual([l for l in page.splitlines() if l.startswith("#")], ["# Release heatmap"])
 
     def test_heat(self):
         self.assertEqual([rh.heat(n) for n in (0, 1, 3, 6)], ["·", "🟨", "🟧", "🟥"])

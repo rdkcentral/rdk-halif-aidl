@@ -22,15 +22,10 @@
 
 Run at any time. It reads the open issues, their labels and milestones, and
 the Priority and Interface Effect fields of project 41, and writes one markdown
-page:
-
-    Heatmap     components (component:* labels; repo-wide work by its scope:
-                infrastructure, scope:overview or documentation label) x open
-                milestones, each cell
-                listing the tickets considered for that release
-    Change class  the same tickets by Interface Effect (Major, New Interface,
-                Minor, Documentation, ...) x open milestones
-    Milestones  each milestone's tickets, ranked by score
+page, the heatmap: components (component:* labels; repo-wide work by its
+scope:infrastructure, scope:overview or documentation label) against the open
+milestones. Each cell lists its tickets, most urgent first, as badges coloured
+by change class.
 
 Usage:
     scripts/release_heatmap.py                 # print the page
@@ -68,13 +63,12 @@ _spec.loader.exec_module(pie)
 
 BREAKING = {"Major", "CR-Major"}
 PRIORITY_POINTS = {"P0": 5, "P1": 3, "P2": 1, "P3": 0}
-TIERS = [(7, "Do first"), (4, "Next"), (0, "Later")]
 NO_MILESTONE = "No milestone"
 UNCLASSIFIED = "(no change class)"
 # Change class -> badge letter and colour; the order is the legend's.
 BADGE = {"Major": ("M", "d73a4a"), "CR-Major": ("CR", "8b0000"), "New Interface": ("NI", "8250df"),
          "Minor": ("m", "0969da"), "BugFix": ("B", "1a7f37"), "Documentation": ("D", "6e7781"),
-         "Infrastructure": ("I", "bf8700"), UNCLASSIFIED: ("?", "d0d7de")}
+         "Infrastructure": ("I", "bf8700"), "Query": ("Q", "bf3989"), UNCLASSIFIED: ("?", "d0d7de")}
 REPO_WIDE = [("scope:infrastructure", "(infrastructure)"), ("scope:overview", "(overview)"),
              ("documentation", "(documentation)")]
 
@@ -183,7 +177,6 @@ def classify(issue, maintainers, today, next_due):
         "milestone": ms["title"] if ms else NO_MILESTONE, "components": comps,
         "effect": effect, "label_class": label_class, "field": fields.get("Interface Effect"),
         "priority": priority, "score": score, "why": why,
-        "tier": next(t for floor, t in TIERS if score >= floor),
     }
 
 
@@ -199,7 +192,8 @@ def shield(label, message, colour):
 
 def badge(t):
     """The ticket as a badge: its number and change-class letter, coloured by class."""
-    letter, colour = BADGE[t["effect"] or UNCLASSIFIED]
+    # A project option added after this table shows its full name, in grey.
+    letter, colour = BADGE.get(t["effect"] or UNCLASSIFIED, (t["effect"], "57606a"))
     return "[![#%d %s](%s)](%s)" % (t["number"], t["effect"] or UNCLASSIFIED,
                                    shield("#%d" % t["number"], letter, colour), t["url"])
 
@@ -217,14 +211,6 @@ def cell(tickets):
     return "%s %d<br>%s" % (heat(len(tickets)), len(tickets), " ".join(badge(t) for t in ranked))
 
 
-def esc(text):
-    return text.replace("|", "\\|")
-
-
-def link(t):
-    return "[#%d](%s) %s" % (t["number"], t["url"], esc(t["title"][:80]))
-
-
 def render(tickets, milestones, generated):
     used = {t["milestone"] for t in tickets}
     cols = [m["title"] for m in milestones if m["title"] in used]
@@ -238,9 +224,8 @@ def render(tickets, milestones, generated):
         "labels and milestones, and project %d. Do not edit by hand: re-run the "
         "script._" % (generated, PROJECT_NUMBER), "",
         "%d open issues. A ticket on several components counts once on each. "
-        "🟨 1–2 · 🟧 3–5 · 🟥 6 or more. Each cell lists its tickets, highest score "
+        "🟨 1–2 · 🟧 3–5 · 🟥 6 or more. Each cell lists its tickets, most urgent "
         "first, as a badge coloured by its change class:" % len(tickets), "", legend(), "",
-        "## Heatmap", "",
         "| Component | " + " | ".join(short[c] for c in cols) + " | Total |",
         "| --- |" + " --- |" * (len(cols) + 1),
     ]
@@ -251,38 +236,6 @@ def render(tickets, milestones, generated):
     lines.append("| **Tickets** | %s | **%d** |" % (" | ".join(
         "**%d**" % sum(1 for t in tickets if t["milestone"] == c) for c in cols), len(tickets)))
 
-    # Change class: what each release does to the interface.
-    lines += ["", "## Change class", "",
-              "Each open ticket once, by its Interface Effect (labels first, then the "
-              "project field). New Interface is a major version of a new module, not a "
-              "break of an existing one.", "",
-              "| Change class | " + " | ".join(short[c] for c in cols) + " | Total |",
-              "| --- |" + " --- |" * (len(cols) + 1)]
-    for cls in pie.OPTION_ORDER + [UNCLASSIFIED]:
-        row = [t for t in tickets if (t["effect"] or UNCLASSIFIED) == cls]
-        if row:
-            lines.append("| %s | %s | %d |" % (cls, " | ".join(
-                cell([t for t in row if t["milestone"] == c]) for c in cols), len(row)))
-
-    # Milestones
-    lines += ["", "## Milestones", "",
-              "Score: P0 5, P1 3, P2 1; blocks another ticket 3; breaking 2; overdue 2; "
-              "milestone due next 1; three or more people 1; six or more references 1"
-              "%s. Do first is 7 or more, Next 4 to 6." % (
-                  "; raised by someone other than a maintainer 2"
-                  if any("raised by" in w for t in tickets for w in t["why"]) else "")]
-    for c in cols:
-        ts = sorted((t for t in tickets if t["milestone"] == c), key=lambda t: (-t["score"], t["number"]))
-        if not ts:
-            continue
-        due = next((m["due"][:10] for m in milestones if m["title"] == c and m["due"]), None)
-        lines += ["", "### %s%s (%d)" % (c, ", due %s" % due if due else "", len(ts)), "",
-                  "| Ticket | Components | Effect | Priority | Score | Tier | Why |",
-                  "| --- | --- | --- | --- | --- | --- | --- |"]
-        for t in ts:
-            lines.append("| %s | %s | %s | %s | %d | %s | %s |" % (
-                link(t), ", ".join(t["components"]), t["effect"] or "—", t["priority"] or "—",
-                t["score"], t["tier"], ", ".join(t["why"]) or "—"))
     return "\n".join(lines) + "\n"
 
 
