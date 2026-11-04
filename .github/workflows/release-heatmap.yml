@@ -1,9 +1,9 @@
 name: "Release heatmap"
 
-# Regenerates the wiki's Release-Heatmap page when a ticket changes. A board
-# edit to Priority or Interface Effect sends no event to a repository workflow
-# (`projects_v2_item` is an organisation webhook), so a sweep five minutes
-# after each Interface Effect reconcile catches those.
+# Regenerates the wiki's Release-Heatmap page when a ticket, milestone or
+# release changes. A board edit to Priority or Interface Effect sends no event
+# to a repository workflow (`projects_v2_item` is an organisation webhook):
+# run this workflow by hand, or the script, to pick one up.
 
 # The job's own GITHUB_TOKEN reads the issues, PRs and the public halif_aidl
 # project's items, and pushes the wiki: no repository secret is needed (#986).
@@ -20,8 +20,6 @@ on:
     types: [created, opened, closed, edited, deleted]
   release:     # a new release resets "resolved since the last release"
     types: [published]
-  schedule:
-    - cron: "5-59/15 * * * *"
   workflow_dispatch:
 
 # A burst of label edits becomes one run: each new event replaces the one in flight.
