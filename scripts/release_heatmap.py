@@ -37,8 +37,8 @@ Usage:
 
 Needs `gh`, logged in with read access to the repo and the project; --publish
 also needs push access to the wiki, through the same login or WIKI_TOKEN, and
-refuses a private project. The release-heatmap workflow runs it on ticket
-changes and every 15 minutes.
+refuses a private project. It runs under a maintainer's own login: the repository
+cannot hold the PROJECTS_TOKEN a workflow would need to read the project (#970).
 """
 
 import argparse
@@ -359,8 +359,7 @@ def render(tickets, milestones, generated, project_title="halif_aidl", resolved=
         "# Release heatmap", "",
         "_Generated %s by [`scripts/release_heatmap.py`](https://github.com/%s/blob/develop/"
         "scripts/release_heatmap.py) from the open issues and the [%s](https://github.com/orgs/%s/"
-        "projects/%d) project. It updates itself when a ticket changes and every 15 minutes; "
-        "do not edit it by hand._" % (generated, REPO, project_title, OWNER, PROJECT_NUMBER), "",
+        "projects/%d) project. Do not edit it by hand: re-run the script._" % (generated, REPO, project_title, OWNER, PROJECT_NUMBER), "",
         "%d open issues. A ticket on several components counts once on each. "
         "Each cell lists its tickets, most urgent "
         "first, as a badge coloured by its change class; each PR that closes a ticket is "
