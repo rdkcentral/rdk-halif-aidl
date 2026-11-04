@@ -51,6 +51,7 @@ import re
 import subprocess
 import sys
 import tempfile
+import urllib.parse
 
 REPO = os.environ.get("GITHUB_REPOSITORY", "rdkcentral/rdk-halif-aidl")
 OWNER, NAME = REPO.split("/")
@@ -70,6 +71,10 @@ PRIORITY_POINTS = {"P0": 5, "P1": 3, "P2": 1, "P3": 0}
 TIERS = [(7, "Do first"), (4, "Next"), (0, "Later")]
 NO_MILESTONE = "No milestone"
 UNCLASSIFIED = "(no change class)"
+# Change class -> badge letter and colour; the order is the legend's.
+BADGE = {"Major": ("M", "d73a4a"), "CR-Major": ("CR", "8b0000"), "New Interface": ("NI", "8250df"),
+         "Minor": ("m", "0969da"), "BugFix": ("B", "1a7f37"), "Documentation": ("D", "6e7781"),
+         "Infrastructure": ("I", "bf8700"), UNCLASSIFIED: ("?", "d0d7de")}
 REPO_WIDE = [("scope:infrastructure", "(infrastructure)"), ("scope:overview", "(overview)"),
              ("documentation", "(documentation)")]
 
@@ -186,15 +191,30 @@ def heat(n):
     return "·" if n == 0 else "🟨" if n <= 2 else "🟧" if n <= 5 else "🟥"
 
 
+def shield(label, message, colour):
+    # shields.io static badge: "-" and "_" are doubled, everything else URL-encoded.
+    q = lambda s: urllib.parse.quote(s.replace("-", "--").replace("_", "__"), safe="")
+    return "https://img.shields.io/badge/%s-%s-%s" % (q(label), q(message), colour)
+
+
+def badge(t):
+    """The ticket as a badge: its number and change-class letter, coloured by class."""
+    letter, colour = BADGE[t["effect"] or UNCLASSIFIED]
+    return "[![#%d %s](%s)](%s)" % (t["number"], t["effect"] or UNCLASSIFIED,
+                                   shield("#%d" % t["number"], letter, colour), t["url"])
+
+
+def legend():
+    return " ".join("![%s](%s)" % (cls, shield(letter, cls, colour))
+                    for cls, (letter, colour) in BADGE.items())
+
+
 def cell(tickets):
-    """Heat, count, and every ticket in the cell; a Major is in bold."""
+    """Heat, count, and every ticket in the cell as a class badge, highest score first."""
     if not tickets:
         return "·"
-    refs = []
-    for t in sorted(tickets, key=lambda t: (-t["score"], t["number"])):
-        ref = "[#%d](%s)" % (t["number"], t["url"])
-        refs.append("**%s**" % ref if t["effect"] in BREAKING else ref)
-    return "%s %d<br>%s" % (heat(len(tickets)), len(tickets), " ".join(refs))
+    ranked = sorted(tickets, key=lambda t: (-t["score"], t["number"]))
+    return "%s %d<br>%s" % (heat(len(tickets)), len(tickets), " ".join(badge(t) for t in ranked))
 
 
 def esc(text):
@@ -219,7 +239,7 @@ def render(tickets, milestones, generated):
         "script._" % (generated, PROJECT_NUMBER), "",
         "%d open issues. A ticket on several components counts once on each. "
         "🟨 1–2 · 🟧 3–5 · 🟥 6 or more. Each cell lists its tickets, highest score "
-        "first; a **bold** ticket is breaking (Major or CR-Major)." % len(tickets), "",
+        "first, as a badge coloured by its change class:" % len(tickets), "", legend(), "",
         "## Heatmap", "",
         "| Component | " + " | ".join(short[c] for c in cols) + " | Total |",
         "| --- |" + " --- |" * (len(cols) + 1),

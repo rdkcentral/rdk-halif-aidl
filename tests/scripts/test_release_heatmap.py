@@ -96,13 +96,21 @@ class Classify(unittest.TestCase):
 
 class Render(unittest.TestCase):
 
-    def test_cell_lists_tickets_major_in_bold(self):
+    def test_cell_badges_each_ticket_by_class(self):
         major = rh.classify(issue(1, labels=["Major Change", "component:panel"], milestone="0.24.0"), set(), "2026-11-03", None)
         minor = rh.classify(issue(2, labels=["Minor Change", "component:panel"], milestone="0.24.0"), set(), "2026-11-03", None)
-        page = rh.render([major, minor], [{"title": "0.24.0", "due": None}], "now")
-        self.assertIn("**[#1](u1)**", page)
-        self.assertIn(" [#2](u2)", page)
+        none = rh.classify(issue(3, labels=["component:panel"], milestone="0.24.0"), set(), "2026-11-03", None)
+        page = rh.render([major, minor, none], [{"title": "0.24.0", "due": None}], "now")
+        self.assertIn("[![#1 Major](https://img.shields.io/badge/%231-M-d73a4a)](u1)", page)
+        self.assertIn("[![#2 Minor](https://img.shields.io/badge/%232-m-0969da)](u2)", page)
+        self.assertIn("[![#3 (no change class)](https://img.shields.io/badge/%233-%3F-d0d7de)](u3)", page)
         self.assertNotIn("## Checks", page)
+
+    def test_shield_escapes_dashes_and_spaces(self):
+        self.assertEqual(rh.shield("CR", "CR-Major", "8b0000"),
+                         "https://img.shields.io/badge/CR-CR--Major-8b0000")
+        self.assertEqual(rh.shield("NI", "New Interface", "8250df"),
+                         "https://img.shields.io/badge/NI-New%20Interface-8250df")
 
     def test_change_class_rows(self):
         def t(n, labels):
@@ -114,7 +122,7 @@ class Render(unittest.TestCase):
         rows = [l.split(" | ")[0] for l in section.splitlines() if l.startswith("| ") and "---" not in l]
         self.assertEqual(rows, ["| Change class", "| Major", "| New Interface", "| Minor",
                                 "| Documentation", "| (no change class)"])
-        self.assertIn("| New Interface | 🟨 1<br>[#4](u4) | 1 |", section)
+        self.assertIn("| New Interface | 🟨 1<br>[![#4 New Interface](https://img.shields.io/badge/%234-NI-8250df)](u4) | 1 |", section)
 
     def test_heat(self):
         self.assertEqual([rh.heat(n) for n in (0, 1, 3, 6)], ["·", "🟨", "🟧", "🟥"])
