@@ -25,7 +25,9 @@ the Priority and Interface Effect fields of project 41, and writes one markdown
 page, the heatmap: components (component:* labels; repo-wide work by its
 scope:infrastructure, scope:overview or documentation label) against the open
 milestones. Each cell lists its tickets, most urgent first, as badges coloured
-by change class.
+by change class, each followed by a badge for every PR that closes it. Below it,
+the tickets resolved since the last release, with the PRs that took them into
+develop.
 
 Usage:
     scripts/release_heatmap.py                 # print the page
@@ -87,13 +89,11 @@ def graphql(query, **variables):
     return gh_json(args)["data"]
 
 
-ISSUES = """
-query($owner:String!,$name:String!,$cursor:String){
-  repository(owner:$owner,name:$name){
-    issues(first:50,after:$cursor,states:[OPEN]){
-      pageInfo{ hasNextPage endCursor }
-      nodes{
-        number title url
+ISSUE_FIELDS = """
+        number title url closedAt stateReason
+        closedByPullRequestsReferences(first:5,includeClosedPrs:true){ nodes{
+          number url state isDraft reviewDecision baseRefName
+        } }
         author{ login }
         milestone{ title dueOn }
         labels(first:50){ nodes{ name } }
@@ -106,21 +106,55 @@ query($owner:String!,$name:String!,$cursor:String){
             ... on ProjectV2ItemFieldSingleSelectValue{ name field{ ... on ProjectV2SingleSelectField{ name } } }
           } }
         } }
-      }
+"""
+
+ISSUES = """
+query($owner:String!,$name:String!,$cursor:String){
+  repository(owner:$owner,name:$name){
+    issues(first:50,after:$cursor,states:[OPEN]){
+      pageInfo{ hasNextPage endCursor }
+      nodes{ %s }
     }
   }
 }
-"""
+""" % ISSUE_FIELDS
+
+# Closed issues touched since a date; the caller keeps those closed after it.
+CLOSED = """
+query($owner:String!,$name:String!,$cursor:String,$since:DateTime){
+  repository(owner:$owner,name:$name){
+    issues(first:50,after:$cursor,states:[CLOSED],filterBy:{since:$since}){
+      pageInfo{ hasNextPage endCursor }
+      nodes{ %s }
+    }
+  }
+}
+""" % ISSUE_FIELDS
 
 
-def fetch_issues():
+def fetch_issues(query=ISSUES, **extra):
     out, cursor = [], None
     while True:
-        page = graphql(ISSUES, owner=OWNER, name=NAME, cursor=cursor)["repository"]["issues"]
+        page = graphql(query, owner=OWNER, name=NAME, cursor=cursor, **extra)["repository"]["issues"]
         out += page["nodes"]
         if not page["pageInfo"]["hasNextPage"]:
             return out
         cursor = page["pageInfo"]["endCursor"]
+
+
+def fetch_last_release():
+    """The latest published release, or None before the first one."""
+    r = subprocess.run(["gh", "api", "repos/%s/releases/latest" % REPO], capture_output=True, text=True)
+    if r.returncode:
+        return None
+    rel = json.loads(r.stdout)
+    return {"tag": rel["tag_name"], "url": rel["html_url"], "at": rel["published_at"]}
+
+
+def fetch_resolved(since):
+    """Issues closed as completed after `since`."""
+    return [i for i in fetch_issues(CLOSED, since=since)
+            if i["closedAt"] > since and i["stateReason"] == "COMPLETED"]
 
 
 def version_key(title):
@@ -189,12 +223,35 @@ def classify(issue, maintainers, today, next_due):
         "number": issue["number"], "title": issue["title"], "url": issue["url"],
         "milestone": ms["title"] if ms else NO_MILESTONE, "components": comps,
         "effect": effect, "label_class": label_class, "field": fields.get("Interface Effect"),
-        "priority": priority, "score": score, "why": why,
+        "priority": priority, "score": score, "why": why, "prs": pr_states(issue),
     }
 
 
-def heat(n):
-    return "·" if n == 0 else "🟨" if n <= 2 else "🟧" if n <= 5 else "🟥"
+# PR state -> badge text and colour; the order is the legend's.
+PR_STATE = {"draft": ("draft", "6e7781"), "open": ("open", "bf8700"), "changes": ("changes", "bc4c00"),
+            "approved": ("approved", "1a7f37"), "merged": ("merged", "8250df"), "closed": ("closed", "cf222e")}
+
+
+def pr_states(issue):
+    """The PRs that close the ticket (Closes #n, or linked under Development), newest first.
+
+    A PR that only mentions the ticket is not one of them. A closed, unmerged PR
+    shows only when it is the ticket's only PR.
+    """
+    out = []
+    for p in (issue.get("closedByPullRequestsReferences") or {}).get("nodes") or []:
+        if p["state"] == "MERGED":
+            k = "merged"
+        elif p["state"] == "CLOSED":
+            k = "closed"
+        elif p.get("isDraft"):
+            k = "draft"
+        else:
+            k = {"APPROVED": "approved", "CHANGES_REQUESTED": "changes"}.get(p.get("reviewDecision"), "open")
+        out.append({"number": p["number"], "url": p["url"], "state": k, "base": p.get("baseRefName")})
+    out.sort(key=lambda p: -p["number"])
+    live = [p for p in out if p["state"] != "closed"]
+    return live or out[:1]
 
 
 def shield(label, message, colour):
@@ -211,20 +268,53 @@ def badge(t):
                                    shield("#%d" % t["number"], letter, colour), t["url"])
 
 
+def pr_badge(p):
+    text, colour = PR_STATE[p["state"]]
+    # The arrow is inside the badge, so it cannot wrap away from it; short, to fit a narrow column.
+    return "[![PR %d %s](%s)](%s)" % (p["number"], text, shield("↳%d" % p["number"], text, colour), p["url"])
+
+
+def ticket(t):
+    """The ticket's class badge, then each PR that closes it on the line below, marked ↳."""
+    return under(badge(t), [pr_badge(p) for p in t["prs"]])
+
+
+def under(ticket_badge, pr_badges):
+    # On the line below, not beside: a narrow column would otherwise wrap a PR away from its ticket.
+    return "<br>".join([ticket_badge] + pr_badges)
+
+
 def legend():
     return " ".join("![%s](%s)" % (cls, shield(letter, cls, colour))
                     for cls, (letter, colour) in BADGE.items())
 
 
+def pr_legend():
+    return " ".join("![PR %s](%s)" % (text, shield("↳PR", text, colour)) for text, colour in PR_STATE.values())
+
+
 def cell(tickets):
-    """Heat, count, and every ticket in the cell as a class badge, highest score first."""
+    """Every ticket in the cell as a class badge, most urgent first."""
     if not tickets:
         return "·"
     ranked = sorted(tickets, key=lambda t: (-t["score"], t["number"]))
-    return "%s %d<br>%s" % (heat(len(tickets)), len(tickets), " ".join(badge(t) for t in ranked))
+    return flow([ticket(t) for t in ranked], [bool(t["prs"]) for t in ranked])
 
 
-def render(tickets, milestones, generated, project_title="halif_aidl"):
+def flow(items, alone):
+    """Badges side by side; one marked alone gets a line of its own, so its PR never wraps away from it."""
+    lines, run = [], []
+    for item, own in zip(items, alone):
+        if own:
+            lines += [" ".join(run)] if run else []
+            lines.append(item)
+            run = []
+        else:
+            run.append(item)
+    return "<br>".join(lines + ([" ".join(run)] if run else []))
+
+
+def render(tickets, milestones, generated, project_title="halif_aidl", resolved=(), release=None):
     used = {t["milestone"] for t in tickets}
     cols = [m["title"] for m in milestones if m["title"] in used]
     # An open ticket on a closed milestone is a fault: the work is done and the
@@ -242,8 +332,10 @@ def render(tickets, milestones, generated, project_title="halif_aidl"):
         "projects/%d) project. It updates itself when a ticket changes and every 15 minutes; "
         "do not edit it by hand._" % (generated, REPO, project_title, OWNER, PROJECT_NUMBER), "",
         "%d open issues. A ticket on several components counts once on each. "
-        "🟨 1–2 · 🟧 3–5 · 🟥 6 or more. Each cell lists its tickets, most urgent "
-        "first, as a badge coloured by its change class:" % len(tickets), "", legend(), "",
+        "Each cell lists its tickets, most urgent "
+        "first, as a badge coloured by its change class; each PR that closes a ticket is "
+        "on the line below it, marked ↳:" % len(tickets), "", legend(), "", "PR: " + pr_legend() + " (open: "
+        "review needed; closed: closed unmerged)", "",
         "| Component | " + " | ".join(short[c] for c in cols) + " | Total |",
         "| --- |" + " --- |" * (len(cols) + 1),
     ]
@@ -254,7 +346,28 @@ def render(tickets, milestones, generated, project_title="halif_aidl"):
     lines.append("| **Tickets** | %s | **%d** |" % (" | ".join(
         "**%d**" % sum(1 for t in tickets if t["milestone"] == c) for c in cols), len(tickets)))
 
+    if release:
+        lines += render_resolved(resolved, release)
     return "\n".join(lines) + "\n"
+
+
+def render_resolved(tickets, release):
+    """What has landed since the last release: completed tickets, and the PRs that took them into develop."""
+    lines = ["", "## Resolved since %s" % release["tag"], "",
+             "Tickets closed as completed since the [%s release](%s) on %s, with the PRs that "
+             "took them into develop." % (release["tag"], release["url"], release["at"][:10]), ""]
+    if not tickets:
+        return lines + ["Nothing yet."]
+    comps = sorted({c for t in tickets for c in t["components"]}, key=lambda c: (c.startswith("("), c))
+    lines += ["| Component | Resolved | Total |", "| --- | --- | --- |"]
+    for comp in comps:
+        row = sorted((t for t in tickets if comp in t["components"]), key=lambda t: t["number"])
+        merged = [[p for p in t["prs"] if p["state"] == "merged" and p["base"] == "develop"] for t in row]
+        lines.append("| %s | %s | %d |" % (comp, flow(
+            [under(badge(t), [pr_badge(p) for p in m]) for t, m in zip(row, merged)],
+            [bool(m) for m in merged]), len(row)))
+    lines.append("| **Tickets** | | **%d** |" % len(tickets))
+    return lines
 
 
 def wiki_git():
@@ -299,9 +412,12 @@ def main(argv):
     upcoming = sorted(m["due"][:10] for m in milestones if m["due"] and m["due"][:10] >= today)
     next_due = upcoming[0] if upcoming else None
     tickets = [classify(i, set(a.maintainer), today, next_due) for i in fetch_issues()]
+    release = fetch_last_release()
+    resolved = ([classify(i, set(a.maintainer), today, next_due) for i in fetch_resolved(release["at"])]
+                if release else [])
     project = fetch_project()
     page = render(tickets, milestones, now.strftime("%Y-%m-%d %H:%M UTC"),
-                  project["title"] or "project %d" % PROJECT_NUMBER)
+                  project["title"] or "project %d" % PROJECT_NUMBER, resolved, release)
 
     if a.output:
         with open(a.output, "w") as fh:

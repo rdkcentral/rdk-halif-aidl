@@ -35,7 +35,7 @@ spec.loader.exec_module(rh)
 
 
 def issue(number=1, labels=(), milestone=None, due=None, author="someone", priority=None,
-          effect=None, blocking=0, people=1, refs=0, owner=rh.OWNER):
+          effect=None, blocking=0, people=1, refs=0, owner=rh.OWNER, prs=()):
     values = []
     if priority:
         values.append({"name": priority, "field": {"name": "Priority"}})
@@ -49,6 +49,9 @@ def issue(number=1, labels=(), milestone=None, due=None, author="someone", prior
         "participants": {"totalCount": people},
         "timelineItems": {"totalCount": refs},
         "issueDependenciesSummary": {"blocking": blocking},
+        "closedByPullRequestsReferences": {"nodes": [dict(
+            {"url": "p%d" % p["number"], "isDraft": False, "reviewDecision": None, "baseRefName": "develop"}, **p)
+            for p in prs]},
         "projectItems": {"nodes": [{"project": {"number": rh.PROJECT_NUMBER, "owner": {"login": owner}},
                                     "fieldValues": {"nodes": values}}]},
     }
@@ -139,8 +142,42 @@ class Render(unittest.TestCase):
         a = rh.parse_args(["--maintainer", "alice", "bob", "--maintainer", "carol"])
         self.assertEqual(a.maintainer, ["alice", "bob", "carol"])
 
-    def test_heat(self):
-        self.assertEqual([rh.heat(n) for n in (0, 1, 3, 6)], ["·", "🟨", "🟧", "🟥"])
+    def test_pr_states(self):
+        def states(prs):
+            return [(p["number"], p["state"]) for p in rh.pr_states(issue(prs=prs))]
+        self.assertEqual(states([{"number": 5, "state": "OPEN", "isDraft": True},
+                                 {"number": 7, "state": "OPEN", "reviewDecision": "APPROVED"},
+                                 {"number": 6, "state": "MERGED"},
+                                 {"number": 4, "state": "CLOSED"}]),
+                         [(7, "approved"), (6, "merged"), (5, "draft")])
+        self.assertEqual(states([{"number": 4, "state": "CLOSED"}]), [(4, "closed")])
+        self.assertEqual(states([{"number": 8, "state": "OPEN", "reviewDecision": "CHANGES_REQUESTED"}]),
+                         [(8, "changes")])
+
+    def test_cell_has_the_pr_under_the_ticket(self):
+        t = rh.classify(issue(1, labels=["Minor Change", "component:panel"], milestone="0.24.0",
+                              prs=[{"number": 9, "state": "OPEN"}]), set(), "2026-11-03", None)
+        page = rh.render([t], [{"title": "0.24.0", "due": None}], "now")
+        self.assertIn("(u1)<br>[![PR 9 open](https://img.shields.io/badge/%E2%86%B39-open-bf8700)](p9)", page)
+
+    def test_resolved_shows_only_prs_merged_into_develop(self):
+        t = rh.classify(issue(2, labels=["bug", "component:panel"], milestone="0.24.0",
+                              prs=[{"number": 11, "state": "MERGED"},
+                                   {"number": 12, "state": "MERGED", "baseRefName": "main"}]),
+                        set(), "2026-11-03", None)
+        release = {"tag": "0.23.0", "url": "r", "at": "2026-10-26T23:10:03Z"}
+        section = rh.render([], [], "now", resolved=[t], release=release).split("## Resolved since 0.23.0")[1]
+        self.assertIn("%E2%86%B311-merged", section)
+        self.assertNotIn("%E2%86%B312", section)
+        self.assertIn("| **Tickets** | | **1** |", section)
+
+    def test_resolved_section_needs_a_release(self):
+        self.assertNotIn("## Resolved", rh.render([], [], "now"))
+        release = {"tag": "0.23.0", "url": "r", "at": "2026-10-26T23:10:03Z"}
+        self.assertIn("Nothing yet.", rh.render([], [], "now", resolved=[], release=release))
+
+    def test_ticket_with_a_pr_gets_its_own_line(self):
+        self.assertEqual(rh.flow(["a", "b", "c", "d"], [False, True, False, False]), "a<br>b<br>c d")
 
 
 if __name__ == "__main__":
