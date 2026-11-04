@@ -12,6 +12,10 @@ on:
   issues:
     types: [opened, edited, deleted, transferred, closed, reopened,
             labeled, unlabeled, milestoned, demilestoned]
+  milestone:   # a new or closed milestone adds or drops a column
+    types: [created, opened, closed, edited, deleted]
+  release:     # a new release resets "resolved since the last release"
+    types: [published]
   schedule:
     - cron: "5-59/15 * * * *"
   workflow_dispatch:
