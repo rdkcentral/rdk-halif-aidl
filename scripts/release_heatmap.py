@@ -37,8 +37,9 @@ Usage:
 
 Needs `gh`, logged in with read access to the repo and the project; --publish
 also needs push access to the wiki, through the same login or WIKI_TOKEN, and
-refuses a private project. The release-heatmap workflow runs it on ticket
-changes and every 15 minutes.
+refuses a private project. The release-heatmap workflow runs it with the job's
+own GITHUB_TOKEN, which can read the public project's items and push the wiki,
+so no repository secret is needed (#986).
 """
 
 import argparse
@@ -103,13 +104,23 @@ ISSUE_FIELDS = """
         participants{ totalCount }
         timelineItems(itemTypes:[CROSS_REFERENCED_EVENT]){ totalCount }
         issueDependenciesSummary{ blocking }
-        projectItems(first:10){ nodes{
-          project{ number owner{ ... on Organization{ login } ... on User{ login } } }
-          fieldValues(first:30){ nodes{
-            ... on ProjectV2ItemFieldSingleSelectValue{ name field{ ... on ProjectV2SingleSelectField{ name } } }
-          } }
-        } }
 """ % PR_FIELDS
+
+# The project's fields, read from the project's own item list: a workflow's
+# GITHUB_TOKEN can read a public project's items, but not an issue's projectItems.
+PROJECT_ITEMS = """
+query($owner:String!,$number:Int!,$cursor:String){
+  organization(login:$owner){ projectV2(number:$number){ items(first:100,after:$cursor){
+    pageInfo{ hasNextPage endCursor }
+    nodes{
+      content{ ... on Issue{ number repository{ nameWithOwner } } }
+      fieldValues(first:30){ nodes{
+        ... on ProjectV2ItemFieldSingleSelectValue{ name field{ ... on ProjectV2SingleSelectField{ name } } }
+      } }
+    }
+  } } }
+}
+"""
 
 # The rest of one issue's closing PRs, for the rare ticket with more than a page.
 MORE_PRS = """
@@ -204,14 +215,32 @@ def fetch_milestones():
     return sorted(({"title": m["title"], "due": m["due_on"]} for m in ms), key=lambda m: version_key(m["title"]))
 
 
+def fetch_project_fields():
+    """{issue number: {field: value}} for this repo's issues on the project."""
+    nodes, cursor = [], None
+    while True:
+        args = ["api", "graphql", "-f", "query=" + PROJECT_ITEMS, "-f", "owner=" + OWNER,
+                "-F", "number=%d" % PROJECT_NUMBER] + (["-f", "cursor=" + cursor] if cursor else [])
+        page = gh_json(args)["data"]["organization"]["projectV2"]["items"]
+        nodes += page["nodes"]
+        if not page["pageInfo"]["hasNextPage"]:
+            return item_fields(nodes)
+        cursor = page["pageInfo"]["endCursor"]
+
+
+def item_fields(nodes):
+    out = {}
+    for item in nodes:
+        content = item.get("content") or {}
+        # The project spans repositories: only this repo's issues are ours.
+        if content.get("number") and (content.get("repository") or {}).get("nameWithOwner") == REPO:
+            out[content["number"]] = {v["field"]["name"]: v["name"]
+                                      for v in item["fieldValues"]["nodes"] if v and v.get("field")}
+    return out
+
+
 def project_fields(issue):
-    for item in issue["projectItems"]["nodes"]:
-        project = item["project"]
-        # Project numbers are per owner: another owner's project 41 is not ours.
-        if project["number"] == PROJECT_NUMBER and (project.get("owner") or {}).get("login") == OWNER:
-            return {v["field"]["name"]: v["name"]
-                    for v in item["fieldValues"]["nodes"] if v and v.get("field")}
-    return {}
+    return issue.get("projectFields") or {}
 
 
 def classify(issue, maintainers, today, next_due):
@@ -441,9 +470,11 @@ def main(argv):
     milestones = fetch_milestones()
     upcoming = sorted(m["due"][:10] for m in milestones if m["due"] and m["due"][:10] >= today)
     next_due = upcoming[0] if upcoming else None
-    tickets = [classify(i, set(a.maintainer), today, next_due) for i in fetch_issues()]
+    fields = fetch_project_fields()
+    with_fields = lambda issues: [dict(i, projectFields=fields.get(i["number"], {})) for i in issues]
+    tickets = [classify(i, set(a.maintainer), today, next_due) for i in with_fields(fetch_issues())]
     release = fetch_last_release()
-    resolved = ([classify(i, set(a.maintainer), today, next_due) for i in fetch_resolved(release["at"])]
+    resolved = ([classify(i, set(a.maintainer), today, next_due) for i in with_fields(fetch_resolved(release["at"]))]
                 if release else [])
     project = fetch_project()
     page = render(tickets, milestones, now.strftime("%Y-%m-%d %H:%M UTC"),
