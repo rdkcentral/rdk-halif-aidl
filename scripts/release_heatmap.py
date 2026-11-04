@@ -136,7 +136,8 @@ def project_is_public():
 
 def fetch_milestones():
     """Open milestones, in version order, with their due dates."""
-    ms = gh_json(["api", "repos/%s/milestones?state=open&per_page=100" % REPO])
+    pages = gh_json(["api", "--paginate", "--slurp", "repos/%s/milestones?state=open&per_page=100" % REPO])
+    ms = [m for page in pages for m in page]
     return sorted(({"title": m["title"], "due": m["due_on"]} for m in ms), key=lambda m: version_key(m["title"]))
 
 
@@ -279,12 +280,16 @@ def publish(page):
         print("wiki: https://github.com/%s/wiki/%s" % (REPO, WIKI_PAGE))
 
 
-def main(argv):
+def parse_args(argv):
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("-o", "--output")
     ap.add_argument("--publish", action="store_true")
-    ap.add_argument("--maintainer", action="append", default=[])
-    a = ap.parse_args(argv)
+    ap.add_argument("--maintainer", action="extend", nargs="+", default=[], metavar="LOGIN")
+    return ap.parse_args(argv)
+
+
+def main(argv):
+    a = parse_args(argv)
 
     now = datetime.datetime.now(datetime.timezone.utc)
     today = now.strftime("%Y-%m-%d")

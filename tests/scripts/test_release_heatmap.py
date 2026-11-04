@@ -135,6 +135,10 @@ class Render(unittest.TestCase):
         page = rh.render([t], [{"title": "0.24.0", "due": None}], "now")
         self.assertIn("| Component | ⚠️ 0.22.0 closed | Total |", page)
 
+    def test_maintainer_takes_several_logins(self):
+        a = rh.parse_args(["--maintainer", "alice", "bob", "--maintainer", "carol"])
+        self.assertEqual(a.maintainer, ["alice", "bob", "carol"])
+
     def test_heat(self):
         self.assertEqual([rh.heat(n) for n in (0, 1, 3, 6)], ["·", "🟨", "🟧", "🟥"])
 

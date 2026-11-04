@@ -6,7 +6,7 @@ name: "Release heatmap"
 # after each Interface Effect reconcile catches those.
 
 permissions:
-  contents: write   # the wiki is pushed with GITHUB_TOKEN
+  contents: write   # the wiki push, when no WIKI_TOKEN secret is set
 
 on:
   issues:
@@ -34,7 +34,8 @@ jobs:
       - name: "Publish"
         env:
           GH_TOKEN: ${{ secrets.PROJECTS_TOKEN }}
-          WIKI_TOKEN: ${{ github.token }}
+          # A WIKI_TOKEN secret (wiki write) wins; otherwise the job's own token.
+          WIKI_TOKEN: ${{ secrets.WIKI_TOKEN || github.token }}
           GITHUB_REPOSITORY: ${{ github.repository }}
           GIT_AUTHOR_NAME: github-actions[bot]
           GIT_AUTHOR_EMAIL: 41898282+github-actions[bot]@users.noreply.github.com
