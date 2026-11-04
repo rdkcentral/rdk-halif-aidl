@@ -35,7 +35,7 @@ spec.loader.exec_module(rh)
 
 
 def issue(number=1, labels=(), milestone=None, due=None, author="someone", priority=None,
-          effect=None, blocking=0, people=1, refs=0):
+          effect=None, blocking=0, people=1, refs=0, owner=rh.OWNER):
     values = []
     if priority:
         values.append({"name": priority, "field": {"name": "Priority"}})
@@ -49,7 +49,7 @@ def issue(number=1, labels=(), milestone=None, due=None, author="someone", prior
         "participants": {"totalCount": people},
         "timelineItems": {"totalCount": refs},
         "issueDependenciesSummary": {"blocking": blocking},
-        "projectItems": {"nodes": [{"project": {"number": rh.PROJECT_NUMBER},
+        "projectItems": {"nodes": [{"project": {"number": rh.PROJECT_NUMBER, "owner": {"login": owner}},
                                     "fieldValues": {"nodes": values}}]},
     }
 
@@ -79,6 +79,17 @@ class Classify(unittest.TestCase):
     def test_field_fills_in_without_label(self):
         t = rh.classify(issue(effect="Minor"), set(), "2026-11-03", None)
         self.assertEqual(t["effect"], "Minor")
+
+    def test_other_owners_project_is_ignored(self):
+        t = rh.classify(issue(effect="Minor", owner="someone-else"), set(), "2026-11-03", None)
+        self.assertIsNone(t["effect"])
+
+    def test_query_is_the_weakest_class(self):
+        def effect(labels):
+            return rh.classify(issue(labels=labels), set(), "2026-11-03", None)["effect"]
+        self.assertEqual(effect(["Query"]), "Query")
+        self.assertEqual(effect(["Query", "Minor Change"]), "Minor")
+        self.assertEqual(effect(["Query", "scope:infrastructure"]), "Infrastructure")
 
     def test_score(self):
         t = rh.classify(issue(labels=["Major Change"], milestone="0.24.0", due="2026-10-30T00:00:00Z",
@@ -118,6 +129,11 @@ class Render(unittest.TestCase):
         t = rh.classify(issue(1, labels=["Minor Change"], milestone="0.24.0"), set(), "2026-11-03", None)
         page = rh.render([t], [{"title": "0.24.0", "due": None}], "now")
         self.assertEqual([l for l in page.splitlines() if l.startswith("#")], ["# Release heatmap"])
+
+    def test_closed_milestone_gets_a_column(self):
+        t = rh.classify(issue(1, labels=["component:panel"], milestone="0.22.0"), set(), "2026-11-03", None)
+        page = rh.render([t], [{"title": "0.24.0", "due": None}], "now")
+        self.assertIn("| Component | 0.22.0 | Total |", page)
 
     def test_heat(self):
         self.assertEqual([rh.heat(n) for n in (0, 1, 3, 6)], ["·", "🟨", "🟧", "🟥"])

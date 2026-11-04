@@ -34,7 +34,9 @@ Usage:
     [--maintainer LOGIN ...]                   # raised by anyone else scores 2
 
 Needs `gh`, logged in with read access to the repo and the project; --publish
-also needs push access to the wiki. No workflow or secret is involved (#976).
+also needs push access to the wiki, through the same login or WIKI_TOKEN, and
+refuses a private project. The release-heatmap workflow runs it on ticket
+changes and every 15 minutes.
 """
 
 import argparse
@@ -99,7 +101,7 @@ query($owner:String!,$name:String!,$cursor:String){
         timelineItems(itemTypes:[CROSS_REFERENCED_EVENT]){ totalCount }
         issueDependenciesSummary{ blocking }
         projectItems(first:10){ nodes{
-          project{ number }
+          project{ number owner{ ... on Organization{ login } ... on User{ login } } }
           fieldValues(first:30){ nodes{
             ... on ProjectV2ItemFieldSingleSelectValue{ name field{ ... on ProjectV2SingleSelectField{ name } } }
           } }
@@ -121,19 +123,28 @@ def fetch_issues():
         cursor = page["pageInfo"]["endCursor"]
 
 
+def version_key(title):
+    nums = re.findall(r"\d+", title.split(" ")[0])
+    return [int(n) for n in nums] or [10 ** 6]
+
+
+def project_is_public():
+    q = "query($o:String!,$n:Int!){ organization(login:$o){ projectV2(number:$n){ public } } }"
+    data = gh_json(["api", "graphql", "-f", "query=" + q, "-f", "o=" + OWNER, "-F", "n=%d" % PROJECT_NUMBER])
+    return bool(((data["data"].get("organization") or {}).get("projectV2") or {}).get("public"))
+
+
 def fetch_milestones():
     """Open milestones, in version order, with their due dates."""
     ms = gh_json(["api", "repos/%s/milestones?state=open&per_page=100" % REPO])
-
-    def key(m):
-        nums = re.findall(r"\d+", m["title"].split(" ")[0])
-        return [int(n) for n in nums] or [10 ** 6]
-    return sorted(({"title": m["title"], "due": m["due_on"]} for m in ms), key=key)
+    return sorted(({"title": m["title"], "due": m["due_on"]} for m in ms), key=lambda m: version_key(m["title"]))
 
 
 def project_fields(issue):
     for item in issue["projectItems"]["nodes"]:
-        if item["project"]["number"] == PROJECT_NUMBER:
+        project = item["project"]
+        # Project numbers are per owner: another owner's project 41 is not ours.
+        if project["number"] == PROJECT_NUMBER and (project.get("owner") or {}).get("login") == OWNER:
             return {v["field"]["name"]: v["name"]
                     for v in item["fieldValues"]["nodes"] if v and v.get("field")}
     return {}
@@ -214,6 +225,8 @@ def cell(tickets):
 def render(tickets, milestones, generated):
     used = {t["milestone"] for t in tickets}
     cols = [m["title"] for m in milestones if m["title"] in used]
+    # An open ticket can keep a closed milestone: give it a column rather than drop it.
+    cols += sorted(used - set(cols) - {NO_MILESTONE}, key=version_key)
     cols += [NO_MILESTONE] if NO_MILESTONE in used else []
     short = {c: (c if c == NO_MILESTONE else c.split(" ")[0]) for c in cols}
     comps = sorted({c for t in tickets for c in t["components"]},
@@ -239,11 +252,19 @@ def render(tickets, milestones, generated):
     return "\n".join(lines) + "\n"
 
 
+def wiki_git():
+    """git with one credential helper: WIKI_TOKEN when set (CI), else the caller's gh login."""
+    helper = ("!f(){ echo username=x-access-token; echo password=$WIKI_TOKEN; }; f"
+              if os.environ.get("WIKI_TOKEN") else "!gh auth git-credential")
+    return ["git", "-c", "credential.helper=", "-c", "credential.helper=" + helper]
+
+
 def publish(page):
     """Commit the page to the wiki repo; a no-op when nothing changed."""
+    git = wiki_git()
     with tempfile.TemporaryDirectory() as tmp:
         wiki = os.path.join(tmp, "wiki")
-        subprocess.run(["git", "clone", "-q", "--depth", "1",
+        subprocess.run(git + ["clone", "-q", "--depth", "1",
                         "https://github.com/%s.wiki.git" % REPO, wiki], check=True)
         with open(os.path.join(wiki, WIKI_PAGE + ".md"), "w") as fh:
             fh.write(page)
@@ -252,7 +273,7 @@ def publish(page):
             print("wiki: %s unchanged" % WIKI_PAGE)
             return
         subprocess.run(["git", "-C", wiki, "commit", "-q", "-m", "Update release heatmap"], check=True)
-        subprocess.run(["git", "-C", wiki, "push", "-q"], check=True)
+        subprocess.run(git + ["-C", wiki, "push", "-q"], check=True)
         print("wiki: https://github.com/%s/wiki/%s" % (REPO, WIKI_PAGE))
 
 
@@ -275,6 +296,8 @@ def main(argv):
         with open(a.output, "w") as fh:
             fh.write(page)
     if a.publish:
+        if not project_is_public():
+            sys.exit("project %d is not public: its fields cannot go on the public wiki" % PROJECT_NUMBER)
         publish(page)
     if not a.output and not a.publish:
         sys.stdout.write(page)
