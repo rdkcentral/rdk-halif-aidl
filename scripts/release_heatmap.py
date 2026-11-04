@@ -128,10 +128,11 @@ def version_key(title):
     return [int(n) for n in nums] or [10 ** 6]
 
 
-def project_is_public():
-    q = "query($o:String!,$n:Int!){ organization(login:$o){ projectV2(number:$n){ public } } }"
+def fetch_project():
+    """The project's title and whether it is public."""
+    q = "query($o:String!,$n:Int!){ organization(login:$o){ projectV2(number:$n){ title public } } }"
     data = gh_json(["api", "graphql", "-f", "query=" + q, "-f", "o=" + OWNER, "-F", "n=%d" % PROJECT_NUMBER])
-    return bool(((data["data"].get("organization") or {}).get("projectV2") or {}).get("public"))
+    return ((data["data"].get("organization") or {}).get("projectV2")) or {"title": None, "public": False}
 
 
 def fetch_milestones():
@@ -223,7 +224,7 @@ def cell(tickets):
     return "%s %d<br>%s" % (heat(len(tickets)), len(tickets), " ".join(badge(t) for t in ranked))
 
 
-def render(tickets, milestones, generated):
+def render(tickets, milestones, generated, project_title="halif_aidl"):
     used = {t["milestone"] for t in tickets}
     cols = [m["title"] for m in milestones if m["title"] in used]
     # An open ticket on a closed milestone is a fault: the work is done and the
@@ -236,9 +237,10 @@ def render(tickets, milestones, generated):
                    key=lambda c: (c.startswith("("), c))
     lines = [
         "# Release heatmap", "",
-        "_Generated %s by `scripts/release_heatmap.py` from the open issues, their "
-        "labels and milestones, and project %d. Do not edit by hand: re-run the "
-        "script._" % (generated, PROJECT_NUMBER), "",
+        "_Generated %s by [`scripts/release_heatmap.py`](https://github.com/%s/blob/develop/"
+        "scripts/release_heatmap.py) from the open issues and the [%s](https://github.com/orgs/%s/"
+        "projects/%d) project. It updates itself when a ticket changes and every 15 minutes; "
+        "do not edit it by hand._" % (generated, REPO, project_title, OWNER, PROJECT_NUMBER), "",
         "%d open issues. A ticket on several components counts once on each. "
         "🟨 1–2 · 🟧 3–5 · 🟥 6 or more. Each cell lists its tickets, most urgent "
         "first, as a badge coloured by its change class:" % len(tickets), "", legend(), "",
@@ -297,13 +299,15 @@ def main(argv):
     upcoming = sorted(m["due"][:10] for m in milestones if m["due"] and m["due"][:10] >= today)
     next_due = upcoming[0] if upcoming else None
     tickets = [classify(i, set(a.maintainer), today, next_due) for i in fetch_issues()]
-    page = render(tickets, milestones, now.strftime("%Y-%m-%d %H:%M UTC"))
+    project = fetch_project()
+    page = render(tickets, milestones, now.strftime("%Y-%m-%d %H:%M UTC"),
+                  project["title"] or "project %d" % PROJECT_NUMBER)
 
     if a.output:
         with open(a.output, "w") as fh:
             fh.write(page)
     if a.publish:
-        if not project_is_public():
+        if not project["public"]:
             sys.exit("project %d is not public: its fields cannot go on the public wiki" % PROJECT_NUMBER)
         publish(page)
     if not a.output and not a.publish:
