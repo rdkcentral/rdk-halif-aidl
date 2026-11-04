@@ -35,7 +35,7 @@ spec.loader.exec_module(rh)
 
 
 def issue(number=1, labels=(), milestone=None, due=None, author="someone", priority=None,
-          effect=None, blocking=0, people=1, refs=0, owner=rh.OWNER, prs=()):
+          effect=None, blocking=0, people=1, refs=0, prs=()):
     values = []
     if priority:
         values.append({"name": priority, "field": {"name": "Priority"}})
@@ -52,8 +52,7 @@ def issue(number=1, labels=(), milestone=None, due=None, author="someone", prior
         "closedByPullRequestsReferences": {"pageInfo": {"hasNextPage": False}, "nodes": [dict(
             {"url": "p%d" % p["number"], "isDraft": False, "reviewDecision": None, "baseRefName": "develop"}, **p)
             for p in prs]},
-        "projectItems": {"nodes": [{"project": {"number": rh.PROJECT_NUMBER, "owner": {"login": owner}},
-                                    "fieldValues": {"nodes": values}}]},
+        "projectFields": {v["field"]["name"]: v["name"] for v in values},
     }
 
 
@@ -83,9 +82,13 @@ class Classify(unittest.TestCase):
         t = rh.classify(issue(effect="Minor"), set(), "2026-11-03", None)
         self.assertEqual(t["effect"], "Minor")
 
-    def test_other_owners_project_is_ignored(self):
-        t = rh.classify(issue(effect="Minor", owner="someone-else"), set(), "2026-11-03", None)
-        self.assertIsNone(t["effect"])
+    def test_project_fields_only_for_this_repo(self):
+        def node(n, repo, prio):
+            return {"content": {"number": n, "repository": {"nameWithOwner": repo}},
+                    "fieldValues": {"nodes": [{}, {"name": prio, "field": {"name": "Priority"}}]}}
+        got = rh.item_fields([node(1, rh.REPO, "P1 - High"), node(1, "rdkcentral/other", "P0 - Critical"),
+                              {"content": {}, "fieldValues": {"nodes": []}}])
+        self.assertEqual(got, {1: {"Priority": "P1 - High"}})
 
     def test_query_is_the_weakest_class(self):
         def effect(labels):
