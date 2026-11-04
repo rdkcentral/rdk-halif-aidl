@@ -95,6 +95,8 @@ MAPPING = [
     # is also a Minor Change still has a minor effect on the interface, and a
     # major change must never hide behind an infrastructure tag.
     ("Infrastructure", "GREEN", ["scope:infrastructure"]),
+    # A tracking ticket with no work of its own: weaker than every real class.
+    ("Query", "PINK", ["Query"]),
 ]
 
 # Display order of the options on the board.
@@ -106,6 +108,7 @@ OPTION_ORDER = [
     "BugFix",
     "Documentation",
     "Infrastructure",
+    "Query",
 ]
 
 # Precedence, strongest first - MAPPING order is the precedence order.
@@ -117,7 +120,9 @@ PRECEDENCE = [option for option, _colour, _labels in MAPPING]
 # class on the board would throw away triage information this sync does not own.
 # The cost is that an infrastructure-only ticket cannot be cleared from the
 # board - the label is still there, so the next sweep derives the value again.
-KEEP_ALWAYS = {"scope:infrastructure"}
+# `Query` is kept for the same reason: further information is wanted, whatever
+# the ticket's class turns out to be.
+KEEP_ALWAYS = {"scope:infrastructure", "Query"}
 
 # What a board selection writes back. CR-Major and New Interface carry
 # `Major Change` with them: the version bump is label-driven and `release.sh`
@@ -137,6 +142,7 @@ WRITEBACK_LABELS = {
     "BugFix": ["bug"],
     "Documentation": ["documentation"],
     "Infrastructure": ["scope:infrastructure"],
+    "Query": ["Query"],
 }
 
 # Every label the mapping owns: applying one means removing the others.
