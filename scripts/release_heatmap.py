@@ -89,11 +89,14 @@ def graphql(query, **variables):
     return gh_json(args)["data"]
 
 
+PR_FIELDS = """
+          pageInfo{ hasNextPage endCursor }
+          nodes{ number url state isDraft reviewDecision baseRefName repository{ isPrivate } }
+"""
+
 ISSUE_FIELDS = """
         number title url closedAt stateReason
-        closedByPullRequestsReferences(first:5,includeClosedPrs:true){ nodes{
-          number url state isDraft reviewDecision baseRefName
-        } }
+        closedByPullRequestsReferences(first:20,includeClosedPrs:true){ %s }
         author{ login }
         milestone{ title dueOn }
         labels(first:50){ nodes{ name } }
@@ -106,7 +109,16 @@ ISSUE_FIELDS = """
             ... on ProjectV2ItemFieldSingleSelectValue{ name field{ ... on ProjectV2SingleSelectField{ name } } }
           } }
         } }
-"""
+""" % PR_FIELDS
+
+# The rest of one issue's closing PRs, for the rare ticket with more than a page.
+MORE_PRS = """
+query($owner:String!,$name:String!,$number:Int!,$cursor:String){
+  repository(owner:$owner,name:$name){ issue(number:$number){
+    closedByPullRequestsReferences(first:50,after:$cursor,includeClosedPrs:true){ %s }
+  } }
+}
+""" % PR_FIELDS
 
 ISSUES = """
 query($owner:String!,$name:String!,$cursor:String){
@@ -136,17 +148,33 @@ def fetch_issues(query=ISSUES, **extra):
     out, cursor = [], None
     while True:
         page = graphql(query, owner=OWNER, name=NAME, cursor=cursor, **extra)["repository"]["issues"]
+        for issue in page["nodes"]:
+            complete_prs(issue)
         out += page["nodes"]
         if not page["pageInfo"]["hasNextPage"]:
             return out
         cursor = page["pageInfo"]["endCursor"]
 
 
+def complete_prs(issue):
+    prs = issue["closedByPullRequestsReferences"]
+    while prs["pageInfo"]["hasNextPage"]:
+        more = gh_json(["api", "graphql", "-f", "query=" + MORE_PRS, "-f", "owner=" + OWNER, "-f", "name=" + NAME,
+                        "-F", "number=%d" % issue["number"], "-f", "cursor=" + prs["pageInfo"]["endCursor"]])
+        page = more["data"]["repository"]["issue"]["closedByPullRequestsReferences"]
+        prs["nodes"] += page["nodes"]
+        prs["pageInfo"] = page["pageInfo"]
+
+
 def fetch_last_release():
     """The latest published release, or None before the first one."""
     r = subprocess.run(["gh", "api", "repos/%s/releases/latest" % REPO], capture_output=True, text=True)
     if r.returncode:
-        return None
+        # Only "no release yet" is an answer; any other failure stops the run, so a
+        # page without its resolved table is never published.
+        if "HTTP 404" in r.stderr:
+            return None
+        raise RuntimeError("releases/latest: " + r.stderr.strip())
     rel = json.loads(r.stdout)
     return {"tag": rel["tag_name"], "url": rel["html_url"], "at": rel["published_at"]}
 
@@ -240,6 +268,8 @@ def pr_states(issue):
     """
     out = []
     for p in (issue.get("closedByPullRequestsReferences") or {}).get("nodes") or []:
+        if (p.get("repository") or {}).get("isPrivate"):
+            continue   # a private repository's PR never goes on the public wiki
         if p["state"] == "MERGED":
             k = "merged"
         elif p["state"] == "CLOSED":

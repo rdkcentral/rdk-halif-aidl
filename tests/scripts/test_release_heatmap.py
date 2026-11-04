@@ -49,7 +49,7 @@ def issue(number=1, labels=(), milestone=None, due=None, author="someone", prior
         "participants": {"totalCount": people},
         "timelineItems": {"totalCount": refs},
         "issueDependenciesSummary": {"blocking": blocking},
-        "closedByPullRequestsReferences": {"nodes": [dict(
+        "closedByPullRequestsReferences": {"pageInfo": {"hasNextPage": False}, "nodes": [dict(
             {"url": "p%d" % p["number"], "isDraft": False, "reviewDecision": None, "baseRefName": "develop"}, **p)
             for p in prs]},
         "projectItems": {"nodes": [{"project": {"number": rh.PROJECT_NUMBER, "owner": {"login": owner}},
@@ -153,6 +153,23 @@ class Render(unittest.TestCase):
         self.assertEqual(states([{"number": 4, "state": "CLOSED"}]), [(4, "closed")])
         self.assertEqual(states([{"number": 8, "state": "OPEN", "reviewDecision": "CHANGES_REQUESTED"}]),
                          [(8, "changes")])
+
+    def test_private_prs_are_left_out(self):
+        prs = rh.pr_states(issue(prs=[{"number": 3, "state": "OPEN", "repository": {"isPrivate": True}},
+                                      {"number": 4, "state": "OPEN", "repository": {"isPrivate": False}}]))
+        self.assertEqual([p["number"] for p in prs], [4])
+
+    def test_release_lookup_fails_loudly(self):
+        import subprocess
+        real = subprocess.run
+        try:
+            subprocess.run = lambda *a, **k: subprocess.CompletedProcess(a, 1, "", "gh: Not Found (HTTP 404)")
+            self.assertIsNone(rh.fetch_last_release())
+            subprocess.run = lambda *a, **k: subprocess.CompletedProcess(a, 1, "", "gh: HTTP 502")
+            with self.assertRaises(RuntimeError):
+                rh.fetch_last_release()
+        finally:
+            subprocess.run = real
 
     def test_cell_has_the_pr_under_the_ticket(self):
         t = rh.classify(issue(1, labels=["Minor Change", "component:panel"], milestone="0.24.0",
