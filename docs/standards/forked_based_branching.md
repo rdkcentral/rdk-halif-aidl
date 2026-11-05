@@ -25,23 +25,27 @@ Forking creates a personal copy of the main repository under your GitHub account
    git clone https://github.com/<your-username>/<repository-name>.git
    ```
 
-5. **Create a Branch:** (Highly recommended) Create a topic branch for your changes:
+5. **Create a Branch:** Branch from `develop`, named `feature/<issue>-<synopsis>` after the GitHub issue the change belongs to:
 
    ```bash
-   git checkout -b feature/my-new-feature
+   git checkout -b feature/123-add-logging-enhancements develop
    ```
 
 6. **Make Your Changes:** Modify files to add features, fix bugs, or update documentation.
-7. **Commit Your Changes:** Write meaningful and descriptive commit messages:
+7. **Commit Your Changes:** Write commit messages that follow the [50/72 rule](../whitepapers/standardizing_git_commit_messages.md):
 
-   ```bash
-   git commit -m "Add feature: <short description>"
+   ```text
+   Fix #123: Update error handling in authentication module
+
+   Detect token expiry before the request is sent and log each failed
+   attempt with its reason, so that the frequent login failures reported
+   by users can be diagnosed from the logs.
    ```
 
 8. **Push to Your Fork:**
 
    ```bash
-   git push origin feature/my-new-feature
+   git push -u origin feature/123-add-logging-enhancements
    ```
 
 9. **Open a Pull Request:** Go to the original repository and submit a pull request from your fork. Include a clear explanation of your changes and their purpose.
