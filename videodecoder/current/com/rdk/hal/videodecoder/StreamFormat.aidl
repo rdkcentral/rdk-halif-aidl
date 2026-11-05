@@ -41,8 +41,12 @@ enum StreamFormat {
      * Each NAL unit is preceded by its length, big-endian, in
      * `lengthSizeMinusOne + 1` bytes as given by the avcC/hvcC record
      * supplied as codec-specific data. GStreamer `stream-format=avc`,
-     * `hvc1` or `hev1`.
+     * `avc3`, `hvc1` or `hev1`.
      * ISO/IEC 14496-15.
+     *
+     * The record carries the initial parameter sets. With `avc3`/`hev1`
+     * sample entries, parameter sets may also arrive in-band as NAL units;
+     * the decoder applies them as well.
      */
     LENGTH_PREFIXED = 1
 }

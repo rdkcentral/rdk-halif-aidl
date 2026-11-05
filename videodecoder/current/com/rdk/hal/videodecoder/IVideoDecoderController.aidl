@@ -98,7 +98,10 @@ interface IVideoDecoderController {
      * The Video Decoder must be in a `STARTED` state.
      * Buffers can be either non-secure or secure to support SVP (Secure Video Path).
      * Each call shall reference a single video frame with a presentation timestamp
-     * carried in `metadata.nsPresentationTime`.
+     * carried in `metadata.nsPresentationTime`. Exception: for H.264/H.265 input
+     * configured with `Alignment.NAL` (`VideoDecoderStreamConfig.bitstreamFormat`,
+     * since 0.3.1.0), each call references one complete NAL unit, and every NAL unit
+     * of an access unit carries that access unit's presentation timestamp.
      *
      * Buffer Ownership: Ownership of the buffer transfers to the Video Decoder HAL
      * only when this call accepts the buffer (returns true). Once accepted, the HAL
@@ -106,7 +109,8 @@ interface IVideoDecoderController {
      * modify or access the buffer after a successful call. If the call returns false
      * or throws an exception, ownership remains with the caller.
      *
-     * `bufferHandle` MUST reference a valid encoded frame. This method only
+     * `bufferHandle` MUST reference a valid encoded frame (with `Alignment.NAL`, a
+     * valid NAL unit, which may be a non-picture NAL unit). This method only
      * submits data - it carries no end-of-stream signal. A client that has
      * submitted its final buffer ends the decode session out-of-band via
      * `signalEndOfStream()`, which drains the decoder.
@@ -116,8 +120,9 @@ interface IVideoDecoderController {
      * both tunnel and non-tunnel modes - the decoder input path is not
      * tunnelled.
      *
-     * Each call is self-describing; the HAL MUST NOT carry any field of
-     * `InputBufferMetadata` across calls.
+     * `metadata.nsPresentationTime` describes this call only; the HAL MUST NOT
+     * carry it across calls. The override fields and `codecSpecificData` apply
+     * from this buffer onward and persist as defined in `InputBufferMetadata`.
      *
      * A PTS discontinuity is signalled by calling `signalDiscontinuity()`
      * before the first buffer that follows the discontinuity.
@@ -246,8 +251,10 @@ interface IVideoDecoderController {
      * required, this function must be called before video frame buffers are passed to
      * `decodeBufferWithMetadata()`.
      *
-     * The new codec-specific data applies from the next buffer submitted to
-     * `decodeBufferWithMetadata()` after this call returns. To bind a record to a
+     * Since 0.3.1.0, the new codec-specific data applies from the next buffer
+     * submitted to `decodeBufferWithMetadata()` after this call returns; on an older
+     * server, a call made after buffers are queued takes effect at a vendor-specific
+     * point. To bind a record to a
      * specific buffer instead, a client talking to a 0.3.1.0 or later server attaches
      * it to that buffer's `InputBufferMetadata.codecSpecificData`.
      *

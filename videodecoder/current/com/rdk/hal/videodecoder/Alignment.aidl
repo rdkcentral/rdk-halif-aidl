@@ -36,7 +36,12 @@ enum Alignment {
     AU = 0,
 
     /**
-     * One buffer holds exactly one complete NAL unit.
+     * One buffer holds exactly one complete NAL unit, which may be a
+     * non-picture NAL unit (SPS, PPS, VPS, SEI, access unit delimiter) or
+     * one slice of a multi-slice picture. The decoder finds access-unit
+     * boundaries from the bitstream. Every NAL unit of one access unit
+     * carries that access unit's `InputBufferMetadata.nsPresentationTime`,
+     * and metadata on any of its buffers applies from that access unit.
      * GStreamer `alignment=nal`.
      */
     NAL = 1
