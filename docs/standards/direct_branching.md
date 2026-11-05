@@ -59,7 +59,7 @@ Follow coding standards and document your changes thoroughly.
 Use the [50/72 rule](../whitepapers/standardizing_git_commit_messages.md):
 
 ```bash
-Fix #123: Update error handling in authentication module
+Fix #123: Update auth module error handling
 
 Detect token expiry before the request is sent and log each failed
 attempt with its reason, so that the frequent login failures reported
