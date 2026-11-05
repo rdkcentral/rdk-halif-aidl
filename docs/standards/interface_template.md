@@ -87,7 +87,8 @@ Detail the lifecycle:
 
 * How clients `open()` or `acquire()` resource handles
 * Restrictions (e.g., single controller vs. multiple listeners)
-* Cleanup behavior when a client exits
+* Component-specific clean-up beyond the common
+	[client-death contract](../key_concepts/hal/hal_resource_lifecycle.md#client-death-and-resource-clean-up)
 
 ---
 
