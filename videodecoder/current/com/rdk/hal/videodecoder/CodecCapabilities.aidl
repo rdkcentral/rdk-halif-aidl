@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 package com.rdk.hal.videodecoder;
+import com.rdk.hal.videodecoder.BitstreamFormat;
 import com.rdk.hal.videodecoder.Codec;
 import com.rdk.hal.videodecoder.PixelFormat;
 import com.rdk.hal.videodecoder.Profile;
@@ -100,4 +101,23 @@ parcelable CodecCapabilities {
      * @see PixelFormat
      */
     PixelFormat[] supportedOutputPixelFormats;
+
+    /**
+     * H.264/H.265 input layouts this decoder accepts, as explicit
+     * (stream format, alignment) pairs. Empty for every other codec.
+     *
+     * Empty also means "not declared": a server older than 0.3.1.0 never
+     * writes this field and the client reads its default, an empty array.
+     * A client seeing an empty list keeps its pre-0.3.1.0 behaviour and
+     * does not set `VideoDecoderStreamConfig.bitstreamFormat`.
+     *
+     * A server at 0.3.1.0 or later MUST, for every `H264_AVC` and
+     * `H265_HEVC` entry, list at least `{BYTE_STREAM, AU}`, and a decoder
+     * with `Capabilities.supportsSecure == true` MUST also list
+     * `{LENGTH_PREFIXED, AU}`.
+     *
+     * @since 0.3.1.0
+     * @see BitstreamFormat, VideoDecoderStreamConfig.bitstreamFormat
+     */
+    BitstreamFormat[] supportedBitstreamFormats = {};
 }

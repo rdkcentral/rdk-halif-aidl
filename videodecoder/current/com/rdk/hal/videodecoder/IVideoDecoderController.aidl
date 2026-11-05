@@ -98,7 +98,10 @@ interface IVideoDecoderController {
      * The Video Decoder must be in a `STARTED` state.
      * Buffers can be either non-secure or secure to support SVP (Secure Video Path).
      * Each call shall reference a single video frame with a presentation timestamp
-     * carried in `metadata.nsPresentationTime`.
+     * carried in `metadata.nsPresentationTime`. Exception: for H.264/H.265 input
+     * configured with `Alignment.NAL` (`VideoDecoderStreamConfig.bitstreamFormat`,
+     * since 0.3.1.0), each call references one complete NAL unit, and every NAL unit
+     * of an access unit carries that access unit's presentation timestamp.
      *
      * Buffer Ownership: Ownership of the buffer transfers to the Video Decoder HAL
      * only when this call accepts the buffer (returns true). Once accepted, the HAL
@@ -106,7 +109,8 @@ interface IVideoDecoderController {
      * modify or access the buffer after a successful call. If the call returns false
      * or throws an exception, ownership remains with the caller.
      *
-     * `bufferHandle` MUST reference a valid encoded frame. This method only
+     * `bufferHandle` MUST reference a valid encoded frame (with `Alignment.NAL`, a
+     * valid NAL unit, which may be a non-picture NAL unit). This method only
      * submits data - it carries no end-of-stream signal. A client that has
      * submitted its final buffer ends the decode session out-of-band via
      * `signalEndOfStream()`, which drains the decoder.
@@ -116,8 +120,9 @@ interface IVideoDecoderController {
      * both tunnel and non-tunnel modes - the decoder input path is not
      * tunnelled.
      *
-     * Each call is self-describing; the HAL MUST NOT carry any field of
-     * `InputBufferMetadata` across calls.
+     * `metadata.nsPresentationTime` describes this call only; the HAL MUST NOT
+     * carry it across calls. The override fields and `codecSpecificData` apply
+     * from this buffer onward and persist as defined in `InputBufferMetadata`.
      *
      * A PTS discontinuity is signalled by calling `signalDiscontinuity()`
      * before the first buffer that follows the discontinuity.
@@ -246,6 +251,17 @@ interface IVideoDecoderController {
      * required, this function must be called before video frame buffers are passed to
      * `decodeBufferWithMetadata()`.
      *
+     * Since 0.3.1.0, the new codec-specific data applies from the next buffer
+     * submitted to `decodeBufferWithMetadata()` after this call returns; on an older
+     * server, a call made after buffers are queued takes effect at a vendor-specific
+     * point. To bind a record to a
+     * specific buffer instead, a client talking to a 0.3.1.0 or later server attaches
+     * it to that buffer's `InputBufferMetadata.codecSpecificData`.
+     *
+     * The record supplies parameter sets and, for length-prefixed input, the NAL
+     * length size. It does not select the input layout; that is
+     * `VideoDecoderStreamConfig.bitstreamFormat`.
+     *
      * The format of the `codecData` parameter depends on the `csdVideoFormat`:
      *
      * For `AVC_DECODER_CONFIGURATION_RECORD` (H.264/AVC), this is the
@@ -306,6 +322,8 @@ interface IVideoDecoderController {
      * - `masteringDisplayInfo` — SMPTE ST 2086 fallback (HEVC SEI type 137)
      * - `contentLightLevel`    — CTA-861.3 MaxCLL/MaxFALL fallback (SEI 144)
      * - `dolbyVisionLayerFlags`— BL/EL presence; only meaningful for DOLBY_VISION
+     * - `bitstreamFormat`      — H.264/H.265 input layout; binding configuration,
+     *                            not a hint (since 0.3.1.0)
      *
      * @param[in] config  Stream-configuration batch. Fields set to `null`
      *                    are ignored (no change). Fields with values are
@@ -317,7 +335,8 @@ interface IVideoDecoderController {
      * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT if any field fails validation
      *            (e.g. `resolution.width <= 0`, `frameRate.denominator == 0`
      *            while `numerator != 0`, exactly one of `pixelAspectRatio.numerator` /
-     *            `denominator` is 0).
+     *            `denominator` is 0, or `bitstreamFormat` not listed in
+     *            `CodecCapabilities.supportedBitstreamFormats` for the open codec).
      *
      * @pre The resource must be in State::READY.
      *
