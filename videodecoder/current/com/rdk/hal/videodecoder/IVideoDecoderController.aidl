@@ -246,6 +246,15 @@ interface IVideoDecoderController {
      * required, this function must be called before video frame buffers are passed to
      * `decodeBufferWithMetadata()`.
      *
+     * The new codec-specific data applies from the next buffer submitted to
+     * `decodeBufferWithMetadata()` after this call returns. To bind a record to a
+     * specific buffer instead, a client talking to a 0.3.1.0 or later server attaches
+     * it to that buffer's `InputBufferMetadata.codecSpecificData`.
+     *
+     * The record supplies parameter sets and, for length-prefixed input, the NAL
+     * length size. It does not select the input layout; that is
+     * `VideoDecoderStreamConfig.bitstreamFormat`.
+     *
      * The format of the `codecData` parameter depends on the `csdVideoFormat`:
      *
      * For `AVC_DECODER_CONFIGURATION_RECORD` (H.264/AVC), this is the
@@ -306,6 +315,8 @@ interface IVideoDecoderController {
      * - `masteringDisplayInfo` — SMPTE ST 2086 fallback (HEVC SEI type 137)
      * - `contentLightLevel`    — CTA-861.3 MaxCLL/MaxFALL fallback (SEI 144)
      * - `dolbyVisionLayerFlags`— BL/EL presence; only meaningful for DOLBY_VISION
+     * - `bitstreamFormat`      — H.264/H.265 input layout; binding configuration,
+     *                            not a hint (since 0.3.1.0)
      *
      * @param[in] config  Stream-configuration batch. Fields set to `null`
      *                    are ignored (no change). Fields with values are
@@ -317,7 +328,8 @@ interface IVideoDecoderController {
      * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT if any field fails validation
      *            (e.g. `resolution.width <= 0`, `frameRate.denominator == 0`
      *            while `numerator != 0`, exactly one of `pixelAspectRatio.numerator` /
-     *            `denominator` is 0).
+     *            `denominator` is 0, or `bitstreamFormat` not listed in
+     *            `CodecCapabilities.supportedBitstreamFormats` for the open codec).
      *
      * @pre The resource must be in State::READY.
      *
