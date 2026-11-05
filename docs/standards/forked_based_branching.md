@@ -19,23 +19,26 @@ Forking creates a personal copy of the main repository under your GitHub account
 1. **Find the Repository:** Navigate to the official project repository on GitHub.
 2. **Click “Fork”:** Located in the upper-right of the repository page.
 3. **Choose Your Account:** Select your GitHub account to host the fork.
-4. **Clone Your Fork Locally:**
+4. **Clone Your Fork Locally** and add the original repository as `upstream`:
 
    ```bash
    git clone https://github.com/<your-username>/<repository-name>.git
+   cd <repository-name>
+   git remote add upstream https://github.com/rdkcentral/<repository-name>.git
+   git fetch upstream develop
    ```
 
-5. **Create a Branch:** Branch from `develop`, named `feature/<issue>-<synopsis>` after the GitHub issue the change belongs to:
+5. **Create a Branch:** Branch from the upstream `develop`, named `feature/<issue>-<synopsis>` after the GitHub issue the change belongs to:
 
    ```bash
-   git checkout -b feature/123-add-logging-enhancements develop
+   git checkout -b feature/123-add-logging-enhancements upstream/develop
    ```
 
 6. **Make Your Changes:** Modify files to add features, fix bugs, or update documentation.
 7. **Commit Your Changes:** Write commit messages that follow the [50/72 rule](../whitepapers/standardizing_git_commit_messages.md):
 
    ```text
-   Fix #123: Update error handling in authentication module
+   Fix #123: Update auth module error handling
 
    Detect token expiry before the request is sent and log each failed
    attempt with its reason, so that the frequent login failures reported

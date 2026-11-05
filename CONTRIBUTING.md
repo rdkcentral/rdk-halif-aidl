@@ -4,7 +4,7 @@
 
 You can submit your changes for review via that site, by raising an issue in github, [rdk-halif-aidl/issues](https://github.com/rdkcentral/rdk-halif-aidl/issues), and following the sequence below.
 
-- create a branch from `develop` named `feature/<x>-<synopsis>` (`bugfix/<x>-<synopsis>` for a bug)
+- create a branch from `develop` named `feature/<x>-<synopsis>`
 - where x is the issue number
 - where synopsis is a short, lowercase, hyphenated synopsis for the reason for the branch.
 - create a pull request against `develop` [https://github.com/rdkcentral/rdk-halif-aidl/compare](https://github.com/rdkcentral/rdk-halif-aidl/compare) when the code changes are ready for review.
