@@ -76,7 +76,8 @@ interface IAudioDecoderController {
      * Stops the audio decoder.
      *
      * The decoder enters the `STOPPING` state and then any input data buffers that have been passed for decode but have
-     * not yet been decoded are freed automatically.  This is effectively the same as a flush.
+     * not yet been decoded are freed automatically.  This is effectively the same as a flush,
+     * including the handling of output buffers described for `flush()`.
      * Once buffers are freed and the internal audio decoder state is reset, the decoder enters the `READY` state.
      *
      * @exception binder::Status::Exception::EX_NONE for success.
@@ -150,6 +151,12 @@ interface IAudioDecoderController {
      * The audio decoder must be in a state of `STARTED`.
      * Any input data buffers that have been passed for decode but have
      * not yet been decoded are automatically freed.
+     *
+     * Output buffers the HAL still holds (decoded but not yet delivered via
+     * `onFrameOutput()`) are freed and never delivered. Output buffers already
+     * delivered via `onFrameOutput()` stay owned by the client, which frees them
+     * with `IAVBuffer.free()` or passes them on. Once this call returns, no
+     * `onFrameOutput()` is issued for data submitted before it.
      * The internal audio decoder state is optionally reset.
      *
      * @param[in] reset     When true, the internal audio decoder state is fully reset back to its opened READY state.
