@@ -50,6 +50,8 @@ The **RDK middleware GStreamer pipeline** includes a dedicated **RDK Video Decod
 | **HAL.VIDEODECODER.11** | The video decoder shall be able to decode back to back I-frames.| Used in I-frame trick modes. |
 | **HAL.VIDEODECODER.12** | The video decoder shall discard any frames until the first reference frame has been received. |
 | **HAL.VIDEODECODER.13** | If a client process exits, the Video Decoder server shall automatically stop and close any Video Decoder instance controlled by that client. |
+| **HAL.VIDEODECODER.14** | From 0.3.1.0, every H.264 and H.265 codec entry shall advertise a non-empty `supportedBitstreamFormats` that includes `{BYTE_STREAM, AU}`. | See [bitstream-input-format](#bitstream-input-format). Not retroactive: a 0.3.0.x server leaves the list empty. |
+| **HAL.VIDEODECODER.15** | From 0.3.1.0, a decoder with `supportsSecure = true` shall also advertise `{LENGTH_PREFIXED, AU}` for each H.264 and H.265 entry. | Secure buffers cannot be reformatted by the client. See [bitstream-input-format](#bitstream-input-format). |
 
 ## Interface Definition
 
@@ -230,6 +232,88 @@ Secure video processing (SVP) is a requirement for RDK-E. Video decoder instance
 A secure video decoder shall be able to handle secure AV buffers and decoded video frames output from the decoder shall be either contained in secure AV buffers or securely tunnelled in the vendor layer.
 
 If any video decoder supports SVP in non-tunnelled mode then the Video Sink HAL must also support SVP to be able to process secure AV buffers of decoded video frames.
+
+## Bitstream Input Format
+
+```mermaid
+sequenceDiagram
+    participant C as Client
+    participant D as IVideoDecoder
+    participant DC as IVideoDecoderController
+    C->>D: getCapabilities()
+    D-->>C: CodecCapabilities[].supportedBitstreamFormats
+    alt list empty (0.3.0.x server, or not declared)
+        Note over C: legacy behaviour, bitstreamFormat not set
+    else list non-empty
+        C->>DC: setStreamConfig({bitstreamFormat = fmt}) in READY
+    end
+    C->>DC: start()
+    loop each access unit or NAL unit
+        C->>DC: decodeBufferWithMetadata(buffer, metadata)
+    end
+    Note over C,DC: parameter-set change mid-stream (e.g. ABR switch)
+    alt atLeast(service, 0, 3, 1)
+        C->>DC: decodeBufferWithMetadata(buffer, {codecSpecificData = avcC/hvcC})
+    else 0.3.0.x server
+        C->>DC: parseCodecSpecificData(format, record)
+        C->>DC: decodeBufferWithMetadata(buffer, metadata)
+    end
+```
+
+The H.264/H.265 byte layout of each buffer passed to `decodeBufferWithMetadata()` is a `BitstreamFormat`: a `StreamFormat` paired with an `Alignment`.
+
+| `StreamFormat` | Layout | GStreamer caps |
+| --- | --- | --- |
+| `BYTE_STREAM` | Annex B: start code before each NAL unit, parameter sets in-band | `stream-format=byte-stream` |
+| `LENGTH_PREFIXED` | ISO/IEC 14496-15: big-endian length before each NAL unit, length size and parameter sets from the avcC/hvcC record | `stream-format=avc`, `hvc1`, `hev1` |
+
+| `Alignment` | One buffer holds | GStreamer caps |
+| --- | --- | --- |
+| `AU` | one complete access unit (all NAL units of one coded picture) | `alignment=au` |
+| `NAL` | one complete NAL unit | `alignment=nal` |
+
+The decoder lists every pair it accepts in `CodecCapabilities.supportedBitstreamFormats`; pairs are not implied by listing a format and an alignment separately. The client selects one pair, once, in `State::READY`, through `VideoDecoderStreamConfig.bitstreamFormat`. It is binding configuration, not a hint: the precedence rule in [stream-hints-vs-bitstream-truth](#stream-hints-vs-bitstream-truth) does not apply. A pair not in the list fails `setStreamConfig()` with `EX_ILLEGAL_ARGUMENT`.
+
+### Mandatory formats
+
+| Decoder | Shall advertise | Requirement |
+| --- | --- | --- |
+| Any H.264 / H.265 entry, server 0.3.1.0 or later | `{BYTE_STREAM, AU}` | HAL.VIDEODECODER.14 |
+| `supportsSecure = true`, server 0.3.1.0 or later | `{BYTE_STREAM, AU}` and `{LENGTH_PREFIXED, AU}` | HAL.VIDEODECODER.15 |
+| Any codec other than H.264 / H.265 | nothing: the list is empty | — |
+
+Every other pair is optional and advertised when supported.
+
+### Compatibility
+
+The fields were added in 0.3.1.0 by appending to parcelables, so 0.3.0.x and 0.3.1.x clients and servers interoperate on the wire.
+
+| Client | Server | Behaviour |
+| --- | --- | --- |
+| 0.3.0.x | 0.3.1.x | `bitstreamFormat` and `codecSpecificData` arrive as `null`; the server keeps its 0.3.0.x behaviour. |
+| 0.3.1.x | 0.3.0.x | `supportedBitstreamFormats` reads as empty; the client keeps its 0.3.0.x behaviour, sets neither new field, and sends CSD through `parseCodecSpecificData()`. |
+| 0.3.1.x | 0.3.1.x | The client selects a pair from the list and may bind CSD to a buffer. |
+
+Client gating rules:
+
+- Set `bitstreamFormat` only when `supportedBitstreamFormats` is non-empty. A non-empty list proves the server is 0.3.1.0 or later; an older server would skip the field without an error.
+- Attach `InputBufferMetadata.codecSpecificData` only when `halcompat::atLeast(service, 0, 3, 1)` holds. An older server drops the field without an error. It is gated on version rather than on the list because it applies to every codec that has CSD, AV1 included.
+- A client built against 0.3.1.0 that also serves 0.3.0.x servers checks its baseline with `halcompat::atLeast(service, 0, 3, 0)`. `halcompat::isCompatible(service)` compares against the client's compiled `VERSION` (0.3.1.0) and rejects a 0.3.0.x server.
+
+Semantics note: `parseCodecSpecificData()` applies from the next buffer submitted after it returns; `InputBufferMetadata.codecSpecificData` applies from the buffer that carries it. Both replace the codec configuration; neither selects the input layout.
+
+### Under SVP
+
+The CDM decrypts into a secure buffer of the same size, and the client cannot map secure buffers (HAL.AVBUF.7). Any reformatting has to happen before decryption, on the encrypted buffer and its `DecryptArgs.subSamples` map, so a secure decoder receives the layout the demuxer produced.
+
+| Source | Layout reaching the decoder | Parameter sets |
+| --- | --- | --- |
+| CENC / CMAF MP4 (DASH, fMP4 HLS) | `{LENGTH_PREFIXED, AU}` | out-of-band in avcC/hvcC; a change mid-stream reaches the decoder only as CSD |
+| HLS SAMPLE-AES (MPEG-TS) | `{BYTE_STREAM, AU}` | in-band; NAL headers and start codes stay clear for AU splitting |
+
+With 4-byte NAL lengths the client can rewrite each length to `00 00 00 01` in place before decryption, since the lengths are in clear bytes and the buffer size and subsample map do not change. With 1- or 2-byte lengths, or when SPS/PPS would be inserted in-band, the buffer size changes and the subsample map would have to be rewritten. That is why HAL.VIDEODECODER.15 requires secure decoders to accept length-prefixed input directly.
+
+A 0.3.0.x secure decoder advertises nothing; the client keeps its existing per-SoC behaviour.
 
 Markdown Output:
 

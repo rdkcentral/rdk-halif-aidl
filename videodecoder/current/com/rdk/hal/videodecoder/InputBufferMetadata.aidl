@@ -18,6 +18,7 @@
  */
 package com.rdk.hal.videodecoder;
 
+import com.rdk.hal.videodecoder.CodecSpecificData;
 import com.rdk.hal.videodecoder.Colorimetry;
 import com.rdk.hal.videodecoder.ContentLightLevel;
 import com.rdk.hal.videodecoder.DolbyVisionLayerFlags;
@@ -134,4 +135,23 @@ parcelable InputBufferMetadata {
      * @see VideoDecoderStreamConfig.pixelAspectRatio, IVideoDecoderController.setStreamConfig()
      */
     @nullable Fraction pixelAspectRatio;
+
+    /**
+     * Optional new codec-specific data (avcC/hvcC/av1C record) taking
+     * effect from this buffer onward. null = no change.
+     *
+     * Unlike the override fields above, this is not a fallback: the record
+     * replaces the decoder's codec configuration from this buffer, exactly
+     * as `parseCodecSpecificData()` would. Persists across `flush()` and is
+     * cleared on `close()`.
+     *
+     * A server older than 0.3.1.0 drops this field without reporting an
+     * error, so a client attaches it only when
+     * `halcompat::atLeast(service, 0, 3, 1)` holds, and otherwise calls
+     * `parseCodecSpecificData()`.
+     *
+     * @since 0.3.1.0
+     * @see CodecSpecificData, IVideoDecoderController.parseCodecSpecificData()
+     */
+    @nullable CodecSpecificData codecSpecificData;
 }
