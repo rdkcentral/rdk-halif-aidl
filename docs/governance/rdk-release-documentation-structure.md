@@ -8,7 +8,7 @@
 
 ## **Audience and Scope**
 
-This document defines the governance model for how RDK Release documentation is structured, owned, and maintained across layers, subsystems, and component boundaries. It outlines the architectural principles and tooling standards (e.g., `mk_docs.yaml`) that ensure consistency, traceability, and reuse of documentation throughout the development and release lifecycle.
+This document defines the governance model for how RDK Release documentation is structured, owned, and maintained across layers, subsystems, and component boundaries. It outlines the architectural principles and tooling standards (e.g., `mkdocs.yml`) that ensure consistency, traceability, and reuse of documentation throughout the development and release lifecycle.
 
 This document is intended for:
 
@@ -20,7 +20,7 @@ It applies to all documentation that is versioned alongside RDK release version 
 
 ## **Overview**
 
-This governance standard outlines the structured use of `mk_docs.yaml` files within the RDK documentation ecosystem. The goal is to ensure:
+This governance standard outlines the structured use of `mkdocs.yml` files within the RDK documentation ecosystem. The goal is to ensure:
 
 * Clear documentation ownership
 * Consistent documentation build and release processes
@@ -37,9 +37,9 @@ The top-level documentation acts as the entry point to the  RDK Release X docume
 * Architecture and layering
 * Documentation navigation guidance
 
-### **`mk_docs.yaml` Requirements**
+### **`mkdocs.yml` Requirements**
 
-* The top-level `mk_docs.yaml` must include links to the layer-specific documentation projects.
+* The top-level `mkdocs.yml` must include links to the layer-specific documentation projects.
 * Documentation is presented as per release tag (e.g. `RDK Release X.0.0`).
 * Documentation per layer is included based on that tag.
 
@@ -57,7 +57,7 @@ flowchart TD
 
 ### **Layer Structure**
 
-Each major area of concern (e.g., Hardware Porting Kit (HPK) Vendor Layer, Middleware (MPK), Applications (APK)) is treated as a documentation **layer** with its own `mk_docs.yaml` file and documentation site.
+Each major area of concern (e.g., Hardware Porting Kit (HPK) Vendor Layer, Middleware (MPK), Applications (APK)) is treated as a documentation **layer** with its own `mkdocs.yml` file and documentation site.
 
 ### **Layer Ownership**
 
@@ -78,11 +78,11 @@ The following content is expected for each layer:
 ### **Location and Structure**
 
 * The layer documentation must reside inside a Git repository or manifest repo that logically contains the layer. Only documentation that relates to the layer itself should be included here — component documentation must reside within the respective versioned component repositories.
-* All content must be referenced through the layer's `mk_docs.yaml` file.
+* All content must be referenced through the layer's `mkdocs.yml` file.
 
 ```mermaid
 graph LR
-    GIT_REPO[Layer Git Repo or Manifest] --> DOCS[mk_docs.yaml]
+    GIT_REPO[Layer Git Repo or Manifest] --> DOCS[mkdocs.yml]
     DOCS --> M1[Layer Relevant Markdown Files / Release notes ]
     DOCS --> M2[Component Documentation .md files @version X]
 ```
@@ -110,7 +110,7 @@ graph LR
 
 If a component is undocumented:
 
-* A Jira/task should be raised for the owning team.
+* A GitHub issue (a Task) is raised on the owning team's repository.
 * The documentation team may provide a draft, but must send a pull request against the component repo.
 * The component team is responsible for review and merge.
 * Until merged, documentation must not be included beyond a brief placeholder or summary.
@@ -125,13 +125,12 @@ If a component is undocumented:
 
   * A **support branch** must be created and documentation committed against the existing tag.
   * Alternatively, documentation may be updated in a new release if `main` still reflects the current release state.
-* See also: [git_flow_branching_strategy.md](../standards/git_flow_branching_strategy.md)
 
 ```mermaid
 graph TD
-    L1[Middleware Layer - mk_docs.yaml @ Version X] --> TL[ RDK-X.Y.Z Release]
-    L2[Applications Layer mk_docs.yaml @ Version Y] --> TL
-    L3[Vendor Layer - HPK mk_docs.yaml @ Version Z] --> TL
+    L1[Middleware Layer - mkdocs.yml @ Version X] --> TL[ RDK-X.Y.Z Release]
+    L2[Applications Layer mkdocs.yml @ Version Y] --> TL
+    L3[Vendor Layer - HPK mkdocs.yml @ Version Z] --> TL
 ```
 
 ## **Summary**
