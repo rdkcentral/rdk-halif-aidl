@@ -38,7 +38,7 @@ Mixer instances are accessed and controlled via `IAudioMixer`, with additional l
 | HAL.AUDIOMIXER.1 | The service shall expose all available mixers through `IAudioMixerManager`. | |
 | HAL.AUDIOMIXER.2 | Each `IAudioMixer` shall expose at least one `IAudioOutputPort`. | |
 | HAL.AUDIOMIXER.3 | The mixer shall support querying `Capabilities` via `getCapabilities()`. | |
-| HAL.AUDIOMIXER.4 | The controller shall support `start`, `stop`, `flush`, and `signalEOS`. | |
+| HAL.AUDIOMIXER.4 | The controller shall support `start`, `stop`, `flush`, and `signalEndOfStream`. | |
 | HAL.AUDIOMIXER.5 | Output port properties shall be readable via `IAudioOutputPort.getProperty()` and writable via `IAudioOutputPortController.setProperty()` (controller acquired via `IAudioOutputPort.open()`). | |
 | HAL.AUDIOMIXER.6 | Null values for `Capabilities.name` or `OutputPortCapabilities.portName` are allowed but discouraged. | For debugging support. |
 
@@ -128,8 +128,8 @@ flowchart TD
   B2 -->|getCapabilities| C1
   B2 -->|getCurrentSourceCodecs| C2
   B4 -->|get or set Property| C3
-  B4 -->|registerListener| C4
-  B2 -->|registerListener| C5
+  B4 -->|registerEventListener| C4
+  B2 -->|registerEventListener| C5
   B2 -->|control| D1
   D1 -->|start / stop / flush| E1
   D1 -->|setProperty| E2
@@ -247,7 +247,7 @@ Setting a volume instantly is fine for steady state, but causes audible *clicks*
 boolean setInputVolumeRamp(in int inputIndex, in int targetVolume, in int overMs, in VolumeRamp curve);
 ```
 
-The HAL walks the volume from its current value to `targetVolume` over `overMs` milliseconds following the chosen curve (linear, logarithmic, etc.). Typical durations are 50–500 ms — long enough to avoid clicks, short enough to feel responsive.
+The HAL walks the volume from its current value to `targetVolume` over `overMs` milliseconds following the chosen curve (`LINEAR`, `IN_CUBIC` or `OUT_CUBIC` from `VolumeRamp`). Typical durations are 50–500 ms — long enough to avoid clicks, short enough to feel responsive.
 
 ### Use case 1 — Single-source playback
 
@@ -382,7 +382,7 @@ Multiple output ports may be active simultaneously, subject to platform constrai
 Common constraints across platforms:
 
 * **Only one passthrough source at a time** — a compressed bitstream (AC3, DTS, MAT, etc.) can leave one output port in `OutputFormat.PASSTHROUGH`. A second port simultaneously requesting passthrough on the same source is generally rejected. Other ports must use decoded PCM or transcode.
-* **Transcode is per-port** — each port independently chooses its `TRANSCODE_FORMAT`. SPDIF can transcode to AC3 while HDMI delivers MAT.
+* **Encoding is per-port** — each port independently chooses its `OUTPUT_FORMAT`. SPDIF can carry `AC3` while HDMI delivers `MAT`.
 * **Internal speakers are PCM only** — they receive the decoded mix; passthrough does not apply.
 * **ARC / eARC are mutually exclusive** — a port operates as one or the other based on the connected sink's capability negotiation, not both at once.
 
@@ -399,7 +399,7 @@ sequenceDiagram
     participant Listener as IAudioOutputPortListener
     Note over App,Listener: HDMI port open and active
 
-    App->>Port: registerListener(listener)
+    App->>Port: registerEventListener(listener)
     Note over Port: User unplugs HDMI cable
     Port-->>Listener: onPropertyChanged(CONNECTION_STATE, DISCONNECTED)
     Note over App: Decide policy:<br/>• re-route to internal speakers?<br/>• pause playback?<br/>• wait for re-plug?
@@ -491,7 +491,7 @@ stateDiagram-v2
     CLOSING --> CLOSED
 ```
 
-Methods like `start()`, `stop()`, `flush(reset)`, and `signalEOS()` are valid only in specific states. Errors are returned if called out of sequence.
+Methods like `start()`, `stop()`, `flush(reset)`, and `signalEndOfStream()` are valid only in specific states. Errors are returned if called out of sequence.
 
 ---
 
@@ -549,7 +549,7 @@ Declared in the HFP YAML:
 
 ## End-of-Stream and Error Handling
 
-* `signalEOS()` triggers end-of-stream processing for all inputs.
+* `signalEndOfStream()` triggers end-of-stream processing for all inputs.
 * `onError()` provides error propagation.
 * `flush(reset=true)` resets internal state, `flush(false)` discards buffered data only.
 * `signalDiscontinuity()` informs the HAL of PTS jumps or source switches.
