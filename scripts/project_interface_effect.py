@@ -55,8 +55,8 @@ can be edited, so the sync has to work out which one moved rather than assuming.
     when that is genuinely wanted.
 
 Subcommands:
-  sync-item  --number N   one ticket, for a labeled/unlabeled event
-  reconcile               every ticket, both directions (the scheduled sweep)
+  sync-item  --number N   one ticket and its linked issues (configure_pr.sh, merge_pr.sh)
+  reconcile               every ticket, both directions (a full sweep, run by hand)
   check                   fail if the field options or labels have drifted
 
 Auth: GH_TOKEN must hold `project` scope. The Actions GITHUB_TOKEN cannot read
@@ -863,8 +863,11 @@ def cmd_sync_item(args):
     if class_of([n["name"] for n in ticket["labels"]["nodes"]]) != before:
         sync_ticket(project, ticket, args.dry_run, report)
 
-    # A linked issue that just changed needs its own item updating too.
-    for number in touched:
+    # Every linked issue gets its own item synced, not only one whose labels
+    # just changed: an issue already carrying the PR's class can still have no
+    # project item or an unset field, and there is no sweep to repair it.
+    linked = [n["number"] for n in ticket.get("closingIssuesReferences", {}).get("nodes", [])]
+    for number in dict.fromkeys(touched + linked):
         follow = gql(
             """
             query($owner:String!,$name:String!,$number:Int!){
