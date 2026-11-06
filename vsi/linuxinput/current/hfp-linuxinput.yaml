@@ -1,0 +1,97 @@
+#** *****************************************************************************
+# *
+# * If not stated otherwise in this file or this component's LICENSE file the
+# * following copyright and licenses apply:
+# *
+# * Copyright 2026 RDK Management
+# *
+# * Licensed under the Apache License, Version 2.0 (the "License");
+# * you may not use this file except in compliance with the License.
+# * You may obtain a copy of the License at
+# *
+# *
+# * http://www.apache.org/licenses/LICENSE-2.0
+# *
+# * Unless required by applicable law or agreed to in writing, software
+# * distributed under the License is distributed on an "AS IS" BASIS,
+# * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# * See the License for the specific language governing permissions and
+# * limitations under the License.
+# *
+#** ******************************************************************************
+
+# HAL Feature Profile for linuxinput
+#
+# Declares what this platform's input devices can produce, so a consumer does
+# not have to probe for it. The common key set is identical on every platform
+# and is NOT restated here — only what this platform adds or omits.
+
+linuxinput:                         # Component object begins
+    interfaceVersion: current
+
+    # transports - the input transports this platform carries. An open list:
+    # a transport not listed has no device node and no obligations. Name each
+    # one as the platform knows it; the name is a label, not an enumeration
+    # this specification fixes.
+    transports:
+      - ir
+      - frontPanel
+      - bluetooth
+
+    # devices - the input devices a reader can expect to find.
+    # 'source' says how the device reaches evdev: a kernel driver, or an
+    # injector writing to /dev/uinput. See "Injection Methods".
+    # 'path' is stated only where a fixed path is mandated; every other device
+    # is located by identity, never by event node number.
+    devices:
+      - id: ir
+        transport: ir
+        path: /dev/input/rdk_ir     # Mandated fixed path, created by udev rule
+        source: kernel              # kernel | uinput
+
+      - id: frontPanel
+        transport: frontPanel
+        source: kernel
+
+      - id: btRcu
+        transport: bluetooth
+        source: uinput
+        transient: true             # Node exists only while connected
+
+    # commonKeySet - the baseline every platform supports, defined in
+    # docs/common_key_set.md. Stated as a version, not enumerated, so it cannot
+    # drift per platform. A platform that cannot produce a key in this set
+    # declares it under 'omittedKeys' with a reason; it does not silently differ.
+    commonKeySet:
+        version: 1
+
+    omittedKeys: []
+    # Example:
+    #   - code: KEY_RECORD
+    #     reason: "No record button on any remote shipped with this product"
+
+    # specialKeys - keys this platform's remotes produce that are NOT in the
+    # common set. Every entry must still be a standard code from
+    # linux/input-event-codes.h.
+    #
+    # Where the button appears under 'allocated codes for optional buttons' in
+    # docs/common_key_set.md, use the code allocated there rather than choosing
+    # one. Where a button has no standard semantic code, allocate from
+    # KEY_MACRO1..KEY_MACRO30 and give it a name here. Vendor-private ranges are
+    # prohibited: a code outside the header cannot be carried by Wayland or
+    # interpreted by an application.
+    specialKeys: []
+    # Example:
+    #   - code: KEY_PROG1
+    #     name: "Partner app launch"
+    #     devices: [btRcu]
+    #   - code: KEY_MACRO1
+    #     name: "Product-specific scene preset, no standard equivalent"
+    #     devices: [btRcu]
+
+    # keymapOverrides - whether this platform relies on userspace keymap files
+    # to correct devices that cannot be fixed at source. False is the target
+    # state: the mapping belongs in the device tree or the injecting daemon.
+    keymapOverrides:
+        required: false
+        path: /etc/vendor/input/keymaps/
