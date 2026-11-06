@@ -123,11 +123,17 @@ EXPECTED_RELEASED=$(awk '/^components:/ {inmap=1; next}
                         inmap && /^[^[:space:]#]/ {inmap=0}
                         inmap && /^[[:space:]]+[A-Za-z0-9_]+:/ {n++}
                         END {print n+0}' "${REPO_ROOT}/versions_released.yaml")
-# Sanity check: the released cohort should cover every component the dev
-# tree has. If the parser drops most lines, EXPECTED_RELEASED falls below
-# EXPECTED_CURRENT and we surface it before the build phase.
-if [ "${EXPECTED_RELEASED}" -lt "${EXPECTED_CURRENT}" ]; then
-    fail "manifest (released): parsed ${EXPECTED_RELEASED} entries from versions_released.yaml, expected >= ${EXPECTED_CURRENT} — likely a manifest-format regression"
+# Sanity check: the released cohort should cover every component that has a
+# released snapshot. A new module with only current/ is not released yet and
+# stays out of versions_released.yaml, because the Yocto planner
+# (halif_plan.py) accepts numbered snapshots only. Snapshots are counted by
+# halif_plan.py's rule: a <X.Y.Z[.W]>/ directory holding a CMakeLists.txt.
+# If the parser drops most lines, EXPECTED_RELEASED falls below
+# EXPECTED_SNAPSHOTTED and we surface it before the build phase.
+EXPECTED_SNAPSHOTTED=$(ls -d ./*/[0-9]*.[0-9]*.[0-9]*/CMakeLists.txt 2>/dev/null \
+                       | cut -d/ -f2 | sort -u | wc -l)
+if [ "${EXPECTED_RELEASED}" -lt "${EXPECTED_SNAPSHOTTED}" ]; then
+    fail "manifest (released): parsed ${EXPECTED_RELEASED} entries from versions_released.yaml, expected >= ${EXPECTED_SNAPSHOTTED} — likely a manifest-format regression"
 fi
 if ./build_modules.sh manifest > /tmp/smoke_manifest_released.log 2>&1; then
     # Count ONLY versioned snapshot libs (`-v<X.Y.Z.W>-cpp.so`) — phase 2
