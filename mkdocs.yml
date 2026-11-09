@@ -45,6 +45,7 @@ nav:
   - The Software Stack: introduction/the_software_stack.md
   - Hardware Abstraction Layer:
     - Introduction: introduction/aidl_and_binder.md
+    - Binder Call Path: introduction/binder_call_path.md
     - Key Concepts:
       - HAL Interface Usage: key_concepts/hal/hal_interface_usage.md
       - HAL Properties: key_concepts/hal/hal_properties.md
