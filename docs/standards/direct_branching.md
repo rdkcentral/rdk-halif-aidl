@@ -29,7 +29,7 @@ Before any code can be merged, you must sign the [RDK Contributor License Agreem
 ### 1. **Clone the Repository**
 
 ```bash
-git clone https://github.com/rdkcentral/ut-core.git
+git clone https://github.com/rdkcentral/rdk-halif-aidl.git
 ```
 
 ### 2. **Set Up Git Flow**
@@ -89,7 +89,7 @@ git flow feature finish 123-add-logging-enhancements
 `CODEOWNERS` ensure quality and manage release tagging:
 
 ```plaintext
-*       @rdkcentral/ut-core_codeowner
+*       @rdkcentral/rdk-halif-aidl-pr-review-team
 ```
 
 ---
