@@ -24,6 +24,13 @@
 
 audiodecoder:                   # Component object begins
     interfaceVersion: current
+
+    # Metrics this product serves through IAudioDecoder.getMetrics(), for
+    # every resource instance. Names are members of the Metric enum.
+    supportedMetrics:
+      - FRAMES_DECODED
+      - FRAMES_DROPPED
+      - DECODE_ERRORS
     IAudioDecoder:              # Resource list
       - 0:                      # Resource object begins
          supportedCodecs:       # Array of codec capabilities

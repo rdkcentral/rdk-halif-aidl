@@ -57,6 +57,8 @@ Uncompressed PCM audio streams do not require decoding. Therefore, they bypass t
 | **HAL.AUDIODECODER.10** | Audio frame metadata shall be returned to a controlling client on the first audio frame decoded after an open or flush, and thereafter only when the frame metadata changes. | Not sent on every decoded audio frame buffer unless changed since previous. In non-tunnelled mode, a frame with a non-zero trim always carries metadata — see [The trim contract](#the-trim-contract). |
 | **HAL.AUDIODECODER.11** | The audio frame output buffer from an audio decoder shall match the platform PCM audio format required for mixing. | See com.rdk.hal.audiosink.PlatformCapabilities |
 | **HAL.AUDIODECODER.12** | If a client process exits, the Audio Decoder server shall automatically stop and close any Audio Decoder instance controlled by that client. |
+| **HAL.AUDIODECODER.13** | Shall serve every metric listed under `supportedMetrics` in the HAL Feature Profile through `getMetrics()` and `getMetric()`, in any state, counting from service initialisation. | See [metrics](#metrics). |
+| **HAL.AUDIODECODER.14** | Shall raise the matching metric event each time a supported metric that has one rises. | See [metrics](#metrics). |
 
 ## Interface Definition
 
@@ -78,6 +80,11 @@ The interface can be found by following this link [audiodecoder](https://github.
 | `PCMFormat.aidl` | Enum list of PCM coding formats. |
 | `Property.aidl` | Enum list of audio decoder properties. |
 | `OperationalMode.aidl` | Common enum value describing the current output routing mode. |
+| `Metric.aidl` | Enum list of the metrics the audio decoder serves. |
+| `MetricValue.aidl` | Parcelable pairing a `Metric` with its value. |
+| `MetricSnapshot.aidl` | Parcelable holding metric values latched at one instant. |
+| `DecodeErrorEvent.aidl` | Parcelable carried by `onDecodeErrorEvent()`. |
+| `FrameDropEvent.aidl` | Parcelable carried by `onFrameDropEvent()`. |
 
 ## Initialization
 
@@ -563,6 +570,27 @@ By default, an AC-4 audio decoder must use the user preferences for the presenta
 The Audio Mixer provides the platform user preferences for AC-4 default presentation selection.
 
 The Audio Decoder also provides properties which allow for an override of the platform user preferences for the current player session.
+
+## Metrics
+
+`IAudioDecoder.getMetrics()` returns the metrics asked for, latched at one instant with a `CLOCK_MONOTONIC_RAW` timestamp; `getMetric()` returns one. Both are callable in any state. Counters count from service initialisation and are never reset, so a session or interval figure is the difference of two snapshots. The rules common to every component are in the [HAL Metrics Pattern](../standards/hal_metrics_pattern.md); what each metric measures, excludes and is used for is in the Doxygen of `Metric.aidl`.
+
+| Metric | Unit | Kind | Meaning |
+|---|---|---|---|
+| `FRAMES_DECODED` | frames | counter | Frames the decoder has output. |
+| `FRAMES_DROPPED` | frames | counter | Input frames for which the decoder output nothing. |
+| `DECODE_ERRORS` | errors | counter | Errors the decoder has raised. |
+
+Each event below is raised on `IAudioDecoderEventListener` and carries its own parcelable, named after the callback.
+
+| Callback | Raised | Carries |
+|---|---|---|
+| `onDecodeErrorEvent()` | One decode error. | `timestampNs`, `presentationTimeNs`, `errorCode`, `vendorErrorCode` |
+| `onFrameDropEvent()` | One frame the decoder dropped. | `timestampNs`, `presentationTimeNs` |
+
+Frames the decoder outputs can still be dropped for lateness by the [Audio Sink](../audiosink/audio_sink.md), which serves the rendered and late-dropped counts. The two components latch separately, so figures read from both are not one atomic read.
+
+The `METRIC_*` properties that these metrics replace are deprecated and remain readable.
 
 ## Audio Decoder States
 

@@ -17,7 +17,9 @@
  * limitations under the License.
  */
 package com.rdk.hal.audiodecoder;
+import com.rdk.hal.audiodecoder.DecodeErrorEvent;
 import com.rdk.hal.audiodecoder.ErrorCode;
+import com.rdk.hal.audiodecoder.FrameDropEvent;
 import com.rdk.hal.audiodecoder.FrameMetadata;
 import com.rdk.hal.audiodecoder.State;
 
@@ -47,4 +49,23 @@ oneway interface IAudioDecoderEventListener {
      * @see getState()
      */
     void onStateChanged(in State oldState, in State newState);
+
+    /**
+     * Raised once per decode error, with onDecodeError(), carrying the time and
+     * the frame concerned.
+     *
+     * @param[in] event    What happened and when.
+     *
+     * @see DecodeErrorEvent
+     */
+    void onDecodeErrorEvent(in DecodeErrorEvent event);
+
+    /**
+     * Raised once per frame counted by Metric::FRAMES_DROPPED.
+     *
+     * @param[in] event    What happened and when.
+     *
+     * @see FrameDropEvent
+     */
+    void onFrameDropEvent(in FrameDropEvent event);
 }
