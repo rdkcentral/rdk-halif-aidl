@@ -35,7 +35,7 @@ spec.loader.exec_module(rh)
 
 
 def issue(number=1, labels=(), milestone=None, due=None, author="someone", priority=None,
-          effect=None, blocking=0, people=1, refs=0, prs=()):
+          effect=None, blocking=0, people=1, refs=0, prs=(), ref_prs=()):
     values = []
     if priority:
         values.append({"name": priority, "field": {"name": "Priority"}})
@@ -47,7 +47,9 @@ def issue(number=1, labels=(), milestone=None, due=None, author="someone", prior
         "milestone": {"title": milestone, "dueOn": due} if milestone else None,
         "labels": {"nodes": [{"name": l} for l in labels]},
         "participants": {"totalCount": people},
-        "timelineItems": {"totalCount": refs},
+        "timelineItems": {"totalCount": refs, "nodes": [{"source": dict(
+            {"url": "p%d" % p["number"], "isDraft": False, "reviewDecision": None, "baseRefName": "develop",
+             "repository": {"isPrivate": False, "nameWithOwner": rh.REPO}}, **p)} for p in ref_prs]},
         "issueDependenciesSummary": {"blocking": blocking},
         "closedByPullRequestsReferences": {"pageInfo": {"hasNextPage": False}, "nodes": [dict(
             {"url": "p%d" % p["number"], "isDraft": False, "reviewDecision": None, "baseRefName": "develop"}, **p)
@@ -153,9 +155,33 @@ class Render(unittest.TestCase):
                                  {"number": 6, "state": "MERGED"},
                                  {"number": 4, "state": "CLOSED"}]),
                          [(7, "approved"), (6, "merged"), (5, "draft")])
-        self.assertEqual(states([{"number": 4, "state": "CLOSED"}]), [(4, "closed")])
+        self.assertEqual(states([{"number": 4, "state": "CLOSED"}]), [])
         self.assertEqual(states([{"number": 8, "state": "OPEN", "reviewDecision": "CHANGES_REQUESTED"}]),
                          [(8, "changes")])
+
+    def test_open_prs_take_closing_and_referencing_prs(self):
+        t = issue(prs=[{"number": 961, "state": "CLOSED"}, {"number": 970, "state": "MERGED"}],
+                  ref_prs=[{"number": 962, "state": "OPEN"},
+                           {"number": 963, "state": "OPEN", "isDraft": True},
+                           {"number": 964, "state": "CLOSED"},
+                           {"number": 965, "state": "OPEN",
+                            "repository": {"isPrivate": False, "nameWithOwner": "other/repo"}}])
+        t["timelineItems"]["nodes"].append({"source": {}})   # a cross-reference from an issue, not a PR
+        self.assertEqual([(p["number"], p["state"]) for p in rh.open_prs(t)], [(963, "draft"), (962, "open")])
+
+    def test_a_pr_both_closing_and_referencing_shows_once(self):
+        t = issue(prs=[{"number": 962, "state": "OPEN"}], ref_prs=[{"number": 962, "state": "OPEN"}])
+        self.assertEqual([p["number"] for p in rh.open_prs(t)], [962])
+
+    def test_open_ticket_shows_only_open_prs(self):
+        t = rh.classify(issue(1, labels=["component:panel"], milestone="0.24.0",
+                              prs=[{"number": 8, "state": "CLOSED"}, {"number": 7, "state": "MERGED"}],
+                              ref_prs=[{"number": 9, "state": "OPEN"}]), set(), "2026-11-03", None)
+        page = rh.render([t], [{"title": "0.24.0", "due": None}], "now")
+        self.assertIn("(p9)", page)
+        self.assertNotIn("(p8)", page)
+        self.assertNotIn("(p7)", page)
+        self.assertNotIn("closed unmerged", page)
 
     def test_private_prs_are_left_out(self):
         prs = rh.pr_states(issue(prs=[{"number": 3, "state": "OPEN", "repository": {"isPrivate": True}},
