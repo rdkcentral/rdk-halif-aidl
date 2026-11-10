@@ -17,7 +17,12 @@
  * limitations under the License.
  */
 package com.rdk.hal.videosink;
+import com.rdk.hal.videosink.FrameDropEvent;
+import com.rdk.hal.videosink.FrameRepeatResolvedEvent;
+import com.rdk.hal.videosink.FrameRepeatStartedEvent;
 import com.rdk.hal.videosink.State;
+import com.rdk.hal.videosink.UnderflowResolvedEvent;
+import com.rdk.hal.videosink.UnderflowStartedEvent;
 
 /**
  *  @brief     Callbacks event listener interface for Video Sink.
@@ -103,4 +108,52 @@ oneway interface IVideoSinkEventListener {
      * @param[in] newState  The new state that the sink has transitioned to.
      */
     void onStateChanged(in State oldState, in State newState);
+
+    /**
+     * Raised once per frame counted by Metric::FRAMES_DROPPED.
+     *
+     * @param[in] event    What happened and when.
+     *
+     * @see FrameDropEvent
+     */
+    void onFrameDropEvent(in FrameDropEvent event);
+
+    /**
+     * Raised once when a run of repeated frames starts; onFrameRepeatResolved()
+     * follows when a new frame is presented.
+     *
+     * @param[in] event    What happened and when.
+     *
+     * @see FrameRepeatStartedEvent
+     */
+    void onFrameRepeatStarted(in FrameRepeatStartedEvent event);
+
+    /**
+     * Raised once when the run reported by onFrameRepeatStarted() ends.
+     *
+     * @param[in] event    What happened and when.
+     *
+     * @see FrameRepeatResolvedEvent
+     */
+    void onFrameRepeatResolved(in FrameRepeatResolvedEvent event);
+
+    /**
+     * Raised once when an underflow starts, with onVideoUnderflow();
+     * onUnderflowResolved() follows when presentation resumes.
+     *
+     * @param[in] event    What happened and when.
+     *
+     * @see UnderflowStartedEvent
+     */
+    void onUnderflowStarted(in UnderflowStartedEvent event);
+
+    /**
+     * Raised once when the underflow reported by onUnderflowStarted() ends,
+     * with onVideoResumed().
+     *
+     * @param[in] event    What happened and when.
+     *
+     * @see UnderflowResolvedEvent
+     */
+    void onUnderflowResolved(in UnderflowResolvedEvent event);
 }

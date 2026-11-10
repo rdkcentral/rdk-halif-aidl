@@ -40,6 +40,8 @@ The RDK middleware’s GStreamer pipeline includes a dedicated RDK Video Sink el
 | **HAL.VIDEOSINK.7** | Shall run a session with no video plane mapped, consuming queued frames and freeing their buffers against the attached AV Clock while displaying nothing. | The plane mapping is owned by Plane Control and may be set or cleared at any point in the session, including while the sink is `STARTED`. |
 | **HAL.VIDEOSINK.8** | Video frames decoupled from video planes (destination plane -1) shall continue to be delivered and remain in sync with audio.  When coupled to a video plane they shall immediately become visible and be in lip sync. |To ensure if/when a video sink source is assigned to a video plane it appears in sync with audio. |
 | **HAL.VIDEOSINK.9** | If a client process exits, the Video Sink server shall automatically stop and close any `IVideoSink` instance controlled by that client. ||
+| **HAL.VIDEOSINK.10** | Shall serve every metric listed under `supportedMetrics` in the HAL Feature Profile through `getMetrics()` and `getMetric()`, in any state, counting from service initialisation. | See [metrics](#metrics). |
+| **HAL.VIDEOSINK.11** | Shall raise the matching metric event each time a supported metric that has one rises. | See [metrics](#metrics). |
 
 ## Interface Definition
 
@@ -52,6 +54,14 @@ The RDK middleware’s GStreamer pipeline includes a dedicated RDK Video Sink el
 | `IVideoSinkEventListener.aidl` | Listener callbacks interface to clients from an `IVideoSink`. |
 | `Capabilities.aidl` | Parcelable describing the capabilities of an `IVideoSink` resource instance. |
 | `Property.aidl` | Enum list of video sink properties. |
+| `Metric.aidl` | Enum list of the metrics the video sink serves. |
+| `MetricValue.aidl` | Parcelable pairing a `Metric` with its value. |
+| `MetricSnapshot.aidl` | Parcelable holding metric values latched at one instant. |
+| `FrameDropEvent.aidl` | Parcelable carried by `onFrameDropEvent()`. |
+| `FrameRepeatStartedEvent.aidl` | Parcelable carried by `onFrameRepeatStarted()`. |
+| `FrameRepeatResolvedEvent.aidl` | Parcelable carried by `onFrameRepeatResolved()`. |
+| `UnderflowStartedEvent.aidl` | Parcelable carried by `onUnderflowStarted()`. |
+| `UnderflowResolvedEvent.aidl` | Parcelable carried by `onUnderflowResolved()`. |
 
 ## Initialization
 
@@ -278,6 +288,33 @@ sequenceDiagram
 ```
 
 This is what makes dual-decode session switching seamless. Two decoder → sink chains run concurrently against the same AV Clock (or an explicitly synchronised pair of clocks), with exactly one mapped to the plane at a time. Switching between them is a mapping swap with no stop, flush or resync on either chain: the newly mapped sink was already consuming at the shared clock's correct presentation times, so video is rendered from the switch point onwards. Paired with the equivalent mixer-input routing swap on the [Audio Sink](../audiosink/audio_sink.md), a full A/V session switch is one mapping change plus one routing change while both sessions keep running.
+
+## Metrics
+
+`IVideoSink.getMetrics()` returns the metrics asked for, latched at one instant with a `CLOCK_MONOTONIC_RAW` timestamp; `getMetric()` returns one. Both are callable in any state. Counters count from service initialisation and are never reset, so a session or interval figure is the difference of two snapshots. The rules common to every component are in the [HAL Metrics Pattern](../standards/hal_metrics_pattern.md); what each metric measures, excludes and is used for is in the Doxygen of `Metric.aidl`.
+
+| Metric | Unit | Kind | Meaning |
+|---|---|---|---|
+| `FRAMES_RENDERED` | frames | counter | Frames presented at their time. |
+| `FRAMES_DROPPED` | frames | counter | Frames discarded because they arrived too late. |
+| `FRAMES_REPEATED` | frames | counter | Extra display periods spent on a frame already shown. |
+| `FRAME_REPEAT_EPISODES` | episodes | counter | Freezes started. |
+| `UNDERFLOW_EPISODES` | episodes | counter | Underflows started. |
+| `UNDERFLOW_DURATION_NS` | nanoseconds | counter | Total time spent in underflow. |
+
+Each event below is raised on `IVideoSinkEventListener` and carries its own parcelable, named after the callback.
+
+| Callback | Raised | Carries |
+|---|---|---|
+| `onFrameDropEvent()` | One frame the sink dropped for arriving late. | `timestampNs`, `presentationTimeNs` |
+| `onFrameRepeatStarted()` | A freeze has started: the sink has shown a frame again because the frame due was missing or late. | `timestampNs`, `presentationTimeNs` |
+| `onFrameRepeatResolved()` | The freeze reported by the matching FrameRepeatStartedEvent has ended: a new frame has been presented. | `timestampNs`, `presentationTimeNs`, `durationNs`, `frameCount` |
+| `onUnderflowStarted()` | An underflow has started: the frame queue was empty at the presentation time of the next frame. | `timestampNs`, `presentationTimeNs` |
+| `onUnderflowResolved()` | The underflow reported by the matching UnderflowStartedEvent has ended: a frame has been presented. | `timestampNs`, `presentationTimeNs`, `durationNs` |
+
+Frames lost or damaged before they reach the sink are counted by the [Video Decoder](../videodecoder/video_decoder.md). The two components latch separately, so figures read from both are not one atomic read.
+
+The `METRIC_*` properties that these metrics replace are deprecated and remain readable.
 
 ## Video Sink States
 

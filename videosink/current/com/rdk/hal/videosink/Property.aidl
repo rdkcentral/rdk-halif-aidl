@@ -116,6 +116,10 @@ enum Property {
      * @exception binder::Status::Exception::EX_NONE for success
      * @exception binder::Status::Exception::EX_UNSUPPORTED_OPERATION if try to modify Read-only property.
      *
+     * @deprecated Deprecated since 2026-11-10. Use Metric::FRAMES_RENDERED through
+     * IVideoSink.getMetrics().
+     * Reason: the metric is typed, latched with a timestamp and counts from
+     * service initialisation, where this property resets with the session.
      */
     METRIC_FRAMES_PRESENTED = 1001,
 
@@ -130,6 +134,10 @@ enum Property {
      * @exception binder::Status::Exception::EX_NONE for success
      * @exception binder::Status::Exception::EX_UNSUPPORTED_OPERATION if try to modify Read-only property.
      *
+     * @deprecated Deprecated since 2026-11-10. Use Metric::FRAMES_DROPPED through
+     * IVideoSink.getMetrics().
+     * Reason: the metric is typed, latched with a timestamp and counts from
+     * service initialisation, where this property resets with the session.
      */
     METRIC_FRAMES_DROPPED_LATE = 1002,
 
@@ -172,6 +180,10 @@ enum Property {
      * @exception binder::Status::Exception::EX_NONE for success
      * @exception binder::Status::Exception::EX_UNSUPPORTED_OPERATION if try to modify Read-only property.
      *
+     * @deprecated Deprecated since 2026-11-10. Use Metric::FRAMES_REPEATED through
+     * IVideoSink.getMetrics().
+     * Reason: the metric is typed, latched with a timestamp and counts from
+     * service initialisation, where this property resets with the session.
      */
     METRIC_FRAMES_REPEATED_MISSING_FRAME = 1005,
 
@@ -186,6 +198,10 @@ enum Property {
      * @exception binder::Status::Exception::EX_NONE for success
      * @exception binder::Status::Exception::EX_UNSUPPORTED_OPERATION if try to modify Read-only property.
      *
+     * @deprecated Deprecated since 2026-11-10. Use Metric::UNDERFLOW_EPISODES through
+     * IVideoSink.getMetrics().
+     * Reason: the metric is typed, latched with a timestamp and counts from
+     * service initialisation, where this property resets with the session.
      */
     METRIC_UNDERFLOWED = 1006,
 }
