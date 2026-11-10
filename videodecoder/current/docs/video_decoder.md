@@ -255,7 +255,8 @@ sequenceDiagram
     alt atLeast(service, 0, 3, 1)
         C->>DC: decodeBufferWithMetadata(buffer, {codecSpecificData = avcC/hvcC})
     else 0.3.0.x server, switch guaranteed
-        C->>DC: flush()
+        C->>DC: flush(false)
+        D-->>C: onStateChanged(FLUSHING → STARTED)
         C->>DC: parseCodecSpecificData(format, record)
         C->>DC: decodeBufferWithMetadata(first AU of new configuration, metadata)
     end
@@ -315,7 +316,7 @@ Client gating rules:
 
 Semantics note: on a 0.3.1.0 or later server, `parseCodecSpecificData()` applies from the next buffer submitted after it returns, and `InputBufferMetadata.codecSpecificData` applies from the buffer that carries it. Both replace the codec configuration; neither selects the input layout.
 
-On a 0.3.0.x server the released contract covers `parseCodecSpecificData()` only before buffers are submitted. When a record sent mid-stream takes effect relative to buffers already queued is vendor-specific. A client that needs a guaranteed switch on such a server calls `flush()` (discarding queued buffers), then `parseCodecSpecificData()`, then submits from the first access unit of the new configuration.
+On a 0.3.0.x server the released contract covers `parseCodecSpecificData()` only before buffers are submitted. When a record sent mid-stream takes effect relative to buffers already queued is vendor-specific. A client that needs a guaranteed switch on such a server calls `flush(false)` (discarding queued buffers), waits for `onStateChanged(FLUSHING → STARTED)`, because `parseCodecSpecificData()` requires `STARTED`, then calls `parseCodecSpecificData()` and submits from the first access unit of the new configuration.
 
 ### Under SVP
 
