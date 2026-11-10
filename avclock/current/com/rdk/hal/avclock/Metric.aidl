@@ -27,6 +27,9 @@ package com.rdk.hal.avclock;
  * difference of two snapshots for a session or an interval. A gauge is the
  * level at the instant of the read.
  *
+ * Each resource instance keeps its own figures: a counter covers that
+ * instance only, across every session opened on it.
+ *
  * The metrics a product serves are listed under supportedMetrics in its HAL
  * Feature Profile. Values are append-only: a member is never renumbered or
  * reused.

@@ -24,14 +24,14 @@ sequenceDiagram
 | M1 | The component that produces a figure serves it. No shared metrics module, no shared metric types and no generated identifiers: every type below lives in the component's own package. |
 | M2 | Metrics are a `Metric` enum, `@VintfStability`, `@Backing(type = "int")`, numbered from 0 and append-only. A member is never renumbered or reused. |
 | M3 | A value is a `long` in the unit its member documents. Time is in nanoseconds and the member name ends `_NS`. |
-| M4 | A metric is a counter or a gauge. A counter starts at zero when the service initialises and only rises; no call resets it. A gauge is the level at the instant of the read. |
+| M4 | A metric is a counter or a gauge. A counter starts at zero when the service initialises and only rises; no call resets it. Each resource instance keeps its own figures, across every session opened on it. A gauge is the level at the instant of the read. |
 | M5 | `getMetrics(in Metric[] metrics)` returns a `MetricSnapshot`. The service latches `timestampNs` (`CLOCK_MONOTONIC_RAW`, nanoseconds) and every value at one instant, at the start of the read, before copying any out. An empty array asks for every supported metric. |
 | M6 | Each `MetricValue` carries its `Metric` id. A metric that is not supported, or has no value at present, has no entry in the snapshot; there is no sentinel value and no status field. |
 | M7 | `getMetric(in Metric metric)` returns one value. It throws `EX_UNSUPPORTED_OPERATION` for a metric the product does not support and `EX_ILLEGAL_STATE` for one that has no value at present. |
 | M8 | Both accessors are callable in any state. |
 | M9 | The metrics a product serves are listed once, as `supportedMetrics` under the component in its HAL Feature Profile, and apply to every resource instance. |
 | M10 | A countable occurrence has an event: one callback on the component's event listener, with its own parcelable. An episode, something with a start and an end, has a pair: `on<Thing>Started` and `on<Thing>Resolved`. |
-| M11 | Every event parcelable carries `timestampNs`, the `CLOCK_MONOTONIC_RAW` time the service detected the event, and the values that belong to it: presentation time, and for a resolved event the duration and any count. |
+| M11 | Every event parcelable carries `timestampNs`, the `CLOCK_MONOTONIC_RAW` time the service detected the event, and the values that belong to it: presentation time (`-1` where the frame carried none), and for a resolved event the duration and any count. |
 | M12 | A figure is counted where it is experienced. Where a decoder and a sink could both report something, the component whose figure describes what the audience saw or heard serves it, and the other does not duplicate it. |
 | M13 | Deliberate behaviour is excluded: frames discarded by a flush, a seek, a reconfiguration, a stop, end of stream or pacing are not drops, and repeats made by frame rate conversion are not freezes. |
 | M14 | Metrics from two components are two reads, latched separately. Document any pairing a client is likely to make as approximate. |
