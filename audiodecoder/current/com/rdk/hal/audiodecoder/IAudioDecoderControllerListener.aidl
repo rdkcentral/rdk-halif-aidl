@@ -79,9 +79,12 @@ oneway interface IAudioDecoderControllerListener {
      * Audio EOS is always client-signalled, so this callback is the sole
      * end-of-stream event for the audio decoder.
      *
-     * After this callback the decoder remains in `State::STARTED` but is
-     * drained; no further `onFrameOutput()` is delivered until `flush()` or
-     * `stop()` + `start()`.
+     * After an uninterrupted end-of-stream the decoder remains in
+     * `State::STARTED` but is drained; no further `onFrameOutput()` is
+     * delivered until `flush(false)`, or `flush(true)` or `stop()` followed by
+     * `start()`. When a `flush()` interrupted the end-of-stream, the decoder is
+     * in the state that flush ended in: `STARTED` for reset=false, `READY` for
+     * reset=true.
      *
      * @see IAudioDecoderController.signalEndOfStream()
      */

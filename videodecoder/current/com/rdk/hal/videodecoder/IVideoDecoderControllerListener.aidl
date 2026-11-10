@@ -73,9 +73,12 @@ oneway interface IVideoDecoderControllerListener {
      * in-bitstream marker (`FrameMetadata.bitstreamEOS`) never does - it may
      * denote a splice boundary rather than authoritative end-of-presentation.
      *
-     * After this callback the decoder remains in `State::STARTED` but is
-     * drained; no further `onFrameOutput()` is delivered until `flush()` or
-     * `stop()` + `start()`.
+     * After an uninterrupted end-of-stream the decoder remains in
+     * `State::STARTED` but is drained; no further `onFrameOutput()` is
+     * delivered until `flush(false)`, or `flush(true)` or `stop()` followed by
+     * `start()`. When a `flush()` interrupted the end-of-stream, the decoder is
+     * in the state that flush ended in: `STARTED` for reset=false, `READY` for
+     * reset=true.
      *
      * @see IVideoDecoderController.signalEndOfStream()
      */

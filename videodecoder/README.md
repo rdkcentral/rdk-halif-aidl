@@ -37,7 +37,8 @@ When `metadata.endOfStream = true`:
 This resolves the #380 vendor divergence: with EOS being just-another-metadata-field on the final real frame (rather than a separate EOS-only callback with undefined fields), there is no ambiguity about what the other metadata fields mean — they describe the frame being delivered.
 
 After this callback the decoder remains in `State::STARTED` but is drained.
-No further `onFrameOutput()` is delivered until `flush()` or `stop()` + `start()`.
+No further `onFrameOutput()` is delivered until `flush(false)`, or `flush(true)`
+or `stop()` followed by `start()`.
 
 ## EOS lifecycle
 
@@ -80,14 +81,19 @@ when no final data exists.
 
 ### UC-4: EOS interrupted by `flush()` or `stop()`
 
-Any pending EOS callback is discarded along with any undelivered frames.
-A new EOS callback can be delivered only after a subsequent EOS signal.
+On `flush()`, undelivered frames are discarded but the pending EOS callback
+is still delivered once, after the flush completes. The decoder is then in
+`STARTED` for reset=false, or `READY` for reset=true.
+
+On `stop()`, the pending EOS callback is discarded along with any undelivered
+frames. A new EOS callback can be delivered only after a subsequent EOS signal.
 
 ### UC-5: Restart without flush after EOS
 
 Calling `decodeBufferWithMetadata()` after the EOS callback has been
 delivered returns `EX_ILLEGAL_STATE`. The application must call
-`flush(reset=true)` or `stop()` + `start()` first.
+`flush(reset=false)`, or `flush(reset=true)` or `stop()` followed by
+`start()`, first.
 
 ### UC-6: Multiple EOS attempts
 

@@ -355,7 +355,7 @@ End-of-stream is a discrete signal, not a per-buffer flag. The client drives it 
 
 This is distinct from `stop()` and `flush()`, which abruptly discard any held frames. `signalEndOfStream()` drains them: the HAL decodes and emits every held frame in presentation order via `onFrameOutput()` (each with its `FrameMetadata`), dropping none.
 
-**Output side:** after the final `onFrameOutput()` of the drained session, the HAL fires `IAudioDecoderControllerListener.onEndOfStream()` exactly once. It is delivered on the same listener and ordered in-band - it follows the last frame on the same ordered callback channel. After this callback the decoder remains in `State::STARTED` but is drained; no further `onFrameOutput()` is delivered until `flush()` or `stop()` + `start()`.
+**Output side:** after the final `onFrameOutput()` of the drained session, the HAL fires `IAudioDecoderControllerListener.onEndOfStream()` exactly once. It is delivered on the same listener and ordered in-band - it follows the last frame on the same ordered callback channel. After this callback the decoder remains in `State::STARTED` but is drained; no further `onFrameOutput()` is delivered until `flush(false)`, or `flush(true)` or `stop()` followed by `start()`.
 
 **Flush during a pending EOS:** if the client calls `flush()` after `signalEndOfStream()` but before `onEndOfStream()` has fired - for example a flushing seek that arrives while the decoder is still draining - the flush takes effect normally: input buffers not yet decoded are freed and any held frames are discarded rather than drained, so no `onFrameOutput()` is delivered for the pre-flush segment. The requested end-of-stream is still honoured: the HAL fires `onEndOfStream()` exactly once after the flush completes and the decoder transitions back to `State::STARTED` when reset=false and to `State::READY` when reset=true.
 
@@ -614,8 +614,8 @@ sequenceDiagram
     Controller-->>IAudioDecoderControllerListener: onFrameOutput(pts, frameBufferHandle=1000, metadata)
     Controller->>IAVBuffer: free(bufferHandle=1)
 
-    Note over ADC: flush() transitions from STARTED → FLUSHING → STARTED
-    Client->>Controller: flush()
+    Note over ADC: flush(reset=false) transitions from STARTED → FLUSHING → STARTED<br>flush(reset=true) ends FLUSHING → READY; start() before further input
+    Client->>Controller: flush(reset=false)
     ADC-->>IAudioDecoderEventListener: onStateChanged(STARTED → FLUSHING)
     Controller->>IAVBuffer: free(bufferHandle=2)
     ADC-->>IAudioDecoderEventListener: onStateChanged(FLUSHING → STARTED)

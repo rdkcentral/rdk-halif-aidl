@@ -157,6 +157,10 @@ interface IVideoDecoderController {
      * Any pending decoded video frames due for callback are returned to the video frame buffer pool.
      * The internal Video Decoder state is optionally reset.
      *
+     * On completion the decoder transitions from `FLUSHING` to `STARTED` when
+     * reset=false, and accepts input straight away. When reset=true it
+     * transitions to `READY`, and `start()` is required before further input.
+     *
      * <b>Flush during a pending end-of-stream:</b> if `flush()` is called after
      * `signalEndOfStream()` has been invoked but before
      * `IVideoDecoderControllerListener.onEndOfStream()` has fired, the flush
@@ -164,10 +168,10 @@ interface IVideoDecoderController {
      * reorder/DPB tail is discarded rather than drained, so none of those
      * frames are emitted via `onFrameOutput()`. The requested end-of-stream is
      * still honoured: the HAL fires `onEndOfStream()` exactly once after the
-     * flush completes and the decoder transitions back to `STARTED` when reset=false
-     * and to `READY` when reset=true.
+     * flush completes, whichever state the flush ends in.
      *
-     * @param[in] reset - When true, the internal Video Decoder state is fully reset back to its opened `READY` state.
+     * @param[in] reset - When true, the internal Video Decoder state is fully reset and the decoder
+     *                    ends in `State::READY`. When false, it ends in `State::STARTED`.
      *
      * @exception binder::Status::Exception::EX_NONE for success
      * @exception binder::Status::Exception::EX_ILLEGAL_STATE
@@ -225,7 +229,7 @@ interface IVideoDecoderController {
      *
      * A second call is a no-op. After this call any `decodeBufferWithMetadata()`
      * throws `EX_ILLEGAL_STATE`. The decoder remains in `STARTED` (drained)
-     * until `flush()` or `stop()` + `start()`. If `flush()` arrives after this
+     * until `flush(false)`, or `flush(true)` or `stop()` followed by `start()`. If `flush()` arrives after this
      * call but before `onEndOfStream()` has fired, the held frames are
      * discarded rather than drained, but the requested end-of-stream is still
      * honoured - `onEndOfStream()` fires once after the flush completes; see
