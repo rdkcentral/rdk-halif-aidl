@@ -22,6 +22,8 @@ import com.rdk.hal.avclock.Capabilities;
 import com.rdk.hal.avclock.IAVClockController;
 import com.rdk.hal.avclock.IAVClockControllerListener;
 import com.rdk.hal.avclock.IAVClockEventListener;
+import com.rdk.hal.avclock.Metric;
+import com.rdk.hal.avclock.MetricSnapshot;
 import com.rdk.hal.avclock.Property;
 import com.rdk.hal.avclock.State;
 
@@ -195,4 +197,45 @@ interface IAVClock {
      * @see registerEventListener()
      */
     boolean unregisterEventListener(in IAVClockEventListener avClockEventListener);
+
+    /**
+     * Reads metrics, latched at one instant.
+     *
+     * Callable in any state. The values returned are those of this resource
+     * instance since the service initialised.
+     *
+     * @param[in] metrics    The metrics wanted. An empty array asks for every
+     * metric the product supports.
+     *
+     * @returns The latch time and one entry per requested metric that is
+     * supported and has a value. A metric that is not supported, or has no
+     * value at present, is left out; it is not an error.
+     *
+     * @exception binder::Status::Exception::EX_NONE for success.
+     *
+     * @see Metric, getMetric()
+     */
+    MetricSnapshot getMetrics(in Metric[] metrics);
+
+    /**
+     * Reads one metric.
+     *
+     * Callable in any state. Use getMetrics() where two figures are to be
+     * compared, or a rate taken, since this call returns no latch time.
+     *
+     * @param[in] metric    The metric wanted.
+     *
+     * @returns The value, in the unit documented on the Metric member.
+     *
+     * @exception binder::Status::Exception::EX_NONE for success.
+     *
+     * @exception binder::Status::Exception::EX_UNSUPPORTED_OPERATION if the
+     * product does not support the metric.
+     *
+     * @exception binder::Status::Exception::EX_ILLEGAL_STATE if the metric is
+     * supported but has no value at present.
+     *
+     * @see Metric, getMetrics()
+     */
+    long getMetric(in Metric metric);
 }

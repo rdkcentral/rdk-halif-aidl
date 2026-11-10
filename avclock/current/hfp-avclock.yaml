@@ -24,6 +24,12 @@
 
 avclock:                        # Component object begins
   interfaceVersion: current
+
+  # Metrics this product serves through IAVClock.getMetrics(), for
+  # every resource instance. Names are members of the Metric enum.
+  supportedMetrics:
+    - SYNC_OFFSET_NS
+    - RESYNC_COUNT
   IAVClock:                     # Resource list
     - 0
     - 1
