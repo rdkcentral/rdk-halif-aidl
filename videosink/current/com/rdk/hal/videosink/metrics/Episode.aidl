@@ -65,8 +65,9 @@ enum Episode {
      *
      * Starts when the frame queue is empty at the presentation time of the next
      * frame, and ends when a frame is presented. Each episode adds one to
-     * Metric::UNDERFLOW_EPISODES. The started event is raised with
-     * onVideoUnderflow() and the resolved event with onVideoResumed().
+     * Metric::UNDERFLOW_EPISODES. The existing onVideoUnderflow() and
+     * onVideoResumed() callbacks are still raised, at the start and the end of
+     * the episode; they carry no values.
      *
      * durationNs runs from the started event to the resolved event; count is
      * not used and is 0. presentationTimeNs is that of the first frame due and

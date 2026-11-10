@@ -265,7 +265,7 @@ For audio decoded by the Audio Decoder, the middleware forwards each decoded fra
 | `UNDERFLOW_EPISODES` | episodes | counter | Underflows started. |
 | `UNDERFLOW_DURATION_NS` | nanoseconds | counter | Total time spent in underflow. |
 
-Events are episodes only: nothing is raised per frame. `IAudioSinkEventListener.onEpisodeStarted()` is raised once when an episode starts and `onEpisodeResolved()` once when it ends, each naming the `Episode`. The resolved event carries the episode's `durationNs` and `count`. A product raises an episode where it supports the metric shown.
+Events are episodes only: nothing is raised per frame. `IAudioSinkEventListener.onEpisodeStarted()` is raised once when an episode starts and `onEpisodeResolved()` once when it ends, each naming the `Episode`. The resolved event carries the episode's `durationNs` and `count`. Both events carry `metrics`, a `MetricSnapshot` of every supported metric latched at the event, so no second read is needed. A product raises an episode where it supports the metric shown.
 
 | Episode | Starts and ends | Metric |
 |---|---|---|

@@ -204,6 +204,12 @@ interface IAVClock {
      * Callable in any state. The values returned are those of this resource
      * instance since the service initialised.
      *
+     * Counters only rise and no call resets them. A figure for a session or an
+     * interval is the difference of two snapshots, and a rate is that
+     * difference divided by the difference of their timestampNs. A counter
+     * lower than in an earlier snapshot means the service restarted; the later
+     * snapshot is then the new baseline.
+     *
      * @param[in] metrics    The metrics wanted. An empty array asks for every
      * metric the product supports.
      *

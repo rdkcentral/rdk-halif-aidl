@@ -19,6 +19,7 @@
 package com.rdk.hal.videosink.metrics;
 
 import com.rdk.hal.videosink.metrics.Episode;
+import com.rdk.hal.videosink.metrics.MetricSnapshot;
 
 /**
  * @brief An episode has started. Carried by onEpisodeStarted().
@@ -41,4 +42,11 @@ parcelable EpisodeStarted {
      * the Episode member, or -1 where the frame carried none.
      */
     long presentationTimeNs;
+
+    /**
+     * Every metric the product supports, latched at timestampNs: the values
+     * getMetrics() with an empty array would have returned at that instant, so
+     * the event needs no second read.
+     */
+    MetricSnapshot metrics;
 }

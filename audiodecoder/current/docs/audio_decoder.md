@@ -582,7 +582,7 @@ The Audio Decoder also provides properties which allow for an override of the pl
 | `FRAMES_DROPPED` | frames | counter | Input frames for which the decoder output nothing. |
 | `DECODE_ERRORS` | errors | counter | Errors the decoder has raised. |
 
-Events are episodes only: nothing is raised per frame. `IAudioDecoderEventListener.onEpisodeStarted()` is raised once when an episode starts and `onEpisodeResolved()` once when it ends, each naming the `Episode`. The resolved event carries the episode's `durationNs` and `count`. A product raises an episode where it supports the metric shown.
+Events are episodes only: nothing is raised per frame. `IAudioDecoderEventListener.onEpisodeStarted()` is raised once when an episode starts and `onEpisodeResolved()` once when it ends, each naming the `Episode`. The resolved event carries the episode's `durationNs` and `count`. Both events carry `metrics`, a `MetricSnapshot` of every supported metric latched at the event, so no second read is needed. A product raises an episode where it supports the metric shown.
 
 | Episode | Starts and ends | Metric |
 |---|---|---|

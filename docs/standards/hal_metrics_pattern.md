@@ -32,11 +32,21 @@ sequenceDiagram
 | M8 | Both accessors are callable in any state. |
 | M9 | The metrics a product serves are listed once, as `supportedMetrics` under the component in its HAL Feature Profile, and apply to every resource instance. |
 | M10 | Events are episodes only. An episode is something with a start and an end; it is a member of the component's `Episode` enum (`@VintfStability`, `@Backing(type = "int")`, numbered from 0, append-only) and is reported once when it starts, by `onEpisodeStarted()`, and once when it ends, by `onEpisodeResolved()`. Nothing is raised per frame or per occurrence: those figures are read with `getMetrics()`. A new episode is a new enum member, never a new callback. |
-| M11 | `EpisodeStarted` carries the `Episode` id, `timestampNs` (the `CLOCK_MONOTONIC_RAW` time the service detected the event) and `presentationTimeNs` (`-1` where the frame carried none). `EpisodeResolved` carries the same and adds `durationNs` and `count`. Each `Episode` member documents what its duration and count measure; a member with nothing to count reports 0. |
+| M11 | `EpisodeStarted` carries the `Episode` id, `timestampNs` (the `CLOCK_MONOTONIC_RAW` time the service detected the event), `presentationTimeNs` (`-1` where the frame carried none) and `metrics`, a `MetricSnapshot` of every supported metric latched at `timestampNs`, so an event is a complete record and needs no second read. `EpisodeResolved` carries the same and adds `durationNs` and `count`. Each `Episode` member documents what its duration and count measure; a member with nothing to count reports 0. |
 | M12 | An episode whose occurrences are separate in time, such as dropped frames or decode errors, starts at the first occurrence when none is open and ends when 1 second has passed without another. Its duration runs from the first occurrence to the last. An episode still open at `flush()` or `stop()` ends there. |
 | M13 | A figure is counted where it is experienced. Where a decoder and a sink could both report something, the component whose figure describes what the audience saw or heard serves it, and the other does not duplicate it. |
 | M14 | Deliberate behaviour is excluded: frames discarded by a flush, a seek, a reconfiguration, a stop, end of stream or pacing are not drops, and repeats made by frame rate conversion are not freezes. |
 | M15 | Metrics from two components are two reads, latched separately. Document any pairing a client is likely to make as approximate. |
+
+## Using the figures
+
+| To get | Do |
+|---|---|
+| A figure for a session or an interval | Read a snapshot at its start and at its end, with one `getMetrics()` call each, and subtract. |
+| A rate | Divide the difference of a counter by the difference of the two `timestampNs`. |
+| A ratio of two counters | Ask for both in the same `getMetrics()` call, so both are latched together, then divide the differences. |
+| The state at an event | Read `metrics` in the episode event; it is latched at the event's `timestampNs`. |
+| A baseline after a service restart | A counter lower than in an earlier snapshot means the service restarted and counts from zero; take the later snapshot as the new baseline. |
 
 ## Files
 
@@ -46,8 +56,8 @@ sequenceDiagram
 | `metrics/MetricValue.aidl` | `{ Metric id; long value; }` |
 | `metrics/MetricSnapshot.aidl` | `{ long timestampNs; MetricValue[] values; }` |
 | `metrics/Episode.aidl` | The enum of episodes. Omitted, with the two files below, by a component that has none. |
-| `metrics/EpisodeStarted.aidl` | `{ Episode id; long timestampNs; long presentationTimeNs; }` |
-| `metrics/EpisodeResolved.aidl` | `{ Episode id; long timestampNs; long presentationTimeNs; long durationNs; long count; }` |
+| `metrics/EpisodeStarted.aidl` | `{ Episode id; long timestampNs; long presentationTimeNs; MetricSnapshot metrics; }` |
+| `metrics/EpisodeResolved.aidl` | `{ Episode id; long timestampNs; long presentationTimeNs; long durationNs; long count; MetricSnapshot metrics; }` |
 | `I<Component>.aidl` | `getMetrics()` and `getMetric()`, appended after the existing methods. |
 | `I<Component>EventListener.aidl` | `onEpisodeStarted()` and `onEpisodeResolved()`, appended after the existing methods. |
 | `hfp-<component>.yaml` | `supportedMetrics`. |
@@ -100,6 +110,8 @@ Every `Metric` member carries the same six paragraphs, in this order. A reader m
 - [ ] `getMetrics()` and `getMetric()` are the last methods of the main interface, with the exceptions of rule M7.
 - [ ] Every event is a member of `Episode`, raised once at its start and once at its end; nothing is raised per occurrence.
 - [ ] Every `Episode` member documents when it starts, when it ends and what `durationNs`, `count` and `presentationTimeNs` hold.
+- [ ] Both episode parcelables carry `metrics`, latched at the event's `timestampNs`.
+- [ ] `interface.yaml` lists `com/rdk/hal/<component>/metrics/*.aidl` under `srcs`.
 - [ ] `onEpisodeStarted()` and `onEpisodeResolved()` are appended to the event listener; no existing method or callback is changed or removed.
 - [ ] `supportedMetrics` in `hfp-<component>.yaml` lists members of the enum by name.
 - [ ] The component document has a `Metrics` section, a requirement for the accessors and one for the episodes.

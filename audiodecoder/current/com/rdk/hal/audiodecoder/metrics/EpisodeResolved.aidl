@@ -19,6 +19,7 @@
 package com.rdk.hal.audiodecoder.metrics;
 
 import com.rdk.hal.audiodecoder.metrics.Episode;
+import com.rdk.hal.audiodecoder.metrics.MetricSnapshot;
 
 /**
  * @brief The episode reported by the matching EpisodeStarted has ended.
@@ -53,4 +54,11 @@ parcelable EpisodeResolved {
      * Occurrences in the episode, as defined on the Episode member.
      */
     long count;
+
+    /**
+     * Every metric the product supports, latched at timestampNs: the values
+     * getMetrics() with an empty array would have returned at that instant, so
+     * the event needs no second read.
+     */
+    MetricSnapshot metrics;
 }

@@ -2,6 +2,7 @@ aidl_interface:
   name: audiodecoder
   srcs:
     - com/rdk/hal/audiodecoder/*.aidl
+    - com/rdk/hal/audiodecoder/metrics/*.aidl
   imports:
     - common@current
   stability: vintf
