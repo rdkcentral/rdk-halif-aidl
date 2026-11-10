@@ -84,7 +84,8 @@ oneway interface IAudioDecoderControllerListener {
      * delivered until `flush(false)`, or `flush(true)` or `stop()` followed by
      * `start()`. When a `flush()` interrupted the end-of-stream, the decoder is
      * in the state that flush ended in: `STARTED` for reset=false, `READY` for
-     * reset=true.
+     * reset=true. This callback follows the `onStateChanged()` that ends the
+     * flush.
      *
      * @see IAudioDecoderController.signalEndOfStream()
      */
