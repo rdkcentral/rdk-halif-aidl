@@ -416,11 +416,11 @@ When a Video Decoder session enters a FLUSHING or STOPPING transitory state it s
 | Buffer | Owner when `flush()` or `stop()` is called | Outcome |
 | --- | --- | --- |
 | Input buffer accepted by `decodeBufferWithMetadata()`, not yet decoded | HAL | Freed by the HAL. |
-| Output buffer decoded but not yet delivered via `onFrameOutput()` | HAL | Freed by the HAL and never delivered. |
-| Output buffer already delivered via `onFrameOutput()` | Client | Unchanged: the client still owns it, and frees it with `IAVBuffer.free()` or passes it to the sink. |
+| Output buffer with no `onFrameOutput()` yet issued | HAL | Freed by the HAL and never delivered. |
+| Output buffer whose `onFrameOutput()` has been issued, including a callback still in flight | Client | Not freed by the HAL: the client frees it with `IAVBuffer.free()` or passes it to the sink. |
 | Tunnelled output (`frameAVBufferHandle == -1`) | Vendor layer | Discarded inside the vendor layer. |
 
-Once `flush()` or `stop()` returns, the HAL issues no `onFrameOutput()` for data submitted before the call. The listener is `oneway`, so a callback issued before the return can still arrive after it; the client owns that buffer and frees it if it no longer needs it.
+Once `flush()` or `stop()` returns, the HAL issues no `onFrameOutput()` for data submitted before the call. Ownership passes when the HAL issues `onFrameOutput()`. The listener is `oneway`, so a callback issued before the return can still arrive after it; the client owns that buffer and frees it if it no longer needs it.
 
 The sequence diagram below shows the behaviour of the callbacks.
 

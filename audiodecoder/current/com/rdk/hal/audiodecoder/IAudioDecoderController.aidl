@@ -152,11 +152,14 @@ interface IAudioDecoderController {
      * Any input data buffers that have been passed for decode but have
      * not yet been decoded are automatically freed.
      *
-     * Output buffers the HAL still holds (decoded but not yet delivered via
-     * `onFrameOutput()`) are freed and never delivered. Output buffers already
-     * delivered via `onFrameOutput()` stay owned by the client, which frees them
-     * with `IAVBuffer.free()` or passes them on. Once this call returns, no
-     * `onFrameOutput()` is issued for data submitted before it.
+     * Ownership of an output buffer passes to the client when the HAL issues
+     * `onFrameOutput()` for it, even though the `oneway` callback may arrive
+     * later. Output buffers with no `onFrameOutput()` yet issued are freed and
+     * never delivered. Output buffers whose `onFrameOutput()` has been issued,
+     * including callbacks still in flight, are the client's: the HAL does not
+     * free them, and the client frees them with `IAVBuffer.free()` or passes
+     * them on. Once this call returns, no `onFrameOutput()` is issued for data
+     * submitted before it.
      * The internal audio decoder state is optionally reset.
      *
      * @param[in] reset     When true, the internal audio decoder state is fully reset back to its opened READY state.
