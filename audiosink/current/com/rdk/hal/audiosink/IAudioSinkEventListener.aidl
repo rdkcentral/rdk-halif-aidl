@@ -18,7 +18,12 @@
  */
 package com.rdk.hal.audiosink;
 import com.rdk.hal.audiosink.ErrorCode;
+import com.rdk.hal.audiosink.FrameDropEvent;
+import com.rdk.hal.audiosink.GapResolvedEvent;
+import com.rdk.hal.audiosink.GapStartedEvent;
 import com.rdk.hal.audiosink.State;
+import com.rdk.hal.audiosink.UnderflowResolvedEvent;
+import com.rdk.hal.audiosink.UnderflowStartedEvent;
 
 /**
  *  @brief     Callbacks listener interface from audio sink.
@@ -89,4 +94,52 @@ oneway interface IAudioSinkEventListener {
      * Callback when a requested flush() operation has completed.
      */
     void onFlushComplete();
+
+    /**
+     * Raised once per frame counted by Metric::FRAMES_DROPPED.
+     *
+     * @param[in] event    What happened and when.
+     *
+     * @see FrameDropEvent
+     */
+    void onFrameDropEvent(in FrameDropEvent event);
+
+    /**
+     * Raised once when an audio gap starts; onGapResolved() follows when audio
+     * plays again.
+     *
+     * @param[in] event    What happened and when.
+     *
+     * @see GapStartedEvent
+     */
+    void onGapStarted(in GapStartedEvent event);
+
+    /**
+     * Raised once when the gap reported by onGapStarted() ends.
+     *
+     * @param[in] event    What happened and when.
+     *
+     * @see GapResolvedEvent
+     */
+    void onGapResolved(in GapResolvedEvent event);
+
+    /**
+     * Raised once when an underflow starts, with onAudioUnderflow();
+     * onUnderflowResolved() follows when playback resumes.
+     *
+     * @param[in] event    What happened and when.
+     *
+     * @see UnderflowStartedEvent
+     */
+    void onUnderflowStarted(in UnderflowStartedEvent event);
+
+    /**
+     * Raised once when the underflow reported by onUnderflowStarted() ends,
+     * with onAudioResumed().
+     *
+     * @param[in] event    What happened and when.
+     *
+     * @see UnderflowResolvedEvent
+     */
+    void onUnderflowResolved(in UnderflowResolvedEvent event);
 }

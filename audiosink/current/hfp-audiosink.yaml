@@ -23,6 +23,17 @@
 audiosink:
   interfaceVersion: current
 
+  # Metrics this product serves through IAudioSink.getMetrics(), for
+  # every resource instance. Names are members of the Metric enum.
+  supportedMetrics:
+    - FRAMES_RENDERED
+    - FRAMES_DROPPED
+    - GAP_EPISODES
+    - GAP_FRAMES
+    - GAP_DURATION_NS
+    - UNDERFLOW_EPISODES
+    - UNDERFLOW_DURATION_NS
+
   IAudioSink:
     - id: 0
       supportsSecure: true
