@@ -44,6 +44,14 @@
 
 videodecoder:                   # Component object begins
   interfaceVersion: current
+
+  # Metrics this product serves through IVideoDecoder.getMetrics(), for
+  # every resource instance. Names are members of the Metric enum.
+  supportedMetrics:
+    - FRAMES_DECODED
+    - FRAMES_DROPPED
+    - FRAMES_CORRUPTED
+    - DECODE_ERRORS
   IVideoDecoder:                # Resource list
     - 0:                        # Resource object begins (high-tier decoder)
       supportedCodecs:          # Array of CodecCapabilities

@@ -50,6 +50,8 @@ The **RDK middleware GStreamer pipeline** includes a dedicated **RDK Video Decod
 | **HAL.VIDEODECODER.11** | The video decoder shall be able to decode back to back I-frames.| Used in I-frame trick modes. |
 | **HAL.VIDEODECODER.12** | The video decoder shall discard any frames until the first reference frame has been received. |
 | **HAL.VIDEODECODER.13** | If a client process exits, the Video Decoder server shall automatically stop and close any Video Decoder instance controlled by that client. |
+| **HAL.VIDEODECODER.14** | Shall serve every metric listed under `supportedMetrics` in the HAL Feature Profile through `getMetrics()` and `getMetric()`, in any state, counting from service initialisation. | See [metrics](#metrics). |
+| **HAL.VIDEODECODER.15** | Shall raise the matching metric event each time a supported metric that has one rises. | See [metrics](#metrics). |
 
 ## Interface Definition
 
@@ -72,6 +74,11 @@ The **RDK middleware GStreamer pipeline** includes a dedicated **RDK Video Decod
 | `OperationalMode.aidl` | Common enum value describing the current output routing mode. |
 | `PropertyKVPair.aidl` | Parcelable of a Property and PropertyValue pair. |
 | `ScanType.aidl` | Enum list of video frame scan types. |
+| `Metric.aidl` | Enum list of the metrics the video decoder serves. |
+| `MetricValue.aidl` | Parcelable pairing a `Metric` with its value. |
+| `MetricSnapshot.aidl` | Parcelable holding metric values latched at one instant. |
+| `DecodeErrorEvent.aidl` | Parcelable carried by `onDecodeErrorEvent()`. |
+| `FrameDropEvent.aidl` | Parcelable carried by `onFrameDropEvent()`. |
 
 ## Initialization
 
@@ -406,6 +413,28 @@ The byte array in `onUserDataOutput()` starts from the `user_identifier` field (
 ### Client Handling
 
 The RDK media pipeline is responsible for parsing the SEI user data from the byte array to extract CEA-608 or CEA-708 caption packets and synchronize them with playback.
+
+## Metrics
+
+`IVideoDecoder.getMetrics()` returns the metrics asked for, latched at one instant with a `CLOCK_MONOTONIC_RAW` timestamp; `getMetric()` returns one. Both are callable in any state. Counters count from service initialisation and are never reset, so a session or interval figure is the difference of two snapshots. The rules common to every component are in the [HAL Metrics Pattern](../standards/hal_metrics_pattern.md); what each metric measures, excludes and is used for is in the Doxygen of `Metric.aidl`.
+
+| Metric | Unit | Kind | Meaning |
+|---|---|---|---|
+| `FRAMES_DECODED` | frames | counter | Frames the decoder has output. |
+| `FRAMES_DROPPED` | frames | counter | Input frames for which the decoder output nothing. |
+| `FRAMES_CORRUPTED` | frames | counter | Frames output with visible damage or concealment. |
+| `DECODE_ERRORS` | errors | counter | Errors the decoder has raised. |
+
+Each event below is raised on `IVideoDecoderEventListener` and carries its own parcelable, named after the callback.
+
+| Callback | Raised | Carries |
+|---|---|---|
+| `onDecodeErrorEvent()` | One decode error. | `timestampNs`, `presentationTimeNs`, `errorCode`, `vendorErrorCode` |
+| `onFrameDropEvent()` | One frame the decoder dropped. | `timestampNs`, `presentationTimeNs` |
+
+Frames the decoder outputs can still be dropped for lateness by the [Video Sink](../videosink/video_sink.md), which serves the rendered and late-dropped counts. The two components latch separately, so figures read from both are not one atomic read.
+
+The `METRIC_*` properties that these metrics replace are deprecated and remain readable.
 
 ## Video Decoder States
 
