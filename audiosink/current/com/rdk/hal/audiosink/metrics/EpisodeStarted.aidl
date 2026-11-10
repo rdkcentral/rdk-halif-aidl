@@ -16,23 +16,29 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.rdk.hal.audiosink;
+package com.rdk.hal.audiosink.metrics;
+
+import com.rdk.hal.audiosink.metrics.Episode;
 
 /**
- * @brief One frame the sink dropped for arriving late. Each occurrence adds one
- * to Metric::FRAMES_DROPPED.
+ * @brief An episode has started. Carried by onEpisodeStarted().
  */
 @VintfStability
-parcelable FrameDropEvent {
+parcelable EpisodeStarted {
+    /**
+     * Which episode this is.
+     */
+    Episode id;
+
     /**
      * CLOCK_MONOTONIC_RAW time, in nanoseconds, at which the service detected
-     * the event.
+     * the start of the episode.
      */
     long timestampNs;
 
     /**
-     * Presentation time of the frame concerned, in nanoseconds, or -1 where the
-     * frame carried none.
+     * Presentation time, in nanoseconds, of the frame concerned, as defined on
+     * the Episode member, or -1 where the frame carried none.
      */
     long presentationTimeNs;
 }

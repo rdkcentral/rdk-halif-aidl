@@ -17,10 +17,10 @@
  * limitations under the License.
  */
 package com.rdk.hal.videodecoder;
-import com.rdk.hal.videodecoder.DecodeErrorEvent;
 import com.rdk.hal.videodecoder.ErrorCode;
-import com.rdk.hal.videodecoder.FrameDropEvent;
 import com.rdk.hal.videodecoder.State;
+import com.rdk.hal.videodecoder.metrics.EpisodeResolved;
+import com.rdk.hal.videodecoder.metrics.EpisodeStarted;
 
 /**
  *  @brief     Event callbacks listener interface from video decoder.
@@ -48,21 +48,25 @@ oneway interface IVideoDecoderEventListener {
     void onStateChanged(in State oldState, in State newState);
 
     /**
-     * Raised once per decode error, with onDecodeError(), carrying the time and
-     * the frame concerned.
+     * Raised once when an episode starts. onEpisodeResolved() follows, with the
+     * same Episode, when it ends.
      *
-     * @param[in] event    What happened and when.
+     * Episodes are the only metric events: nothing is raised per frame, and
+     * per-frame figures are read with IVideoDecoder.getMetrics().
      *
-     * @see DecodeErrorEvent
+     * @param[in] event    Which episode started, and when.
+     *
+     * @see Episode, EpisodeStarted
      */
-    void onDecodeErrorEvent(in DecodeErrorEvent event);
+    void onEpisodeStarted(in EpisodeStarted event);
 
     /**
-     * Raised once per frame counted by Metric::FRAMES_DROPPED.
+     * Raised once when the episode reported by onEpisodeStarted() ends.
      *
-     * @param[in] event    What happened and when.
+     * @param[in] event    Which episode ended, when, how long it lasted and
+     * what it counted.
      *
-     * @see FrameDropEvent
+     * @see Episode, EpisodeResolved
      */
-    void onFrameDropEvent(in FrameDropEvent event);
+    void onEpisodeResolved(in EpisodeResolved event);
 }

@@ -25,10 +25,10 @@ import com.rdk.hal.audiodecoder.Codec;
 import com.rdk.hal.audiodecoder.IAudioDecoderController;
 import com.rdk.hal.audiodecoder.IAudioDecoderControllerListener;
 import com.rdk.hal.audiodecoder.IAudioDecoderEventListener;
-import com.rdk.hal.audiodecoder.Metric;
-import com.rdk.hal.audiodecoder.MetricSnapshot;
 import com.rdk.hal.audiodecoder.Property;
 import com.rdk.hal.audiodecoder.State;
+import com.rdk.hal.audiodecoder.metrics.Metric;
+import com.rdk.hal.audiodecoder.metrics.MetricSnapshot;
 
 /**
  *  @brief     Audio Decoder HAL interface.

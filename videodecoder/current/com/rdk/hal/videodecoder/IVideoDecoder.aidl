@@ -24,11 +24,11 @@ import com.rdk.hal.videodecoder.Codec;
 import com.rdk.hal.videodecoder.IVideoDecoderController;
 import com.rdk.hal.videodecoder.IVideoDecoderControllerListener;
 import com.rdk.hal.videodecoder.IVideoDecoderEventListener;
-import com.rdk.hal.videodecoder.Metric;
-import com.rdk.hal.videodecoder.MetricSnapshot;
 import com.rdk.hal.videodecoder.Property;
 import com.rdk.hal.videodecoder.PropertyKVPair;
 import com.rdk.hal.videodecoder.State;
+import com.rdk.hal.videodecoder.metrics.Metric;
+import com.rdk.hal.videodecoder.metrics.MetricSnapshot;
 
 /**
  *  @brief     Video Decoder HAL interface.

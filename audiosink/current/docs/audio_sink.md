@@ -47,7 +47,7 @@ The interaction between the RDK GStreamer Audio Sink element and the Audio Sink 
 | **HAL.AUDIOSINK.5** | If a client process exits, the Audio Sink server shall automatically stop and close any Audio Sink instance controlled by that client. ||
 | **HAL.AUDIOSINK.6** | Shall run a session with no mixer input routed, consuming queued frames and freeing their buffers against the attached AV Clock while producing no audio. | The routing is owned by the Audio Mixer and may be set or cleared at any point in the session, including while the sink is `STARTED`. |
 | **HAL.AUDIOSINK.7** | Shall serve every metric listed under `supportedMetrics` in the HAL Feature Profile through `getMetrics()` and `getMetric()`, in any state, counting from service initialisation. | See [metrics](#metrics). |
-| **HAL.AUDIOSINK.8** | Shall raise the matching metric event each time a supported metric that has one rises. | See [metrics](#metrics). |
+| **HAL.AUDIOSINK.8** | Shall raise `onEpisodeStarted()` when an episode of a supported metric starts and `onEpisodeResolved()` when it ends. | See [metrics](#metrics). |
 
 ## Interface Definition
 
@@ -64,14 +64,12 @@ The interaction between the RDK GStreamer Audio Sink element and the Audio Sink 
 | `Property.aidl` | Enum list of audio sink properties. |
 | `Volume.aidl` | Parcelable for defining a volume and mute state. |
 | `VolumeRamp.aidl` | Enum list of volume ramp types. |
-| `Metric.aidl` | Enum list of the metrics the audio sink serves. |
-| `MetricValue.aidl` | Parcelable pairing a `Metric` with its value. |
-| `MetricSnapshot.aidl` | Parcelable holding metric values latched at one instant. |
-| `FrameDropEvent.aidl` | Parcelable carried by `onFrameDropEvent()`. |
-| `GapStartedEvent.aidl` | Parcelable carried by `onGapStarted()`. |
-| `GapResolvedEvent.aidl` | Parcelable carried by `onGapResolved()`. |
-| `UnderflowStartedEvent.aidl` | Parcelable carried by `onUnderflowStarted()`. |
-| `UnderflowResolvedEvent.aidl` | Parcelable carried by `onUnderflowResolved()`. |
+| `metrics/Metric.aidl` | Enum list of the metrics the audio sink serves. |
+| `metrics/MetricValue.aidl` | Parcelable pairing a `Metric` with its value. |
+| `metrics/MetricSnapshot.aidl` | Parcelable holding metric values latched at one instant. |
+| `metrics/Episode.aidl` | Enum list of the episodes the component reports. |
+| `metrics/EpisodeStarted.aidl` | Parcelable carried by `onEpisodeStarted()`. |
+| `metrics/EpisodeResolved.aidl` | Parcelable carried by `onEpisodeResolved()`. |
 
 ## Initialization
 
@@ -267,15 +265,13 @@ For audio decoded by the Audio Decoder, the middleware forwards each decoded fra
 | `UNDERFLOW_EPISODES` | episodes | counter | Underflows started. |
 | `UNDERFLOW_DURATION_NS` | nanoseconds | counter | Total time spent in underflow. |
 
-Each event below is raised on `IAudioSinkEventListener` and carries its own parcelable, named after the callback.
+Events are episodes only: nothing is raised per frame. `IAudioSinkEventListener.onEpisodeStarted()` is raised once when an episode starts and `onEpisodeResolved()` once when it ends, each naming the `Episode`. The resolved event carries the episode's `durationNs` and `count`. A product raises an episode where it supports the metric shown.
 
-| Callback | Raised | Carries |
+| Episode | Starts and ends | Metric |
 |---|---|---|
-| `onFrameDropEvent()` | One frame the sink dropped for arriving late. | `timestampNs`, `presentationTimeNs` |
-| `onGapStarted()` | An audio gap has started: the sink is outputting silence because the audio due was missing or late. | `timestampNs`, `presentationTimeNs` |
-| `onGapResolved()` | The audio gap reported by the matching GapStartedEvent has ended: audio is playing again. | `timestampNs`, `presentationTimeNs`, `durationNs`, `frameCount` |
-| `onUnderflowStarted()` | An underflow has started: the frame queue was empty at the presentation time of the next frame. | `timestampNs`, `presentationTimeNs` |
-| `onUnderflowResolved()` | The underflow reported by the matching UnderflowStartedEvent has ended: a frame has been played. | `timestampNs`, `presentationTimeNs`, `durationNs` |
+| `FRAME_DROP` | Covers frames counted by FRAMES_DROPPED. The episode starts at the first dropped frame when no such episode is open and ends when 1 second has passed without another. | `FRAMES_DROPPED` |
+| `GAP` | Starts when the sink outputs silence because the audio due was missing or late, and ends when audio plays again. | `GAP_EPISODES` |
+| `UNDERFLOW` | Starts when the frame queue is empty at the presentation time of the next frame, and ends when a frame is played. | `UNDERFLOW_EPISODES` |
 
 Frames lost before they reach the sink are counted by the [Audio Decoder](../audiodecoder/audio_decoder.md). The two components latch separately, so figures read from both are not one atomic read.
 

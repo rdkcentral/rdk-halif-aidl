@@ -16,29 +16,41 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.rdk.hal.audiosink;
+package com.rdk.hal.audiosink.metrics;
+
+import com.rdk.hal.audiosink.metrics.Episode;
 
 /**
- * @brief The underflow reported by the matching UnderflowStartedEvent has
- * ended: a frame has been played.
+ * @brief The episode reported by the matching EpisodeStarted has ended.
+ * Carried by onEpisodeResolved().
  */
 @VintfStability
-parcelable UnderflowResolvedEvent {
+parcelable EpisodeResolved {
+    /**
+     * Which episode this is.
+     */
+    Episode id;
+
     /**
      * CLOCK_MONOTONIC_RAW time, in nanoseconds, at which the service detected
-     * the event.
+     * the end of the episode.
      */
     long timestampNs;
 
     /**
-     * Presentation time, in nanoseconds, of the frame that ended the episode,
-     * or -1 where it is not known.
+     * Presentation time, in nanoseconds, of the frame concerned, as defined on
+     * the Episode member, or -1 where the frame carried none.
      */
     long presentationTimeNs;
 
     /**
-     * Length of the episode in nanoseconds, measured on CLOCK_MONOTONIC_RAW
-     * from the matching started event to this one.
+     * Length of the episode in nanoseconds, measured on CLOCK_MONOTONIC_RAW as
+     * defined on the Episode member.
      */
     long durationNs;
+
+    /**
+     * Occurrences in the episode, as defined on the Episode member.
+     */
+    long count;
 }

@@ -16,7 +16,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.rdk.hal.avclock;
+package com.rdk.hal.avclock.metrics;
 
 /**
  * @brief Metrics served by the AV clock.

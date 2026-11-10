@@ -17,11 +17,11 @@
  * limitations under the License.
  */
 package com.rdk.hal.audiodecoder;
-import com.rdk.hal.audiodecoder.DecodeErrorEvent;
 import com.rdk.hal.audiodecoder.ErrorCode;
-import com.rdk.hal.audiodecoder.FrameDropEvent;
 import com.rdk.hal.audiodecoder.FrameMetadata;
 import com.rdk.hal.audiodecoder.State;
+import com.rdk.hal.audiodecoder.metrics.EpisodeResolved;
+import com.rdk.hal.audiodecoder.metrics.EpisodeStarted;
 
 /**
  *  @brief     Events callbacks listener interface from audio decoder.
@@ -51,21 +51,25 @@ oneway interface IAudioDecoderEventListener {
     void onStateChanged(in State oldState, in State newState);
 
     /**
-     * Raised once per decode error, with onDecodeError(), carrying the time and
-     * the frame concerned.
+     * Raised once when an episode starts. onEpisodeResolved() follows, with the
+     * same Episode, when it ends.
      *
-     * @param[in] event    What happened and when.
+     * Episodes are the only metric events: nothing is raised per frame, and
+     * per-frame figures are read with IAudioDecoder.getMetrics().
      *
-     * @see DecodeErrorEvent
+     * @param[in] event    Which episode started, and when.
+     *
+     * @see Episode, EpisodeStarted
      */
-    void onDecodeErrorEvent(in DecodeErrorEvent event);
+    void onEpisodeStarted(in EpisodeStarted event);
 
     /**
-     * Raised once per frame counted by Metric::FRAMES_DROPPED.
+     * Raised once when the episode reported by onEpisodeStarted() ends.
      *
-     * @param[in] event    What happened and when.
+     * @param[in] event    Which episode ended, when, how long it lasted and
+     * what it counted.
      *
-     * @see FrameDropEvent
+     * @see Episode, EpisodeResolved
      */
-    void onFrameDropEvent(in FrameDropEvent event);
+    void onEpisodeResolved(in EpisodeResolved event);
 }

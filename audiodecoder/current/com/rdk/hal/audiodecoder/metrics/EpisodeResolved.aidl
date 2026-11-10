@@ -16,23 +16,41 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.rdk.hal.videosink;
+package com.rdk.hal.audiodecoder.metrics;
+
+import com.rdk.hal.audiodecoder.metrics.Episode;
 
 /**
- * @brief One frame the sink dropped for arriving late. Each occurrence adds one
- * to Metric::FRAMES_DROPPED.
+ * @brief The episode reported by the matching EpisodeStarted has ended.
+ * Carried by onEpisodeResolved().
  */
 @VintfStability
-parcelable FrameDropEvent {
+parcelable EpisodeResolved {
+    /**
+     * Which episode this is.
+     */
+    Episode id;
+
     /**
      * CLOCK_MONOTONIC_RAW time, in nanoseconds, at which the service detected
-     * the event.
+     * the end of the episode.
      */
     long timestampNs;
 
     /**
-     * Presentation time of the frame concerned, in nanoseconds, or -1 where the
-     * frame carried none.
+     * Presentation time, in nanoseconds, of the frame concerned, as defined on
+     * the Episode member, or -1 where the frame carried none.
      */
     long presentationTimeNs;
+
+    /**
+     * Length of the episode in nanoseconds, measured on CLOCK_MONOTONIC_RAW as
+     * defined on the Episode member.
+     */
+    long durationNs;
+
+    /**
+     * Occurrences in the episode, as defined on the Episode member.
+     */
+    long count;
 }

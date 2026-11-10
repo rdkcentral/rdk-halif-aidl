@@ -16,8 +16,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.rdk.hal.videosink;
-import com.rdk.hal.videosink.MetricValue;
+package com.rdk.hal.audiodecoder.metrics;
+import com.rdk.hal.audiodecoder.metrics.MetricValue;
 
 /**
  * @brief Metric values latched at one instant.

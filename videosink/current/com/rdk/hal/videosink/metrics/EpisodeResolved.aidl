@@ -16,23 +16,41 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.rdk.hal.videosink;
+package com.rdk.hal.videosink.metrics;
+
+import com.rdk.hal.videosink.metrics.Episode;
 
 /**
- * @brief An underflow has started: the frame queue was empty at the
- * presentation time of the next frame. Adds one to Metric::UNDERFLOW_EPISODES.
+ * @brief The episode reported by the matching EpisodeStarted has ended.
+ * Carried by onEpisodeResolved().
  */
 @VintfStability
-parcelable UnderflowStartedEvent {
+parcelable EpisodeResolved {
+    /**
+     * Which episode this is.
+     */
+    Episode id;
+
     /**
      * CLOCK_MONOTONIC_RAW time, in nanoseconds, at which the service detected
-     * the event.
+     * the end of the episode.
      */
     long timestampNs;
 
     /**
-     * Presentation time, in nanoseconds, of the first frame that was due and
-     * missing, or -1 where it is not known.
+     * Presentation time, in nanoseconds, of the frame concerned, as defined on
+     * the Episode member, or -1 where the frame carried none.
      */
     long presentationTimeNs;
+
+    /**
+     * Length of the episode in nanoseconds, measured on CLOCK_MONOTONIC_RAW as
+     * defined on the Episode member.
+     */
+    long durationNs;
+
+    /**
+     * Occurrences in the episode, as defined on the Episode member.
+     */
+    long count;
 }

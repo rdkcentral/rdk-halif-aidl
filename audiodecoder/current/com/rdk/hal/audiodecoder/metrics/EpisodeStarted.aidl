@@ -16,20 +16,29 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.rdk.hal.videosink;
-import com.rdk.hal.videosink.Metric;
+package com.rdk.hal.audiodecoder.metrics;
+
+import com.rdk.hal.audiodecoder.metrics.Episode;
 
 /**
- * @brief One metric and its value.
- *
- * The value carries its own identifier, so a caller matches entries by id and
- * never by position.
+ * @brief An episode has started. Carried by onEpisodeStarted().
  */
 @VintfStability
-parcelable MetricValue {
-    /** The metric this value belongs to. */
-    Metric id;
+parcelable EpisodeStarted {
+    /**
+     * Which episode this is.
+     */
+    Episode id;
 
-    /** The value, in the unit documented on the Metric member. */
-    long value;
+    /**
+     * CLOCK_MONOTONIC_RAW time, in nanoseconds, at which the service detected
+     * the start of the episode.
+     */
+    long timestampNs;
+
+    /**
+     * Presentation time, in nanoseconds, of the frame concerned, as defined on
+     * the Episode member, or -1 where the frame carried none.
+     */
+    long presentationTimeNs;
 }

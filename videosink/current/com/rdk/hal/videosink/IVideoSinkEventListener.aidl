@@ -17,12 +17,9 @@
  * limitations under the License.
  */
 package com.rdk.hal.videosink;
-import com.rdk.hal.videosink.FrameDropEvent;
-import com.rdk.hal.videosink.FrameRepeatResolvedEvent;
-import com.rdk.hal.videosink.FrameRepeatStartedEvent;
 import com.rdk.hal.videosink.State;
-import com.rdk.hal.videosink.UnderflowResolvedEvent;
-import com.rdk.hal.videosink.UnderflowStartedEvent;
+import com.rdk.hal.videosink.metrics.EpisodeResolved;
+import com.rdk.hal.videosink.metrics.EpisodeStarted;
 
 /**
  *  @brief     Callbacks event listener interface for Video Sink.
@@ -110,50 +107,25 @@ oneway interface IVideoSinkEventListener {
     void onStateChanged(in State oldState, in State newState);
 
     /**
-     * Raised once per frame counted by Metric::FRAMES_DROPPED.
+     * Raised once when an episode starts. onEpisodeResolved() follows, with the
+     * same Episode, when it ends.
      *
-     * @param[in] event    What happened and when.
+     * Episodes are the only metric events: nothing is raised per frame, and
+     * per-frame figures are read with IVideoSink.getMetrics().
      *
-     * @see FrameDropEvent
+     * @param[in] event    Which episode started, and when.
+     *
+     * @see Episode, EpisodeStarted
      */
-    void onFrameDropEvent(in FrameDropEvent event);
+    void onEpisodeStarted(in EpisodeStarted event);
 
     /**
-     * Raised once when a run of repeated frames starts; onFrameRepeatResolved()
-     * follows when a new frame is presented.
+     * Raised once when the episode reported by onEpisodeStarted() ends.
      *
-     * @param[in] event    What happened and when.
+     * @param[in] event    Which episode ended, when, how long it lasted and
+     * what it counted.
      *
-     * @see FrameRepeatStartedEvent
+     * @see Episode, EpisodeResolved
      */
-    void onFrameRepeatStarted(in FrameRepeatStartedEvent event);
-
-    /**
-     * Raised once when the run reported by onFrameRepeatStarted() ends.
-     *
-     * @param[in] event    What happened and when.
-     *
-     * @see FrameRepeatResolvedEvent
-     */
-    void onFrameRepeatResolved(in FrameRepeatResolvedEvent event);
-
-    /**
-     * Raised once when an underflow starts, with onVideoUnderflow();
-     * onUnderflowResolved() follows when presentation resumes.
-     *
-     * @param[in] event    What happened and when.
-     *
-     * @see UnderflowStartedEvent
-     */
-    void onUnderflowStarted(in UnderflowStartedEvent event);
-
-    /**
-     * Raised once when the underflow reported by onUnderflowStarted() ends,
-     * with onVideoResumed().
-     *
-     * @param[in] event    What happened and when.
-     *
-     * @see UnderflowResolvedEvent
-     */
-    void onUnderflowResolved(in UnderflowResolvedEvent event);
+    void onEpisodeResolved(in EpisodeResolved event);
 }

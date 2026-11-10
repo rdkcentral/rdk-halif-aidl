@@ -58,7 +58,7 @@ Uncompressed PCM audio streams do not require decoding. Therefore, they bypass t
 | **HAL.AUDIODECODER.11** | The audio frame output buffer from an audio decoder shall match the platform PCM audio format required for mixing. | See com.rdk.hal.audiosink.PlatformCapabilities |
 | **HAL.AUDIODECODER.12** | If a client process exits, the Audio Decoder server shall automatically stop and close any Audio Decoder instance controlled by that client. |
 | **HAL.AUDIODECODER.13** | Shall serve every metric listed under `supportedMetrics` in the HAL Feature Profile through `getMetrics()` and `getMetric()`, in any state, counting from service initialisation. | See [metrics](#metrics). |
-| **HAL.AUDIODECODER.14** | Shall raise the matching metric event each time a supported metric that has one rises. | See [metrics](#metrics). |
+| **HAL.AUDIODECODER.14** | Shall raise `onEpisodeStarted()` when an episode of a supported metric starts and `onEpisodeResolved()` when it ends. | See [metrics](#metrics). |
 
 ## Interface Definition
 
@@ -80,11 +80,12 @@ The interface can be found by following this link [audiodecoder](https://github.
 | `PCMFormat.aidl` | Enum list of PCM coding formats. |
 | `Property.aidl` | Enum list of audio decoder properties. |
 | `OperationalMode.aidl` | Common enum value describing the current output routing mode. |
-| `Metric.aidl` | Enum list of the metrics the audio decoder serves. |
-| `MetricValue.aidl` | Parcelable pairing a `Metric` with its value. |
-| `MetricSnapshot.aidl` | Parcelable holding metric values latched at one instant. |
-| `DecodeErrorEvent.aidl` | Parcelable carried by `onDecodeErrorEvent()`. |
-| `FrameDropEvent.aidl` | Parcelable carried by `onFrameDropEvent()`. |
+| `metrics/Metric.aidl` | Enum list of the metrics the audio decoder serves. |
+| `metrics/MetricValue.aidl` | Parcelable pairing a `Metric` with its value. |
+| `metrics/MetricSnapshot.aidl` | Parcelable holding metric values latched at one instant. |
+| `metrics/Episode.aidl` | Enum list of the episodes the component reports. |
+| `metrics/EpisodeStarted.aidl` | Parcelable carried by `onEpisodeStarted()`. |
+| `metrics/EpisodeResolved.aidl` | Parcelable carried by `onEpisodeResolved()`. |
 
 ## Initialization
 
@@ -581,12 +582,12 @@ The Audio Decoder also provides properties which allow for an override of the pl
 | `FRAMES_DROPPED` | frames | counter | Input frames for which the decoder output nothing. |
 | `DECODE_ERRORS` | errors | counter | Errors the decoder has raised. |
 
-Each event below is raised on `IAudioDecoderEventListener` and carries its own parcelable, named after the callback.
+Events are episodes only: nothing is raised per frame. `IAudioDecoderEventListener.onEpisodeStarted()` is raised once when an episode starts and `onEpisodeResolved()` once when it ends, each naming the `Episode`. The resolved event carries the episode's `durationNs` and `count`. A product raises an episode where it supports the metric shown.
 
-| Callback | Raised | Carries |
+| Episode | Starts and ends | Metric |
 |---|---|---|
-| `onDecodeErrorEvent()` | One decode error. | `timestampNs`, `presentationTimeNs`, `errorCode`, `vendorErrorCode` |
-| `onFrameDropEvent()` | One frame the decoder dropped. | `timestampNs`, `presentationTimeNs` |
+| `FRAME_DROP` | Covers frames counted by FRAMES_DROPPED. The episode starts at the first dropped frame when no such episode is open and ends when 1 second has passed without another. | `FRAMES_DROPPED` |
+| `DECODE_ERROR` | Covers errors counted by DECODE_ERRORS. The episode starts at the first error when no such episode is open and ends when 1 second has passed without another. | `DECODE_ERRORS` |
 
 Frames the decoder outputs can still be dropped for lateness by the [Audio Sink](../audiosink/audio_sink.md), which serves the rendered and late-dropped counts. The two components latch separately, so figures read from both are not one atomic read.
 

@@ -16,33 +16,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.rdk.hal.videodecoder;
-import com.rdk.hal.videodecoder.ErrorCode;
+package com.rdk.hal.videosink.metrics;
+import com.rdk.hal.videosink.metrics.Metric;
 
 /**
- * @brief One decode error. Each occurrence adds one to Metric::DECODE_ERRORS.
+ * @brief One metric and its value.
+ *
+ * The value carries its own identifier, so a caller matches entries by id and
+ * never by position.
  */
 @VintfStability
-parcelable DecodeErrorEvent {
-    /**
-     * CLOCK_MONOTONIC_RAW time, in nanoseconds, at which the service detected
-     * the event.
-     */
-    long timestampNs;
+parcelable MetricValue {
+    /** The metric this value belongs to. */
+    Metric id;
 
-    /**
-     * Presentation time, in nanoseconds, of the frame being decoded, or -1
-     * where the error is not tied to a frame.
-     */
-    long presentationTimeNs;
-
-    /**
-     * The error raised.
-     */
-    ErrorCode errorCode;
-
-    /**
-     * Vendor-specific code for diagnosis; 0 where the vendor has none.
-     */
-    int vendorErrorCode;
+    /** The value, in the unit documented on the Metric member. */
+    long value;
 }

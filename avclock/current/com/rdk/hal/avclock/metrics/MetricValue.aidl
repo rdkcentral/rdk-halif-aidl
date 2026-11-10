@@ -16,23 +16,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.rdk.hal.audiosink;
+package com.rdk.hal.avclock.metrics;
+import com.rdk.hal.avclock.metrics.Metric;
 
 /**
- * @brief An audio gap has started: the sink is outputting silence because the
- * audio due was missing or late. Adds one to Metric::GAP_EPISODES.
+ * @brief One metric and its value.
+ *
+ * The value carries its own identifier, so a caller matches entries by id and
+ * never by position.
  */
 @VintfStability
-parcelable GapStartedEvent {
-    /**
-     * CLOCK_MONOTONIC_RAW time, in nanoseconds, at which the service detected
-     * the event.
-     */
-    long timestampNs;
+parcelable MetricValue {
+    /** The metric this value belongs to. */
+    Metric id;
 
-    /**
-     * Presentation time, in nanoseconds, of the first frame that was due and
-     * missing, or -1 where it is not known.
-     */
-    long presentationTimeNs;
+    /** The value, in the unit documented on the Metric member. */
+    long value;
 }

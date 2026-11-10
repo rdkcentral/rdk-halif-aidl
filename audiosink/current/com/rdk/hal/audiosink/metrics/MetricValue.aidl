@@ -16,23 +16,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.rdk.hal.audiodecoder;
+package com.rdk.hal.audiosink.metrics;
+import com.rdk.hal.audiosink.metrics.Metric;
 
 /**
- * @brief One frame the decoder dropped. Each occurrence adds one to
- * Metric::FRAMES_DROPPED.
+ * @brief One metric and its value.
+ *
+ * The value carries its own identifier, so a caller matches entries by id and
+ * never by position.
  */
 @VintfStability
-parcelable FrameDropEvent {
-    /**
-     * CLOCK_MONOTONIC_RAW time, in nanoseconds, at which the service detected
-     * the event.
-     */
-    long timestampNs;
+parcelable MetricValue {
+    /** The metric this value belongs to. */
+    Metric id;
 
-    /**
-     * Presentation time of the frame concerned, in nanoseconds, or -1 where the
-     * frame carried none.
-     */
-    long presentationTimeNs;
+    /** The value, in the unit documented on the Metric member. */
+    long value;
 }

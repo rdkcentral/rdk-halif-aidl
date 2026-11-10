@@ -16,8 +16,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.rdk.hal.videodecoder;
-import com.rdk.hal.videodecoder.MetricValue;
+package com.rdk.hal.avclock.metrics;
+import com.rdk.hal.avclock.metrics.MetricValue;
 
 /**
  * @brief Metric values latched at one instant.

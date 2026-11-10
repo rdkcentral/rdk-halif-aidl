@@ -16,35 +16,41 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.rdk.hal.audiosink;
+package com.rdk.hal.videodecoder.metrics;
+
+import com.rdk.hal.videodecoder.metrics.Episode;
 
 /**
- * @brief The audio gap reported by the matching GapStartedEvent has ended:
- * audio is playing again.
+ * @brief The episode reported by the matching EpisodeStarted has ended.
+ * Carried by onEpisodeResolved().
  */
 @VintfStability
-parcelable GapResolvedEvent {
+parcelable EpisodeResolved {
+    /**
+     * Which episode this is.
+     */
+    Episode id;
+
     /**
      * CLOCK_MONOTONIC_RAW time, in nanoseconds, at which the service detected
-     * the event.
+     * the end of the episode.
      */
     long timestampNs;
 
     /**
-     * Presentation time, in nanoseconds, of the frame that ended the episode,
-     * or -1 where it is not known.
+     * Presentation time, in nanoseconds, of the frame concerned, as defined on
+     * the Episode member, or -1 where the frame carried none.
      */
     long presentationTimeNs;
 
     /**
-     * Length of the episode in nanoseconds, measured on CLOCK_MONOTONIC_RAW
-     * from the matching started event to this one.
+     * Length of the episode in nanoseconds, measured on CLOCK_MONOTONIC_RAW as
+     * defined on the Episode member.
      */
     long durationNs;
 
     /**
-     * Frame periods of silence in the gap; the amount this gap added to
-     * Metric::GAP_FRAMES.
+     * Occurrences in the episode, as defined on the Episode member.
      */
-    long frameCount;
+    long count;
 }

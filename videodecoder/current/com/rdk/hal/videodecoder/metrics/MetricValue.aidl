@@ -16,22 +16,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.rdk.hal.videosink;
+package com.rdk.hal.videodecoder.metrics;
+import com.rdk.hal.videodecoder.metrics.Metric;
 
 /**
- * @brief A freeze has started: the sink has shown a frame again because the
- * frame due was missing or late. Adds one to Metric::FRAME_REPEAT_EPISODES.
+ * @brief One metric and its value.
+ *
+ * The value carries its own identifier, so a caller matches entries by id and
+ * never by position.
  */
 @VintfStability
-parcelable FrameRepeatStartedEvent {
-    /**
-     * CLOCK_MONOTONIC_RAW time, in nanoseconds, at which the service detected
-     * the event.
-     */
-    long timestampNs;
+parcelable MetricValue {
+    /** The metric this value belongs to. */
+    Metric id;
 
-    /**
-     * Presentation time, in nanoseconds, of the frame being repeated.
-     */
-    long presentationTimeNs;
+    /** The value, in the unit documented on the Metric member. */
+    long value;
 }

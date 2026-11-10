@@ -23,10 +23,10 @@ import com.rdk.hal.audiosink.ContentType;
 import com.rdk.hal.audiosink.IAudioSinkController;
 import com.rdk.hal.audiosink.IAudioSinkControllerListener;
 import com.rdk.hal.audiosink.IAudioSinkEventListener;
-import com.rdk.hal.audiosink.Metric;
-import com.rdk.hal.audiosink.MetricSnapshot;
 import com.rdk.hal.audiosink.Property;
 import com.rdk.hal.audiosink.State;
+import com.rdk.hal.audiosink.metrics.Metric;
+import com.rdk.hal.audiosink.metrics.MetricSnapshot;
 
 /**
  *  @brief     Audio Sink HAL interface.

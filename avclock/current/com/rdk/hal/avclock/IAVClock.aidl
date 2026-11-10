@@ -22,10 +22,10 @@ import com.rdk.hal.avclock.Capabilities;
 import com.rdk.hal.avclock.IAVClockController;
 import com.rdk.hal.avclock.IAVClockControllerListener;
 import com.rdk.hal.avclock.IAVClockEventListener;
-import com.rdk.hal.avclock.Metric;
-import com.rdk.hal.avclock.MetricSnapshot;
 import com.rdk.hal.avclock.Property;
 import com.rdk.hal.avclock.State;
+import com.rdk.hal.avclock.metrics.Metric;
+import com.rdk.hal.avclock.metrics.MetricSnapshot;
 
 /**
  *  @brief     AV Clock HAL interface.

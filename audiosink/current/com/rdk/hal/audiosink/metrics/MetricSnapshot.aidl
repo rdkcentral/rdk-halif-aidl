@@ -16,35 +16,29 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.rdk.hal.videosink;
+package com.rdk.hal.audiosink.metrics;
+import com.rdk.hal.audiosink.metrics.MetricValue;
 
 /**
- * @brief The freeze reported by the matching FrameRepeatStartedEvent has ended:
- * a new frame has been presented.
+ * @brief Metric values latched at one instant.
+ *
+ * The service latches timestampNs and every value together before it copies any
+ * of them out, so figures in one snapshot are consistent with each other and a
+ * rate is the difference of two snapshots divided by the difference of their
+ * timestamps.
  */
 @VintfStability
-parcelable FrameRepeatResolvedEvent {
+parcelable MetricSnapshot {
     /**
-     * CLOCK_MONOTONIC_RAW time, in nanoseconds, at which the service detected
-     * the event.
+     * CLOCK_MONOTONIC_RAW time of the latch, in nanoseconds. Taken at the
+     * start of the read, at the same instant as the values.
      */
     long timestampNs;
 
     /**
-     * Presentation time, in nanoseconds, of the frame that ended the episode,
-     * or -1 where it is not known.
+     * One entry per metric that was requested, is supported and has a value.
+     * A metric the product does not support, or that has no value at this
+     * instant, has no entry. The order is not specified.
      */
-    long presentationTimeNs;
-
-    /**
-     * Length of the episode in nanoseconds, measured on CLOCK_MONOTONIC_RAW
-     * from the matching started event to this one.
-     */
-    long durationNs;
-
-    /**
-     * Repeated frames in the episode; the amount this episode added to
-     * Metric::FRAMES_REPEATED.
-     */
-    long frameCount;
+    MetricValue[] values;
 }

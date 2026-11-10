@@ -16,12 +16,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.rdk.hal.audiosink;
+package com.rdk.hal.videosink.metrics;
 
 /**
- * @brief Metrics served by the audio sink.
+ * @brief Metrics served by the video sink.
  *
- * Each member is one figure, read through IAudioSink.getMetrics() or
+ * Each member is one figure, read through IVideoSink.getMetrics() or
  * getMetric(). A counter starts at zero when the service initialises and only
  * rises: open(), close(), flush(), start() and stop() do not reset it, so a
  * client takes the difference of two snapshots for a session or an interval. A
@@ -38,18 +38,22 @@ package com.rdk.hal.audiosink;
 @Backing(type = "int")
 enum Metric {
     /**
-     * @brief Frames played at their time.
+     * @brief Frames presented at their time.
      *
-     * Measures: audio frames the sink passed to the mixer at their presentation
-     * time on the attached clock, counted at the sink output.
+     * Measures: frames the sink released for display at their presentation time
+     * on the attached clock, each counted once, at the sink output. With no
+     * video plane mapped the frame is counted when it is consumed at its
+     * presentation time.
      *
-     * Excludes: frames discarded (FRAMES_DROPPED) and silence inserted in place
-     * of missing audio (GAP_FRAMES).
+     * Excludes: repeats of a frame already counted (FRAMES_REPEATED) and frames
+     * discarded (FRAMES_DROPPED).
      *
-     * Used for: the denominator for audio presentation quality.
+     * Used for: the denominator for presentation quality, and the delivered
+     * frame rate.
      *
      * How to use: FRAMES_RENDERED and FRAMES_DROPPED come from one latch when
-     * asked for in one getMetrics() call.
+     * asked for in one getMetrics() call; difference two snapshots and divide
+     * by the difference in timestampNs for the delivered frame rate.
      *
      * Unit: frames. Kind: counter.
      */
@@ -58,88 +62,71 @@ enum Metric {
     /**
      * @brief Frames discarded because they arrived too late.
      *
-     * Measures: audio frames queued to the sink and discarded without being
-     * played because their presentation time had passed, counted at the sink.
+     * Measures: frames queued to the sink and discarded without being presented
+     * because their presentation time had passed, counted at the sink.
      *
      * Excludes: frames discarded on purpose by flush(), a seek, a stream
-     * reconfiguration, stop() or end of stream, frames removed to hold lip sync
-     * or pace playback, and frames the decoder never output
-     * (com.rdk.hal.audiodecoder.Metric::FRAMES_DROPPED).
+     * reconfiguration, stop() or end of stream, frames removed by frame rate
+     * conversion or pacing, and frames the decoder never output
+     * (com.rdk.hal.videodecoder.metrics.Metric::FRAMES_DROPPED).
      *
-     * Used for: measuring audio the listener lost.
+     * Used for: measuring stutter the viewer saw.
      *
      * How to use: rate = delta FRAMES_DROPPED / (delta FRAMES_RENDERED + delta
-     * FRAMES_DROPPED), from one getMetrics() call per snapshot. Each drop also
-     * raises onFrameDropEvent().
+     * FRAMES_DROPPED), from one getMetrics() call per snapshot. A run of drops
+     * is reported as an Episode::FRAME_DROP episode.
      *
      * Unit: frames. Kind: counter.
      */
     FRAMES_DROPPED = 1,
 
     /**
-     * @brief Audio gaps started.
+     * @brief Extra display periods spent on a frame already shown.
      *
-     * Measures: runs of one or more frame periods in which the sink output
-     * silence because the audio due was missing or late, counted when the run
-     * starts while STARTED; one per onGapStarted().
+     * Measures: display refreshes on which the sink showed the previous frame
+     * again because the frame due was missing or late, counted at the sink
+     * while STARTED.
      *
-     * Excludes: silence that is in the content, mute, and silence output while
-     * paused, flushing or after end of stream.
+     * Excludes: repeats made on purpose by frame rate conversion or pacing, and
+     * the hold of the last frame while paused, flushing or after end of stream.
      *
-     * Used for: counting how often the listener heard a dropout.
+     * Used for: measuring freeze the viewer saw, in frames.
      *
-     * How to use: difference two snapshots; pair with GAP_DURATION_NS for the
-     * mean dropout length.
-     *
-     * Unit: episodes. Kind: counter.
-     */
-    GAP_EPISODES = 2,
-
-    /**
-     * @brief Frame periods of silence output in gaps.
-     *
-     * Measures: frame periods filled with silence in place of missing or late
-     * audio, summed over all gaps.
-     *
-     * Excludes: as GAP_EPISODES.
-     *
-     * Used for: measuring dropout in the unit FRAMES_RENDERED uses.
-     *
-     * How to use: gap ratio = delta GAP_FRAMES / (delta FRAMES_RENDERED + delta
-     * GAP_FRAMES).
+     * How to use: divide delta FRAMES_REPEATED by delta FRAME_REPEAT_EPISODES
+     * for the mean length of a freeze in frames.
      *
      * Unit: frames. Kind: counter.
      */
-    GAP_FRAMES = 3,
+    FRAMES_REPEATED = 2,
 
     /**
-     * @brief Total time spent in audio gaps.
+     * @brief Freezes started.
      *
-     * Measures: time from each gap starting to audio playing again, summed over
-     * all gaps and including the elapsed part of a gap still open at the latch.
+     * Measures: runs of one or more repeated frames, counted when the first
+     * repeat of the run is shown; one per Episode::FRAME_REPEAT episode.
      *
-     * Excludes: as GAP_EPISODES.
+     * Excludes: as FRAMES_REPEATED.
      *
-     * Used for: measuring how long the listener heard nothing.
+     * Used for: counting how often the picture froze, whatever the length.
      *
-     * How to use: mean gap = delta GAP_DURATION_NS / delta GAP_EPISODES between
-     * two snapshots.
+     * How to use: difference two snapshots; pair with FRAMES_REPEATED for the
+     * mean length.
      *
-     * Unit: nanoseconds. Kind: counter.
+     * Unit: episodes. Kind: counter.
      */
-    GAP_DURATION_NS = 4,
+    FRAME_REPEAT_EPISODES = 3,
 
     /**
      * @brief Underflows started.
      *
      * Measures: occasions on which the frame queue was empty at the
      * presentation time of the next frame while STARTED, counted when the queue
-     * is found empty; one per onUnderflowStarted(). Underflow is measured at
+     * is found empty; one per Episode::UNDERFLOW episode. Underflow is measured at
      * the sink because that is where the audience experiences it. A decoder
      * with no input is ordinary, at start-up, after a seek, in trick play and
      * whenever the client feeds on demand, and says nothing about what was
      * presented; a sink with nothing to present when a frame is due is a stall
-     * the audience hears.
+     * the audience sees.
      *
      * Excludes: an empty queue before the first frame of a session or after a
      * flush, while paused, and after end of stream has been signalled.
@@ -151,23 +138,24 @@ enum Metric {
      *
      * Unit: episodes. Kind: counter.
      */
-    UNDERFLOW_EPISODES = 5,
+    UNDERFLOW_EPISODES = 4,
 
     /**
      * @brief Total time spent in underflow.
      *
      * Measures: time from each underflow starting to the next frame being
-     * played, summed over all episodes and including the elapsed part of an
+     * presented, summed over all episodes and including the elapsed part of an
      * episode still open at the latch.
      *
      * Excludes: as UNDERFLOW_EPISODES.
      *
-     * Used for: measuring how long the listener waited, the stall ratio.
+     * Used for: measuring how long the viewer waited, the stall ratio.
      *
      * How to use: stall ratio = delta UNDERFLOW_DURATION_NS / delta timestampNs
-     * between two snapshots.
+     * between two snapshots; mean stall = delta UNDERFLOW_DURATION_NS / delta
+     * UNDERFLOW_EPISODES.
      *
      * Unit: nanoseconds. Kind: counter.
      */
-    UNDERFLOW_DURATION_NS = 6,
+    UNDERFLOW_DURATION_NS = 5,
 }

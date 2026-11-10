@@ -41,7 +41,7 @@ The RDK middleware’s GStreamer pipeline includes a dedicated RDK Video Sink el
 | **HAL.VIDEOSINK.8** | Video frames decoupled from video planes (destination plane -1) shall continue to be delivered and remain in sync with audio.  When coupled to a video plane they shall immediately become visible and be in lip sync. |To ensure if/when a video sink source is assigned to a video plane it appears in sync with audio. |
 | **HAL.VIDEOSINK.9** | If a client process exits, the Video Sink server shall automatically stop and close any `IVideoSink` instance controlled by that client. ||
 | **HAL.VIDEOSINK.10** | Shall serve every metric listed under `supportedMetrics` in the HAL Feature Profile through `getMetrics()` and `getMetric()`, in any state, counting from service initialisation. | See [metrics](#metrics). |
-| **HAL.VIDEOSINK.11** | Shall raise the matching metric event each time a supported metric that has one rises. | See [metrics](#metrics). |
+| **HAL.VIDEOSINK.11** | Shall raise `onEpisodeStarted()` when an episode of a supported metric starts and `onEpisodeResolved()` when it ends. | See [metrics](#metrics). |
 
 ## Interface Definition
 
@@ -54,14 +54,12 @@ The RDK middleware’s GStreamer pipeline includes a dedicated RDK Video Sink el
 | `IVideoSinkEventListener.aidl` | Listener callbacks interface to clients from an `IVideoSink`. |
 | `Capabilities.aidl` | Parcelable describing the capabilities of an `IVideoSink` resource instance. |
 | `Property.aidl` | Enum list of video sink properties. |
-| `Metric.aidl` | Enum list of the metrics the video sink serves. |
-| `MetricValue.aidl` | Parcelable pairing a `Metric` with its value. |
-| `MetricSnapshot.aidl` | Parcelable holding metric values latched at one instant. |
-| `FrameDropEvent.aidl` | Parcelable carried by `onFrameDropEvent()`. |
-| `FrameRepeatStartedEvent.aidl` | Parcelable carried by `onFrameRepeatStarted()`. |
-| `FrameRepeatResolvedEvent.aidl` | Parcelable carried by `onFrameRepeatResolved()`. |
-| `UnderflowStartedEvent.aidl` | Parcelable carried by `onUnderflowStarted()`. |
-| `UnderflowResolvedEvent.aidl` | Parcelable carried by `onUnderflowResolved()`. |
+| `metrics/Metric.aidl` | Enum list of the metrics the video sink serves. |
+| `metrics/MetricValue.aidl` | Parcelable pairing a `Metric` with its value. |
+| `metrics/MetricSnapshot.aidl` | Parcelable holding metric values latched at one instant. |
+| `metrics/Episode.aidl` | Enum list of the episodes the component reports. |
+| `metrics/EpisodeStarted.aidl` | Parcelable carried by `onEpisodeStarted()`. |
+| `metrics/EpisodeResolved.aidl` | Parcelable carried by `onEpisodeResolved()`. |
 
 ## Initialization
 
@@ -302,15 +300,13 @@ This is what makes dual-decode session switching seamless. Two decoder → sink 
 | `UNDERFLOW_EPISODES` | episodes | counter | Underflows started. |
 | `UNDERFLOW_DURATION_NS` | nanoseconds | counter | Total time spent in underflow. |
 
-Each event below is raised on `IVideoSinkEventListener` and carries its own parcelable, named after the callback.
+Events are episodes only: nothing is raised per frame. `IVideoSinkEventListener.onEpisodeStarted()` is raised once when an episode starts and `onEpisodeResolved()` once when it ends, each naming the `Episode`. The resolved event carries the episode's `durationNs` and `count`. A product raises an episode where it supports the metric shown.
 
-| Callback | Raised | Carries |
+| Episode | Starts and ends | Metric |
 |---|---|---|
-| `onFrameDropEvent()` | One frame the sink dropped for arriving late. | `timestampNs`, `presentationTimeNs` |
-| `onFrameRepeatStarted()` | A freeze has started: the sink has shown a frame again because the frame due was missing or late. | `timestampNs`, `presentationTimeNs` |
-| `onFrameRepeatResolved()` | The freeze reported by the matching FrameRepeatStartedEvent has ended: a new frame has been presented. | `timestampNs`, `presentationTimeNs`, `durationNs`, `frameCount` |
-| `onUnderflowStarted()` | An underflow has started: the frame queue was empty at the presentation time of the next frame. | `timestampNs`, `presentationTimeNs` |
-| `onUnderflowResolved()` | The underflow reported by the matching UnderflowStartedEvent has ended: a frame has been presented. | `timestampNs`, `presentationTimeNs`, `durationNs` |
+| `FRAME_DROP` | Covers frames counted by FRAMES_DROPPED. The episode starts at the first dropped frame when no such episode is open and ends when 1 second has passed without another. | `FRAMES_DROPPED` |
+| `FRAME_REPEAT` | Starts when the sink shows a frame again because the frame due was missing or late, and ends when a new frame is presented. | `FRAME_REPEAT_EPISODES` |
+| `UNDERFLOW` | Starts when the frame queue is empty at the presentation time of the next frame, and ends when a frame is presented. | `UNDERFLOW_EPISODES` |
 
 Frames lost or damaged before they reach the sink are counted by the [Video Decoder](../videodecoder/video_decoder.md). The two components latch separately, so figures read from both are not one atomic read.
 

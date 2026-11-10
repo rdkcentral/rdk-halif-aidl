@@ -16,7 +16,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.rdk.hal.audiodecoder;
+package com.rdk.hal.audiodecoder.metrics;
 
 /**
  * @brief Metrics served by the audio decoder.
@@ -63,14 +63,14 @@ enum Metric {
      *
      * Excludes: frames discarded on purpose by flush(), a seek, a stream
      * reconfiguration, stop() or end of stream, and frames the sink drops for
-     * arriving late (com.rdk.hal.audiosink.Metric::FRAMES_DROPPED).
+     * arriving late (com.rdk.hal.audiosink.metrics.Metric::FRAMES_DROPPED).
      *
      * Used for: telling a stream or decoder fault from a presentation fault:
      * frames lost here never reached the sink.
      *
      * How to use: rate = delta FRAMES_DROPPED / (delta FRAMES_DECODED + delta
-     * FRAMES_DROPPED) between two snapshots. Each drop also raises
-     * onFrameDropEvent().
+     * FRAMES_DROPPED) between two snapshots. A run of drops is
+     * reported as an Episode::FRAME_DROP episode.
      *
      * Unit: frames. Kind: counter.
      */
@@ -80,7 +80,8 @@ enum Metric {
      * @brief Errors the decoder has raised.
      *
      * Measures: decode errors detected in the bitstream or by the decode
-     * hardware, one per onDecodeErrorEvent(), counted at the decoder.
+     * hardware, counted at the decoder. A run of errors is reported as an
+     * Episode::DECODE_ERROR episode.
      *
      * Excludes: errors returned from API calls, and the number of frames an
      * error affected (FRAMES_DROPPED).

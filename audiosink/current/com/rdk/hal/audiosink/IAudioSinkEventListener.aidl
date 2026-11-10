@@ -18,12 +18,9 @@
  */
 package com.rdk.hal.audiosink;
 import com.rdk.hal.audiosink.ErrorCode;
-import com.rdk.hal.audiosink.FrameDropEvent;
-import com.rdk.hal.audiosink.GapResolvedEvent;
-import com.rdk.hal.audiosink.GapStartedEvent;
 import com.rdk.hal.audiosink.State;
-import com.rdk.hal.audiosink.UnderflowResolvedEvent;
-import com.rdk.hal.audiosink.UnderflowStartedEvent;
+import com.rdk.hal.audiosink.metrics.EpisodeResolved;
+import com.rdk.hal.audiosink.metrics.EpisodeStarted;
 
 /**
  *  @brief     Callbacks listener interface from audio sink.
@@ -96,50 +93,25 @@ oneway interface IAudioSinkEventListener {
     void onFlushComplete();
 
     /**
-     * Raised once per frame counted by Metric::FRAMES_DROPPED.
+     * Raised once when an episode starts. onEpisodeResolved() follows, with the
+     * same Episode, when it ends.
      *
-     * @param[in] event    What happened and when.
+     * Episodes are the only metric events: nothing is raised per frame, and
+     * per-frame figures are read with IAudioSink.getMetrics().
      *
-     * @see FrameDropEvent
+     * @param[in] event    Which episode started, and when.
+     *
+     * @see Episode, EpisodeStarted
      */
-    void onFrameDropEvent(in FrameDropEvent event);
+    void onEpisodeStarted(in EpisodeStarted event);
 
     /**
-     * Raised once when an audio gap starts; onGapResolved() follows when audio
-     * plays again.
+     * Raised once when the episode reported by onEpisodeStarted() ends.
      *
-     * @param[in] event    What happened and when.
+     * @param[in] event    Which episode ended, when, how long it lasted and
+     * what it counted.
      *
-     * @see GapStartedEvent
+     * @see Episode, EpisodeResolved
      */
-    void onGapStarted(in GapStartedEvent event);
-
-    /**
-     * Raised once when the gap reported by onGapStarted() ends.
-     *
-     * @param[in] event    What happened and when.
-     *
-     * @see GapResolvedEvent
-     */
-    void onGapResolved(in GapResolvedEvent event);
-
-    /**
-     * Raised once when an underflow starts, with onAudioUnderflow();
-     * onUnderflowResolved() follows when playback resumes.
-     *
-     * @param[in] event    What happened and when.
-     *
-     * @see UnderflowStartedEvent
-     */
-    void onUnderflowStarted(in UnderflowStartedEvent event);
-
-    /**
-     * Raised once when the underflow reported by onUnderflowStarted() ends,
-     * with onAudioResumed().
-     *
-     * @param[in] event    What happened and when.
-     *
-     * @see UnderflowResolvedEvent
-     */
-    void onUnderflowResolved(in UnderflowResolvedEvent event);
+    void onEpisodeResolved(in EpisodeResolved event);
 }

@@ -63,9 +63,9 @@ Audio and video sinks associated with a given AV Clock instance comprise a synch
 | `ClockMode.aidl` | Enum list of clock modes. |
 | `ClockTime.aidl` | Parcelable holding a clock time. |
 | `Property.aidl` | Enum list of AV Clock properties. |
-| `Metric.aidl` | Enum list of the metrics the AV clock serves. |
-| `MetricValue.aidl` | Parcelable pairing a `Metric` with its value. |
-| `MetricSnapshot.aidl` | Parcelable holding metric values latched at one instant. |
+| `metrics/Metric.aidl` | Enum list of the metrics the AV clock serves. |
+| `metrics/MetricValue.aidl` | Parcelable pairing a `Metric` with its value. |
+| `metrics/MetricSnapshot.aidl` | Parcelable holding metric values latched at one instant. |
 
 ### Initialization
 
