@@ -33,10 +33,10 @@ import com.rdk.hal.panel.IPanelOutputEventListener;
  *  - <b>Failure (Exception)</b>: The method returns a service-specific exception (e.g., `EX_SERVICE_SPECIFIC`,
  * `EX_ILLEGAL_ARGUMENT`). In this case, output parameters and return values contain undefined (garbage) memory and must
  * not be used. The caller must ignore any output variables.
- *  - <b>Boolean / ErrorCode results</b>: A returned boolean `false` or a non-success `ErrorCode`
- *    indicates that the call was accepted and processed but could not complete successfully for the
- *    documented reasons. Input validation and invalid controller state are still reported via Binder
- *    exceptions unless a method explicitly documents otherwise.
+ *  - <b>Boolean results</b>: A returned boolean `false` indicates that the call was accepted and
+ *    processed but could not complete successfully for the documented reasons. Input validation and
+ *    invalid controller state are still reported via Binder exceptions unless a method explicitly
+ *    documents otherwise.
  */
 @VintfStability
 interface IPanelOutput {

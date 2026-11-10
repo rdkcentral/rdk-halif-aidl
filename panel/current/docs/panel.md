@@ -71,7 +71,6 @@ The corresponding `hfp-panel.yaml` file includes structured declarations for:
 | ----------------------------------- | ------------------------------------------------------------ |
 | `Capabilities.aidl`                   | Defines panel capabilities, supported picture modes, supported colour temperature strings, and typed panel sources |
 | `ColourManagementSettings.aidl`       | Grouped CMS structure used for read-modify-apply colour-management updates |
-| `ErrorCode.aidl`                      | Generic panel control result codes used by write-style controller APIs |
 | `IPanelOutput.aidl`                   | Singleton entry point for opening and closing the panel      |
 | `IPanelOutputController.aidl`         | Exclusive control interface for runtime panel operations     |
 | `IPanelOutputControllerListener.aidl` | Exclusive picture-mode and PQ change callbacks               |
@@ -159,6 +158,7 @@ flowchart TD
 
 * Client queries `IPanelOutput.getCapabilities()` for supported picture modes, PQ parameters, refresh rates, runtime limits, supported colour temperature strings, and typed panel sources.
 * Picture mode configurations and PQ parameters are set via `setPictureModes()` and `setPQParameters()` once the controller is in `STARTED`. If `open()` returns a `STOPPED` controller, middleware reaches `STARTED` by calling `start()` first.
+* `setPictureModes()` ignores exact duplicate entries. The same picture mode may be reused across different `(dynamicRange, AV source)` pairs, for example `Movie-HDMI1-HDR10`, `Movie-HDMI1-DV`, `Movie-IP-HDR10`, and `Movie-IP-DV`, while duplicate tuples are treated as no-ops.
 * The panel output enable state controls display and backlight through the controller and is orthogonal to controller lifecycle.
 * Frame rate matching adjusts panel refresh rate dynamically to match video content.
 * PQ parameter queries provide `PQParameterSelector` entries as input and receive `PQParameterConfiguration` entries as output so the returned values remain bundled with the selector context. Aggregate PQ parameters return their full payload in a single `PQParameterConfiguration` value.
@@ -190,9 +190,9 @@ Repeated `enableCalibrationMode(true)` or `enableCalibrationMode(false)` calls a
 
 ### Error Handling
 
-The Panel HAL uses Binder exceptions for invalid arguments, null output parameters, and invalid lifecycle state. Boolean returns and `ErrorCode` values are used only after the request itself has been accepted as well-formed.
+The Panel HAL uses Binder exceptions for invalid arguments, null output parameters, and invalid lifecycle state. Boolean returns are used only after the request itself has been accepted as well-formed; there is no `ErrorCode` return contract in the current panel API.
 
-* `setPQParameters()` returns `ErrorCode.SUCCESS`, `INVALID_ARGUMENT`, `INVALID_STATE`, `NOT_SUPPORTED`, or `HARDWARE_FAILURE` for a valid call.
+* `setPQParameters()` is a void method. It throws `EX_ILLEGAL_ARGUMENT` for malformed or empty configuration lists and `EX_ILLEGAL_STATE` when the controller is not in `STARTED`. Runtime or hardware failure is communicated through the service-specific failure semantics and state transitions; it is not returned as an enum value.
 * `getPQParameters()` and `getDefaultPQParameters()` throw `EX_ILLEGAL_ARGUMENT` for malformed selectors or empty input, throw `EX_ILLEGAL_STATE` if the controller is not `STARTED`, and return `false` only when the selectors are valid but one or more values cannot be resolved. For `COLOUR_MANAGEMENT_SETTINGS`, `TWO_POINT_WB`, `MULTI_POINT_WB`, and `DV_CALIBRATION`, the returned `PQParameterValue` contains the complete aggregate payload for the resolved selector context rather than a single sub-entry.
 * `getPictureModes()` and `getDefaultPictureModes()` follow the same pattern: exceptions for malformed input or invalid state, `false` only when valid criteria cannot be resolved.
 * `start()` and `stop()` use `EX_ILLEGAL_STATE` for invalid transitions. A `false` return indicates a runtime or hardware failure after a valid transition request. If the panel remains in `ERROR` after `close()` and a fresh `open()`/`start()` attempt, the platform may need a full device reboot or power cycle to clear latched display hardware; treat that as a last-resort recovery action.
@@ -202,12 +202,12 @@ The Panel HAL uses Binder exceptions for invalid arguments, null output paramete
 1. Middleware binds `IPanelOutput` from the service manager.
 2. Middleware reads `getCapabilities()` and optionally registers `IPanelOutputEventListener`.
 3. Middleware calls `open()` to obtain the exclusive `IPanelOutputController`.
-4. When `open()` returns, the panel may already be in any retained lifecycle state: `STOPPED`, `STARTING`, `STARTED`, `STOPPING`, or `ERROR`.
+4. When `open()` returns, the panel may already be in any retained lifecycle state: `CLOSED`, `OPENING`, `STOPPED`, `STARTING`, `STARTED`, `STOPPING`, `CLOSING`, or `ERROR`.
 5. Middleware calls `getState()` and chooses the appropriate next action from the returned state rather than assuming a fresh `STOPPED` controller.
 6. If the controller is `STOPPED`, middleware may call `start()`, then use `setEnabled()`, `setPictureModes()`, and `setPQParameters()` while `STARTED`.
 7. If the controller is already `STARTED`, middleware may continue with `STARTED`-state operations directly.
 8. `stop()` is only valid from `STARTED` and transitions `STARTED -> STOPPING -> STOPPED`.
-9. `close()` is the normal release path from `STOPPED` and the recovery path from `ERROR`. If a close/open/start cycle does not clear `ERROR`, a platform reboot or power cycle may be required as a last resort.
+9. `close()` is the normal release path from `STOPPED` and the recovery path from `ERROR`. `CLOSING` and `OPENING` represent in-flight ownership transitions while the resource is being acquired or released.
 10. If the controller-owning client dies, the HAL releases ownership but retains the last panel state and stored configuration. A replacement client reopens the controller, calls `getState()`, and continues from there.
 
 ### PQ Parameter Capability Mapping

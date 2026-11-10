@@ -28,13 +28,12 @@
  * If the client that opened this controller crashes, the HAL releases the
  * controller ownership but retains the current panel state and the latest
  * stored configuration. A later client can reopen the panel and use
- * getState() to discover whether the panel is still STOPPED, STARTING,
- * STARTED, STOPPING, or in ERROR. The enabled/disabled state is retained
- * separately from lifecycle state.
+ * getState() to discover whether the panel is still CLOSED, OPENING,
+ * STOPPED, STARTING, STARTED, STOPPING, CLOSING, or in ERROR. The
+ * enabled/disabled state is retained separately from lifecycle state.
  */
 package com.rdk.hal.panel;
 
-import com.rdk.hal.panel.ErrorCode;
 import com.rdk.hal.panel.PQParameter;
 import com.rdk.hal.panel.PQParameterCapabilities;
 import com.rdk.hal.panel.PQParameterConfiguration;
@@ -154,6 +153,19 @@ interface IPanelOutputController {
      * Each `PictureModeConfiguration` element in the `configurations` array links together
      * a picture mode, dynamic range and AV source.
      *
+     * Exact duplicate entries are ignored. The same picture mode may be associated with
+     * multiple dynamic-range and/or AV-source combinations; the array is interpreted as a
+     * set of per-context mappings, not a single global override. This allows a single
+     * picture mode preset to be reused across different runtime contexts such as:
+     * - `Movie-HDMI1-HDR10` for HDR10 content on HDMI1,
+     * - `Movie-HDMI1-DV` for Dolby Vision content on HDMI1,
+     * - `Movie-IP-HDR10` for HDR10 content on IP/OTT,
+     * - `Movie-IP-DV` for Dolby Vision content on IP/OTT.
+     *
+     * A duplicate with the same picture mode, dynamic range and source is treated as a
+     * no-op. Duplicate entries with the same picture mode but different source or
+     * dynamic-range values are allowed and resolved by their full selector key.
+     *
      * @param[in] configurations    Array of PictureModeConfiguration values.
      *
      * @returns boolean
@@ -256,11 +268,9 @@ interface IPanelOutputController {
      *
      * @param[in] configurations    Array of PQParameterConfiguration values.
      *
-     * @returns ErrorCode
-     * @retval ErrorCode.SUCCESS           The PQ parameters were set.
-     * @retval ErrorCode.INVALID_ARGUMENT  One or more parameter configurations were invalid.
-     * @retval ErrorCode.NOT_SUPPORTED     One or more PQ parameters are unsupported.
-     * @retval ErrorCode.HARDWARE_FAILURE  The HAL could not apply the request.
+     * This method uses Binder exceptions for all failure reporting. Invalid configuration
+     * payloads, unsupported selectors, and invalid controller state are reported via
+     * `EX_ILLEGAL_ARGUMENT` or `EX_ILLEGAL_STATE`.
      *
      * @exception binder::Status::Exception::EX_ILLEGAL_STATE The panel output is not in STARTED state.
      * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT The configuration list is empty or contains invalid
@@ -269,7 +279,7 @@ interface IPanelOutputController {
      * @see getPQParameters(), getDefaultPQParameters(), getPQParameterCapabilities(), enableCalibrationMode(),
      *     PQParameterConfiguration
      */
-    ErrorCode setPQParameters(in PQParameterConfiguration[] configurations);
+    void setPQParameters(in PQParameterConfiguration[] configurations);
 
     /**
      * Gets the current picture quality (PQ) parameter values.
@@ -444,9 +454,16 @@ interface IPanelOutputController {
      *
      * @param[in] source A PanelSource value.
      *
+     * @returns boolean
+     * @retval true  The source override was successfully applied.
+     * @retval false The request was accepted but could not be applied for the current hardware or runtime state.
+     *
+     * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT Invalid source value.
+     * @exception binder::Status::Exception::EX_ILLEGAL_STATE The panel output is not in STARTED state.
+     *
      * @see getVideoSourceOverride(), PanelSource
      */
-    void setVideoSourceOverride(in PanelSource source);
+    boolean setVideoSourceOverride(in PanelSource source);
 
     /**
      * Gets the AV source override used to apply PQ settings.

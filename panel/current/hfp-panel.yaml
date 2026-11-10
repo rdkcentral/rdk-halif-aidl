@@ -48,6 +48,10 @@ panel:                  # Component object begins
     - {type: COMPOSITE, instance: "1"}
   supportedDynamicRanges: [SDR, HLG, HDR10, DOLBY_VISION]
   supportedColourTemperatures: &panelColourTemperatures ["WARM", "NORMAL", "COLD", "SUPER_COLD", "CUSTOM"]
+  # Picture mode mappings are keyed by (pictureMode, dynamicRange, AV source).
+  # Exact duplicate tuples are ignored, but the same picture mode may be reused across
+  # multiple runtime contexts, for example Movie-HDMI1-HDR10, Movie-HDMI1-DV,
+  # Movie-IP-HDR10, and Movie-IP-DV.
   # pictureMode -> dynamicRange -> AV sources. Every picture mode supports all four
   # dynamic ranges; COMPOSITE_1 is SDR-only.
   pictureModeCapabilities: &pqContexts
