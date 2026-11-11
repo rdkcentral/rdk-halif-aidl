@@ -84,6 +84,9 @@ class ChangeClass(unittest.TestCase):
         self.assertClass({"P": PARCEL % "int a;\n    int b;"},
                          {"P": PARCEL % "int a;\n    int b;\n    int c;"}, "minor")
 
+    def test_first_field_on_empty_parcelable_is_minor(self):
+        self.assertClass({"P": PARCEL % ""}, {"P": PARCEL % "int a;"}, "minor")
+
     def test_deprecated_enum_value_is_minor(self):
         self.assertClass({"E": ENUM % "M = 1000,"},
                          {"E": ENUM % "/** @deprecated use B */ M = 1000,\n    B = 1001,"}, "minor")
