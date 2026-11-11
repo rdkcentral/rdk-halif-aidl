@@ -265,8 +265,9 @@ interface IAudioSinkController {
      * still outstanding for this frame. The sink discards them from the start
      * and end of the frame before passing the PCM to the mixer, converting each
      * to whole samples as `round(ns × sample_rate ÷ 1_000_000_000)` at the
-     * sample rate of the queued PCM. Zero values, or null metadata, mean no
-     * trim. A decoder that has already trimmed the frame passes zeros.
+     * sample rate of the queued PCM. Zero values, including a zero-valued
+     * `FrameMetadata`, mean no trim. A decoder that has already trimmed the
+     * frame passes zeros.
      *
      * Throws `binder::Status::Exception::EX_ILLEGAL_STATE` if called after
      * `signalEndOfStream()` has been invoked on this session.
