@@ -45,6 +45,10 @@ parcelable ActiveOutputFormat {
     /**
      * The format on the wire. Never AUTO or PASSTHROUGH: a passthrough
      * bitstream reports its own format (e.g. EAC3) with isPassthrough true.
+     *
+     * A BLUETOOTH port reports the PCM handed to the A2DP encoder
+     * (PCM_STEREO or PCM_MULTICHANNEL). The A2DP codec (SBC, AAC, aptX,
+     * LDAC) is negotiated on the link and is not an OutputFormat.
      */
     OutputFormat format;
 
