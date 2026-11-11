@@ -2,7 +2,7 @@
 
 What one HAL call costs when it crosses binder, traced from the client's generated proxy through the kernel driver to the HAL's implementation and back.
 
-Each synchronous call passes through libbinder twice per side. The client makes one blocking `ioctl`; the HAL's pool thread makes two, one to send the reply and one to wait for the next call. The kernel copies once in each direction, and an ideal hand-off takes two context switches. There is no third process and no dispatcher thread.
+Each synchronous call passes through libbinder twice per side. The client makes one blocking `ioctl`, plus a second to release the reply buffer when its thread is not a binder pool thread; the HAL's pool thread makes two, one to send the reply and one to wait for the next call. The kernel copies once in each direction, and an ideal hand-off takes two context switches. There is no third process and no dispatcher thread.
 
 ## Layers a call passes through
 
@@ -16,28 +16,30 @@ sequenceDiagram
     participant LB as libbinder (HAL)
     participant St as BnVideoDecoder (stub)
     participant Impl as HAL implementation
-    App->>Px: getMetrics(null)
+    App->>Px: getState()
     Px->>LA: marshal into Parcel, BpBinder::transact
     LA->>K: ioctl(BINDER_WRITE_READ): BC_TRANSACTION, then wait
     Note over LA,K: client thread sleeps inside this ioctl
     K->>K: copy Parcel into the HAL's mmap buffer
     K->>LB: wake pool thread: BR_TRANSACTION
     LB->>St: IPCThreadState → BBinder::transact → onTransact
-    St->>Impl: unmarshal, call getMetrics()
-    Impl-->>St: MetricSnapshot
+    St->>Impl: unmarshal, call getState()
+    Impl-->>St: State
     St-->>LB: marshal reply Parcel
     LB->>K: ioctl: BC_REPLY, returns once the reply is queued
     K->>K: copy reply into the client's mmap buffer
     K-->>LA: wake client thread: BR_REPLY
     LA-->>Px: unmarshal reply
-    Px-->>App: MetricSnapshot
+    Px-->>App: State
+    Note over LA,K: reply Parcel destroyed: BC_FREE_BUFFER, sent in a further ioctl on a non-pool client thread
+    LA->>K: ioctl: release the reply buffer
     LB->>K: ioctl: wait for the next call
 ```
 
 | Cost per round trip | Count |
 | --- | --- |
 | Passes through libbinder | 4: client out, HAL in, HAL out, client in |
-| Syscalls | 3: one client `ioctl` that sends and waits for the reply; two on the HAL, one to send the reply and one to wait for the next call |
+| Syscalls | 4 on a non-pool client thread: one client `ioctl` that sends and waits for the reply, one client `ioctl` that releases the reply buffer; two on the HAL, one to send the reply and one to wait for the next call. A client that defers or batches the release makes 3. |
 | Kernel copies | 2: request into the HAL, reply into the client |
 | Context switches | 2 in an ideal hand-off: client to HAL, HAL to client. Scheduling can add more. |
 
@@ -58,7 +60,7 @@ sequenceDiagram
     Note over C: asleep in the same ioctl, no CPU
     K->>H: wake: context switch 1
     activate H
-    Note over H: unmarshal, getMetrics(), marshal
+    Note over H: unmarshal, getState(), marshal
     H->>K: ioctl: reply
     H->>K: ioctl: wait for the next call
     deactivate H
@@ -66,6 +68,7 @@ sequenceDiagram
     K->>C: wake: context switch 2
     activate C
     Note over C: unmarshal, return
+    C->>K: ioctl: release the reply buffer
     deactivate C
 ```
 
@@ -138,7 +141,7 @@ flowchart LR
     H[HAL thread<br/>does not block] --> Q
     subgraph Q[Async queue for one listener object]
         direction LR
-        e1[onMetricEvent] --> e2[onMetricEvent] --> e3[onStateChanged] --> e4[onMetricEvent]
+        e1[onDecodeError] --> e2[onStateChanged] --> e3[onStateChanged] --> e4[onDecodeError]
     end
     Q --> L[Client listener<br/>one call at a time]
 ```
