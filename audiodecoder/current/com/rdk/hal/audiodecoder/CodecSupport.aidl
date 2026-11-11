@@ -27,7 +27,7 @@ import com.rdk.hal.audiodecoder.Profile;
  *
  * The `profiles` field is used **only** for codecs that define formal profiles in their
  * respective specifications. For codecs that do not define profiles (such as PCM, MP3,
- * FLAC, Vorbis, OPUS, ALAC, SBC, and REALAUDIO), the `profiles` array must be null or empty.
+ * FLAC, Vorbis, OPUS, ALAC, SBC, and REALAUDIO), the `profiles` array must be empty.
  *
  * Capability-based codecs must rely solely on `maxSampleRate`, `maxChannels`, and
  * `maxBitDepth` to describe decoding support.
@@ -41,7 +41,7 @@ parcelable CodecSupport
 
     /**
      * List of supported profiles. For codecs with formal profiles (e.g., AAC, USAC, WMA, DTS, AVS),
-     * this contains the supported profiles. For codecs without profiles, this must be empty or null.
+     * this contains the supported profiles. For codecs without profiles, this must be empty.
      */
     Profile[] profiles;
 

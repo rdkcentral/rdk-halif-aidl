@@ -18,14 +18,14 @@
  */
 package com.rdk.hal.audiodecoder;
 
-import com.rdk.hal.audiodecoder.AACProfile;
-import com.rdk.hal.audiodecoder.AVSProfile;
-import com.rdk.hal.audiodecoder.DolbyAC3Profile;
-import com.rdk.hal.audiodecoder.DolbyMATProfile;
-import com.rdk.hal.audiodecoder.DTSProfile;
-import com.rdk.hal.audiodecoder.REALAUDIOProfile;
-import com.rdk.hal.audiodecoder.USACProfile;
-import com.rdk.hal.audiodecoder.WMAProfile;
+import com.rdk.hal.audiodecoder.profiles.AACProfile;
+import com.rdk.hal.audiodecoder.profiles.AVSProfile;
+import com.rdk.hal.audiodecoder.profiles.DolbyAC3Profile;
+import com.rdk.hal.audiodecoder.profiles.DolbyMATProfile;
+import com.rdk.hal.audiodecoder.profiles.DTSProfile;
+import com.rdk.hal.audiodecoder.profiles.REALAUDIOProfile;
+import com.rdk.hal.audiodecoder.profiles.USACProfile;
+import com.rdk.hal.audiodecoder.profiles.WMAProfile;
 
 @VintfStability
 /**
