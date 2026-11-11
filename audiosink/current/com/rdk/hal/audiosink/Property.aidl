@@ -60,6 +60,8 @@ enum Property {
      * The render output latency in nanoseconds.
      * This is the time from an audio frame being rendered from the queue to being output (HDMI/ARC/BT/internal
      * speakers).
+     * It excludes the per-port delay set by
+     * com.rdk.hal.audiomixer.OutputPortProperty::DELAY_MS.
      *
      * Type: Integer
      * Access: Read-only.
