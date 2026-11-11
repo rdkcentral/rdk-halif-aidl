@@ -455,6 +455,55 @@ Non-boolean argument constraints are declared per output port in `audiomixer/cur
 
 For these constrained arguments, out-of-range values shall raise `EX_ILLEGAL_ARGUMENT`.
 
+### Mapping from the Device Settings audio HAL
+
+The Device Settings audio HAL declares MS12 support as a bitmask in
+`Sink_AudioSettings.yaml`. The AIDL audiomixer has no bitmask: it declares the same
+support as one boolean per `IDolbyMs12_2_6_Dap` command in
+`DolbyMs12_2_6_DapCapabilities`, returned by `IDolbyMs12_2_6_Dap.getCapabilities()`.
+A platform migrating a Device Settings profile sets each boolean from the bit, or the
+Device Settings API, shown below.
+
+```yaml
+MS12_Capabilities: 0x7FF   # Device Settings: OR of bits 0-10, the dsMS12SUPPORT_* bits
+```
+
+```cpp
+DolbyMs12_2_6_DapCapabilities caps;   // AIDL: one field per command
+caps.supportsBassEnhancer   = true;   // dsMS12SUPPORT_BassEnhancer set
+caps.supportsVolumeLeveller = true;   // dsMS12SUPPORT_Volumeleveller set
+caps.supportsAtmosLock      = false;  // dsSetAudioAtmosOutputMode() not supported
+```
+
+| Device Settings | `DolbyMs12_2_6_DapCapabilities` field |
+| --------------- | ------------------------------------- |
+| `dsMS12SUPPORT_InteligentEqualizer` (1 << 1) | `supportsIntelligentEqualizerMode` |
+| `dsMS12SUPPORT_DialogueEnhancer` (1 << 2) | `supportsDialogueEnhancer` |
+| `dsMS12SUPPORT_Volumeleveller` (1 << 3) | `supportsVolumeLeveller` |
+| `dsMS12SUPPORT_BassEnhancer` (1 << 4) | `supportsBassEnhancer` |
+| `dsMS12SUPPORT_SurroundDecoder` (1 << 5) | `supportsSurroundDecoderEnabled` |
+| `dsMS12SUPPORT_DRCMode` (1 << 6) | `supportsDynamicRangeControlMode` |
+| `dsMS12SUPPORT_SurroundVirtualizer` (1 << 7) | `supportsSurroundVirtualizer` |
+| `dsMS12SUPPORT_MISteering` (1 << 8) | `supportsMediaIntelligentSteering` |
+| `dsMS12SUPPORT_GraphicEqualizer` (1 << 9) | `supportsGraphicEqualizerMode` |
+| `dsSetAudioGain()`, which sets the DAP post gain on a sink's speaker port; no capability bit | `supportsPostGain`: true on a sink's speaker port. Every MS12 version certified for TV platforms (2.4, 2.5, 2.6, 2.8) supports it. |
+| `dsSetAudioAtmosOutputMode()`, which sets the MS12 Atmos lock; no capability bit | `supportsAtmosLock`: true where the platform supported that call |
+| None: no capability bit, and the SoC configures these at its defaults | `supportsDownmixMode`, `supportsCenterSpreadingEnabled`, `supportsActiveDownmixEnabled`: set from the MS12 support the platform actually has, as declared in its `hfp-audiomixer.yaml`; absence of a bit does not mean unsupported |
+
+Two bits have no confirmed counterpart in the MS12 2.6 DAP. The mappings below are provisional until [#839 audiomixer: confirm the Device Settings dsMS12SUPPORT_DolbyVolume and LEConfig capability mappings](https://github.com/rdkcentral/rdk-halif-aidl/issues/839) is resolved:
+
+- `dsMS12SUPPORT_LEConfig` (1 << 10) belongs to `dsEnableLEConfig()`, Loudness
+  Equivalence, which older non-MS12 products required. It is not post gain.
+- `dsMS12SUPPORT_DolbyVolume` (1 << 0) is the pre-MS12 loudness control. Volume
+  Modeler replaces it in MS12 but is a different control, so
+  `supportsVolumeModelerEnabled` is set from the platform's MS12 configuration, not
+  from this bit.
+
+The `MS12_AudioProfiles` list and its `ms12_audio_profiles.ini` names become
+`OutputPortCapabilities.dolbyMs12AudioProfiles`, selected through
+`OutputPortProperty.DOLBY_MS12_AUDIO_PROFILE`. `MS12_AudioProfileCount` has no
+equivalent — the array length carries it.
+
 ---
 
 ## Event Handling
