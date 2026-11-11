@@ -445,8 +445,8 @@ def pr_wins(winner, reason, prefer):
 def same_repo_links(ticket):
     """The closing references in this repository: a cross-repo one is that repo's to sync."""
     nodes = (ticket.get("closingIssuesReferences") or {}).get("nodes") or []
-    here = f"{REPO_OWNER}/{REPO_NAME}"
-    return [n for n in nodes if (n.get("repository") or {}).get("nameWithOwner", here) == here]
+    here = f"{REPO_OWNER}/{REPO_NAME}".lower()
+    return [n for n in nodes if (n.get("repository") or {}).get("nameWithOwner", here).lower() == here]
 
 
 def pr_classes(prs):
@@ -831,6 +831,7 @@ def cmd_reconcile(args):
         for pr in fetch("pullRequests", "OPEN,CLOSED,MERGED", links=True)
         if in_scope(pr, args.all)
     ]
+    settled = []
     for pr in prs:
         # The PR's own surfaces settle first. Propagating an inherited label
         # before that would make a board edit on the PR look like a label edit,
@@ -840,14 +841,16 @@ def cmd_reconcile(args):
         before = class_of([n["name"] for n in pr["labels"]["nodes"]])
         propagate_pr_to_issues(pr, args.dry_run, report)
         if class_of([n["name"] for n in pr["labels"]["nodes"]]) != before:
-            sync_ticket(project, pr, args.dry_run, report)
+            if sync_ticket(project, pr, args.dry_run, report) == "skipped":
+                continue
+        settled.append(pr)   # only a PR read fresh may overrule its issues' board values
 
     issues = [
         issue
         for issue in fetch("issues", "OPEN,CLOSED", links=False)
         if in_scope(issue, args.all)
     ]
-    prefer = pr_classes(prs)
+    prefer = pr_classes(settled)
     for ticket in issues:
         sync_ticket(project, ticket, args.dry_run, report, prefer=prefer.get(ticket["id"]))
 
@@ -890,7 +893,10 @@ def cmd_sync_item(args):
     report = []
     # Same ordering as the sweep: this ticket's own surfaces first, so an edit
     # made on the board is not mistaken for a label edit once propagation runs.
-    if sync_ticket(project, ticket, args.dry_run, report) == "skipped":
+    # --labels-win: the caller's labels are the decision (release.sh after a cut),
+    # so a board value that differs is repaired, never adopted.
+    own = class_of([n["name"] for n in ticket["labels"]["nodes"]]) if args.labels_win else None
+    if sync_ticket(project, ticket, args.dry_run, report, prefer=own) == "skipped":
         for line in report:
             print(f"  {line}")
         return
@@ -979,6 +985,8 @@ def main():
     one = sub.add_parser("sync-item", help="sync one ticket after a label event")
     one.add_argument("--number", type=int, required=True)
     one.add_argument("--dry-run", action="store_true")
+    one.add_argument("--labels-win", action="store_true",
+                     help="the ticket's labels are authoritative: a differing board value is overwritten")
     one.set_defaults(func=cmd_sync_item)
 
     every = sub.add_parser("reconcile", help="sweep tickets in scope, both directions")

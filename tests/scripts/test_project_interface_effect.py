@@ -61,6 +61,10 @@ class Links(unittest.TestCase):
         t = pr([], ("I1", HERE_REPO), ("I2", "other/repo"))
         self.assertEqual([n["id"] for n in pie.same_repo_links(t)], ["I1"])
 
+    def test_repository_names_match_without_case(self):
+        t = pr([], ("I1", HERE_REPO.upper()))
+        self.assertEqual([n["id"] for n in pie.same_repo_links(t)], ["I1"])
+
     def test_strongest_pr_class_per_issue(self):
         minor = next(o for o in pie.PRECEDENCE if "Minor Change" in pie.LABELS_OF[o])
         major = next(o for o in pie.PRECEDENCE if "Major Change" in pie.LABELS_OF[o])

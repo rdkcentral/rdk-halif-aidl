@@ -4392,7 +4392,7 @@ _sync_label_rank() {   # labels (newline-separated) -> rank of the class they ca
 # The project's Interface Effect for one PR and its linked issues, from labels.
 _sync_effect() {
     GH_TOKEN="${GH_TOKEN:-$(gh auth token)}" GITHUB_REPOSITORY="${GH_REPO}" \
-        python3 "${REPO_ROOT}/scripts/project_interface_effect.py" sync-item --number "$1" >/dev/null
+        python3 "${REPO_ROOT}/scripts/project_interface_effect.py" sync-item --number "$1" --labels-win >/dev/null
 }
 
 run_sync_labels() {
