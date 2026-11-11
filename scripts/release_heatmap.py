@@ -320,15 +320,16 @@ def pr_state(p):
 
 
 def pr_entries(nodes):
-    """Public PRs as badge entries, one per PR, newest first; closed unmerged PRs are left out."""
+    """Public PRs as badge entries, one per PR (by URL, so same-numbered PRs in other repos stay apart),
+    newest first; closed unmerged PRs are left out."""
     out = {}
     for p in nodes:
         if not p or "number" not in p or (p.get("repository") or {}).get("isPrivate"):
             continue   # not a PR, or a private repository's PR, which never goes on the public wiki
         k = pr_state(p)
         if k != "closed":
-            out[p["number"]] = {"number": p["number"], "url": p["url"], "state": k, "base": p.get("baseRefName")}
-    return sorted(out.values(), key=lambda p: -p["number"])
+            out[p["url"]] = {"number": p["number"], "url": p["url"], "state": k, "base": p.get("baseRefName")}
+    return sorted(out.values(), key=lambda p: (-p["number"], p["url"]))
 
 
 def pr_states(issue):

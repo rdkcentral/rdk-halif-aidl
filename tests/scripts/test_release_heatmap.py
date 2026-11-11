@@ -173,6 +173,11 @@ class Render(unittest.TestCase):
         t = issue(prs=[{"number": 962, "state": "OPEN"}], ref_prs=[{"number": 962, "state": "OPEN"}])
         self.assertEqual([p["number"] for p in rh.open_prs(t)], [962])
 
+    def test_same_number_in_another_repo_is_a_different_pr(self):
+        t = issue(prs=[{"number": 12, "state": "OPEN", "url": "https://github.com/a/x/pull/12"},
+                       {"number": 12, "state": "OPEN", "url": "https://github.com/b/y/pull/12"}])
+        self.assertEqual(len(rh.open_prs(t)), 2)
+
     def test_open_ticket_shows_only_open_prs(self):
         t = rh.classify(issue(1, labels=["component:panel"], milestone="0.24.0",
                               prs=[{"number": 8, "state": "CLOSED"}, {"number": 7, "state": "MERGED"}],
