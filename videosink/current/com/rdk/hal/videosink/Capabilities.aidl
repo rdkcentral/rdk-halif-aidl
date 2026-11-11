@@ -18,8 +18,8 @@
  */
 package com.rdk.hal.videosink;
 
-import com.rdk.hal.videosink.metrics.Metric;
 import com.rdk.hal.videosink.metrics.Episode;
+import com.rdk.hal.videosink.metrics.Metric;
 
 /**
  *  @brief     Video Sink capabilities parcelable definition.
