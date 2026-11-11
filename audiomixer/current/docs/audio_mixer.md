@@ -430,7 +430,7 @@ sequenceDiagram
 
 ### Active output format
 
-`OUTPUT_FORMAT` is what the client configured; `ActiveOutputFormat` is what the port is emitting now. Read it with `IAudioOutputPort.getActiveOutputFormat()`; every change arrives whole in one `IAudioOutputPortListener.onActiveOutputFormatChanged()`, so format, channel layout and Atmos are never seen out of step. It is null while the port emits nothing.
+`OUTPUT_FORMAT` is what the client configured; `ActiveOutputFormat` is what the port is emitting now. Read it with `IAudioOutputPort.getActiveOutputFormat()`; every change arrives whole in one `IAudioOutputPortListener.onActiveOutputFormatChanged()`, so format, channel layout and Atmos are never seen out of step. It is null while the port emits nothing: the port is disabled, the mixer is not `STARTED`, or `CONNECTION_STATE` is not `CONNECTED` on a port with connection detection (a non-hotplug port that declares `CONNECTION_STATE` and stays `UNKNOWN` is always connected). A `BLUETOOTH` port reports the PCM format handed to the A2DP encoder; the A2DP codec is not an `OutputFormat`.
 
 | Field | Meaning |
 |---|---|

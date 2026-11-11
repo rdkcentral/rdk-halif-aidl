@@ -185,9 +185,11 @@ interface IAudioOutputPort {
      *           IAudioOutputPortListener.onActiveOutputFormatChanged().
      *
      * @returns  The active format, or null when the port is emitting
-     *           nothing: CONNECTION_STATE is not CONNECTED on a port that
-     *           declares it, the port is disabled, or the mixer is not
-     *           STARTED.
+     *           nothing: CONNECTION_STATE is not CONNECTED on a port with
+     *           connection detection, the port is disabled, or the mixer is
+     *           not STARTED. A non-hotplug port (e.g. SPEAKERS) that declares
+     *           CONNECTION_STATE and reports UNKNOWN is always connected,
+     *           and UNKNOWN does not make this null.
      *
      * @see ActiveOutputFormat
      * @see OutputPortProperty.OUTPUT_FORMAT

@@ -95,8 +95,10 @@ enum OutputPortProperty {
      * Access: Read-only.
      *
      * - False when OutputPortCapabilities.supportsDolbyAtmos is false.
-     * - False when CONNECTION_STATE is not CONNECTED on a port that
-     *   declares CONNECTION_STATE.
+     * - False when CONNECTION_STATE is not CONNECTED on a port with
+     *   connection detection. A non-hotplug port (e.g. SPEAKERS) that
+     *   declares CONNECTION_STATE and reports UNKNOWN is always connected,
+     *   and UNKNOWN does not force false.
      * - ARC, EARC: true when the connected device advertises Atmos (on ARC,
      *   as Dolby Digital Plus with Atmos).
      * - SPEAKERS: true when the HAL can render Atmos to the speakers,
