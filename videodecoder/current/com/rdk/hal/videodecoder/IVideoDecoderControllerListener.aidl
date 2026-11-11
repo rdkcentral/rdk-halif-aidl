@@ -78,8 +78,9 @@ oneway interface IVideoDecoderControllerListener {
      * delivered until `flush(false)`, or `flush(true)` or `stop()` followed by
      * `start()`. When a `flush()` interrupted the end-of-stream, the decoder is
      * in the state that flush ended in: `STARTED` for reset=false, `READY` for
-     * reset=true. This callback follows the `onStateChanged()` that ends the
-     * flush.
+     * reset=true. The HAL sends this callback after the `onStateChanged()`
+     * that ends the flush. That callback is on IVideoDecoderEventListener, so
+     * a client must not rely on receiving the two in that order.
      *
      * @see IVideoDecoderController.signalEndOfStream()
      */

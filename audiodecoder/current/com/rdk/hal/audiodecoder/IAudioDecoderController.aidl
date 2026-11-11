@@ -164,9 +164,11 @@ interface IAudioDecoderController {
      * `onFrameOutput()`. The requested end-of-stream is still honoured: the HAL
      * fires `onEndOfStream()` exactly once after the flush completes, whichever
      * state the flush ends in.
-     * The flush completes first: `onStateChanged()` reports `FLUSHING` ending in
-     * `STARTED` or `READY` before `onEndOfStream()` is delivered, so the client
-     * receives the EOS with the decoder settled and ready to act on it.
+     * The flush completes first: the decoder has entered `STARTED` or `READY`
+     * and sent the `onStateChanged()` that ends `FLUSHING` before it sends
+     * `onEndOfStream()`. The two callbacks are on separate listeners, so a
+     * client must not rely on receiving them in that order; the state is
+     * settled by the time the EOS is sent.
      *
      * @param[in] reset     When true, the internal audio decoder state is fully reset and the decoder
      *                      ends in `State::READY`. When false, it ends in `State::STARTED`.
