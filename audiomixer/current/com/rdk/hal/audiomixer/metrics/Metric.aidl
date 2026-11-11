@@ -45,7 +45,7 @@ enum Metric {
      * How to use: difference two snapshots; pair with
      * UNDERFLOW_DURATION_NS for the mean dropout length.
      *
-     * Unit: episodes. Kind: counter.
+     * Unit: episodes. Kind: counter. Support: mandatory.
      */
     UNDERFLOW_EPISODES = 0,
 
@@ -63,7 +63,7 @@ enum Metric {
      * How to use: dropout ratio = delta UNDERFLOW_DURATION_NS / delta
      * timestampNs between two snapshots.
      *
-     * Unit: nanoseconds. Kind: counter.
+     * Unit: nanoseconds. Kind: counter. Support: mandatory.
      */
     UNDERFLOW_DURATION_NS = 1,
 
@@ -84,7 +84,7 @@ enum Metric {
      * How to use: difference two snapshots. A run of overflows is
      * reported as an Episode::OVERFLOW episode.
      *
-     * Unit: overflows. Kind: counter.
+     * Unit: overflows. Kind: counter. Support: optional.
      */
     OVERFLOWS = 2,
 }

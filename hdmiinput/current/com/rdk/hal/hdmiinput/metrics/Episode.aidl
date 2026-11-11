@@ -45,6 +45,8 @@ enum Episode {
      * packets in error.
      *
      * presentationTimeNs is not used by the HDMI input port and is -1.
+     *
+     * Support: optional.
      */
     PACKET_ERROR = 0,
 }

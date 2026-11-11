@@ -44,7 +44,7 @@ enum Metric {
      * How to use: difference two snapshots; compare with
      * DIRECTED_MESSAGES_ACKED for the delivery ratio.
      *
-     * Unit: messages. Kind: counter.
+     * Unit: messages. Kind: counter. Support: optional.
      */
     DIRECTED_MESSAGES_SENT = 0,
 
@@ -64,7 +64,7 @@ enum Metric {
      * How to use: difference two snapshots; compare with
      * BROADCAST_MESSAGES_ACKED for the delivery ratio.
      *
-     * Unit: messages. Kind: counter.
+     * Unit: messages. Kind: counter. Support: optional.
      */
     BROADCAST_MESSAGES_SENT = 1,
 
@@ -81,7 +81,7 @@ enum Metric {
      * How to use: delivery ratio = delta DIRECTED_MESSAGES_ACKED /
      * delta DIRECTED_MESSAGES_SENT between two snapshots.
      *
-     * Unit: messages. Kind: counter.
+     * Unit: messages. Kind: counter. Support: optional.
      */
     DIRECTED_MESSAGES_ACKED = 2,
 
@@ -99,7 +99,7 @@ enum Metric {
      * How to use: delivery ratio = delta BROADCAST_MESSAGES_ACKED /
      * delta BROADCAST_MESSAGES_SENT between two snapshots.
      *
-     * Unit: messages. Kind: counter.
+     * Unit: messages. Kind: counter. Support: optional.
      */
     BROADCAST_MESSAGES_ACKED = 3,
 
@@ -118,7 +118,7 @@ enum Metric {
      * How to use: difference two snapshots and divide by the
      * difference in timestampNs for failures per unit time.
      *
-     * Unit: attempts. Kind: counter.
+     * Unit: attempts. Kind: counter. Support: optional.
      */
     ARBITRATION_FAILURES = 4,
 }

@@ -45,7 +45,7 @@ enum Metric {
      * difference in timestampNs for an error rate. A run of errors is
      * reported as an Episode::PACKET_ERROR episode.
      *
-     * Unit: packets. Kind: counter.
+     * Unit: packets. Kind: counter. Support: optional.
      */
     PACKET_ERRORS = 0,
 }

@@ -41,8 +41,8 @@ Mixer instances are accessed and controlled via `IAudioMixer`, with additional l
 | HAL.AUDIOMIXER.4 | The controller shall support `start`, `stop`, `flush`, and `signalEOS`. | |
 | HAL.AUDIOMIXER.5 | Output port properties shall be readable via `IAudioOutputPort.getProperty()` and writable via `IAudioOutputPortController.setProperty()` (controller acquired via `IAudioOutputPort.open()`). | |
 | HAL.AUDIOMIXER.6 | Null values for `Capabilities.name` or `OutputPortCapabilities.portName` are allowed but discouraged. | For debugging support. |
-| HAL.AUDIOMIXER.7 | Shall serve every metric listed under `supportedMetrics` in the HAL Feature Profile through `getMetrics()` and `getMetric()`, in any state, counting from service initialisation. | See [metrics](#metrics). |
-| HAL.AUDIOMIXER.8 | Shall raise `onMetricEpisodeStarted()` when an episode of a supported metric starts and `onMetricEpisodeResolved()` when it ends. | See [metrics](#metrics). |
+| HAL.AUDIOMIXER.7 | Shall serve every metric listed under `supportedMetrics` in the HAL Feature Profile through `getMetrics()` and `getMetric()`, in any state, counting from service initialisation. The list includes every metric marked mandatory. | See [metrics](#metrics). |
+| HAL.AUDIOMIXER.8 | Shall raise `onMetricEpisodeStarted()` when an episode of a supported metric starts and `onMetricEpisodeResolved()` when it ends, for every episode listed under `supportedEpisodes`, which includes every episode marked mandatory. | See [metrics](#metrics). |
 
 ---
 
@@ -484,18 +484,18 @@ For these constrained arguments, out-of-range values shall raise `EX_ILLEGAL_ARG
 
 `IAudioOutputPort.getMetrics()` returns the metrics asked for, latched at one instant with a `CLOCK_MONOTONIC_RAW` timestamp; `getMetric()` returns one. Both are callable in any state. Counters count from service initialisation and are never reset, so a session or interval figure is the difference of two snapshots. The rules common to every component are in the [HAL Metrics Pattern](../standards/hal_metrics_pattern.md); what each metric measures, excludes and is used for is in the Doxygen of `Metric.aidl`. The product lists what it supports as `supportedMetrics` and `supportedEpisodes` in the HAL Feature Profile, and `getCapabilities()` reports the same lists at run time in `OutputPortCapabilities`.
 
-| Metric | Unit | Kind | Meaning |
-|---|---|---|---|
-| `UNDERFLOW_EPISODES` | episodes | counter | Underflows started at the output port. |
-| `UNDERFLOW_DURATION_NS` | nanoseconds | counter | Total time spent in underflow at the output port. |
-| `OVERFLOWS` | overflows | counter | Writes refused for lack of buffer space at the output port. |
+| Metric | Unit | Kind | Support | Meaning |
+|---|---|---|---|---|
+| `UNDERFLOW_EPISODES` | episodes | counter | mandatory | Underflows started at the output port. |
+| `UNDERFLOW_DURATION_NS` | nanoseconds | counter | mandatory | Total time spent in underflow at the output port. |
+| `OVERFLOWS` | overflows | counter | optional | Writes refused for lack of buffer space at the output port. |
 
 Events are episodes only: nothing is raised per occurrence. `IAudioOutputPortListener.onMetricEpisodeStarted()` is raised once when an episode starts and `onMetricEpisodeResolved()` once when it ends, each naming the `Episode`. The resolved event carries the episode's `durationNs` and `count`. Both events carry `metrics`, a `MetricSnapshot` of every supported metric latched at the event, so no second read is needed.
 
-| Episode | Starts and ends |
-|---|---|
-| `UNDERFLOW` | Starts when the consumer of the output port needs audio and finds none, and ends when audio flows to it again. Each episode adds one to UNDERFLOW_EPISODES. |
-| `OVERFLOW` | Covers overflows counted by OVERFLOWS. The episode starts at the first overflow when no such episode is open and ends when 1 second has passed without another. |
+| Episode | Support | Starts and ends |
+|---|---|---|
+| `UNDERFLOW` | mandatory | Starts when the consumer of the output port needs audio and finds none, and ends when audio flows to it again. Each episode adds one to UNDERFLOW_EPISODES. |
+| `OVERFLOW` | optional | Covers overflows counted by OVERFLOWS. The episode starts at the first overflow when no such episode is open and ends when 1 second has passed without another. |
 
 The `METRIC_*` properties that these metrics replace are deprecated and remain readable.
 

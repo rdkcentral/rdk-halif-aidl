@@ -52,8 +52,8 @@ The `ICompositeInputManager` provides discovery of port IDs and exposes global `
 | **HAL.CompositeInput.6**    | Port lifecycle shall follow the open/close + start/stop controller pattern. | Mirrors the HDMI input controller pattern |
 | **HAL.CompositeInput.7**    | Property keys shall be `PortProperty` enum values declared in the HFP YAML. | Discoverable via `PortCapabilities.supportedProperties` |
 | **HAL.CompositeInput.8**    | Telemetry metrics shall be served as `Metric` values through `getMetrics()`. | See [metrics](#metrics); the `METRIC_*` keys are deprecated. |
-| **HAL.CompositeInput.9** | Shall serve every metric listed under `supportedMetrics` in the HAL Feature Profile through `getMetrics()` and `getMetric()`, in any state, counting from service initialisation. | See [metrics](#metrics). |
-| **HAL.CompositeInput.10** | Shall raise `onMetricEpisodeStarted()` when an episode of a supported metric starts and `onMetricEpisodeResolved()` when it ends. | See [metrics](#metrics). |
+| **HAL.CompositeInput.9** | Shall serve every metric listed under `supportedMetrics` in the HAL Feature Profile through `getMetrics()` and `getMetric()`, in any state, counting from service initialisation. The list includes every metric marked mandatory. | See [metrics](#metrics). |
+| **HAL.CompositeInput.10** | Shall raise `onMetricEpisodeStarted()` when an episode of a supported metric starts and `onMetricEpisodeResolved()` when it ends, for every episode listed under `supportedEpisodes`, which includes every episode marked mandatory. | See [metrics](#metrics). |
 
 ---
 
@@ -302,19 +302,19 @@ All `METRIC_*` keys are reset atomically by `ICompositeInputController.resetMetr
 
 `ICompositeInputPort.getMetrics()` returns the metrics asked for, latched at one instant with a `CLOCK_MONOTONIC_RAW` timestamp; `getMetric()` returns one. Both are callable in any state. Counters count from service initialisation and are never reset, so a session or interval figure is the difference of two snapshots. The rules common to every component are in the [HAL Metrics Pattern](../standards/hal_metrics_pattern.md); what each metric measures, excludes and is used for is in the Doxygen of `Metric.aidl`. The product lists what it supports as `supportedMetrics` and `supportedEpisodes` in the HAL Feature Profile, and `getCapabilities()` reports the same lists at run time in `PortCapabilities`.
 
-| Metric | Unit | Kind | Meaning |
-|---|---|---|---|
-| `SIGNAL_LOCKS` | locks | counter | Signal locks acquired. |
-| `SIGNAL_DROPS` | drops | counter | Signal locks lost. |
-| `LOCK_ACQUISITION_TIME_NS` | nanoseconds | counter | Total time spent acquiring signal lock. |
-| `LAST_LOCK_ACQUISITION_TIME_NS` | nanoseconds | gauge | Time the most recent signal lock took to acquire. |
-| `STARTED_DURATION_NS` | nanoseconds | counter | Total time the port has been STARTED. |
+| Metric | Unit | Kind | Support | Meaning |
+|---|---|---|---|---|
+| `SIGNAL_LOCKS` | locks | counter | optional | Signal locks acquired. |
+| `SIGNAL_DROPS` | drops | counter | optional | Signal locks lost. |
+| `LOCK_ACQUISITION_TIME_NS` | nanoseconds | counter | optional | Total time spent acquiring signal lock. |
+| `LAST_LOCK_ACQUISITION_TIME_NS` | nanoseconds | gauge | optional | Time the most recent signal lock took to acquire. |
+| `STARTED_DURATION_NS` | nanoseconds | counter | optional | Total time the port has been STARTED. |
 
 Events are episodes only: nothing is raised per occurrence. `ICompositeInputEventListener.onMetricEpisodeStarted()` is raised once when an episode starts and `onMetricEpisodeResolved()` once when it ends, each naming the `Episode`. The resolved event carries the episode's `durationNs` and `count`. Both events carry `metrics`, a `MetricSnapshot` of every supported metric latched at the event, so no second read is needed.
 
-| Episode | Starts and ends |
-|---|---|
-| `SIGNAL_LOSS` | Starts when an acquired lock is lost while the port is STARTED, and ends when lock is gained again. Each episode adds one to SIGNAL_DROPS. |
+| Episode | Support | Starts and ends |
+|---|---|---|
+| `SIGNAL_LOSS` | optional | Starts when an acquired lock is lost while the port is STARTED, and ends when lock is gained again. Each episode adds one to SIGNAL_DROPS. |
 
 The `METRIC_*` properties that these metrics replace are deprecated and remain readable.
 

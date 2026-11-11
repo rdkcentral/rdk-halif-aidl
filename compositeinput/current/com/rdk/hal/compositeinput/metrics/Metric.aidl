@@ -42,7 +42,7 @@ enum Metric {
      * How to use: difference two snapshots. Divide the difference of
      * LOCK_ACQUISITION_TIME_NS by it for the mean time to lock.
      *
-     * Unit: locks. Kind: counter.
+     * Unit: locks. Kind: counter. Support: optional.
      */
     SIGNAL_LOCKS = 0,
 
@@ -59,7 +59,7 @@ enum Metric {
      * How to use: difference two snapshots and divide by the
      * difference of STARTED_DURATION_NS for drops per unit time.
      *
-     * Unit: drops. Kind: counter.
+     * Unit: drops. Kind: counter. Support: optional.
      */
     SIGNAL_DROPS = 1,
 
@@ -77,7 +77,7 @@ enum Metric {
      * How to use: mean time to lock = delta LOCK_ACQUISITION_TIME_NS /
      * delta SIGNAL_LOCKS between two snapshots.
      *
-     * Unit: nanoseconds. Kind: counter.
+     * Unit: nanoseconds. Kind: counter. Support: optional.
      */
     LOCK_ACQUISITION_TIME_NS = 2,
 
@@ -96,7 +96,7 @@ enum Metric {
      * How to use: read it after a lock; it is a level, so do not
      * difference it.
      *
-     * Unit: nanoseconds. Kind: gauge.
+     * Unit: nanoseconds. Kind: gauge. Support: optional.
      */
     LAST_LOCK_ACQUISITION_TIME_NS = 3,
 
@@ -115,7 +115,7 @@ enum Metric {
      * How to use: difference two snapshots and use it as the
      * denominator of per-time rates.
      *
-     * Unit: nanoseconds. Kind: counter.
+     * Unit: nanoseconds. Kind: counter. Support: optional.
      */
     STARTED_DURATION_NS = 4,
 }

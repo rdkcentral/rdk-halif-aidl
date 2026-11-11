@@ -46,6 +46,8 @@ enum Episode {
      *
      * presentationTimeNs is not used by the composite input port and
      * is -1.
+     *
+     * Support: optional.
      */
     SIGNAL_LOSS = 0,
 }

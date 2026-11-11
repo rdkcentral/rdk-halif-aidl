@@ -46,6 +46,8 @@ enum Episode {
      *
      * presentationTimeNs is not used by the audio output port and is
      * -1.
+     *
+     * Support: mandatory.
      */
     UNDERFLOW = 0,
 
@@ -61,6 +63,8 @@ enum Episode {
      *
      * presentationTimeNs is not used by the audio output port and is
      * -1.
+     *
+     * Support: optional.
      */
     OVERFLOW = 1,
 }
