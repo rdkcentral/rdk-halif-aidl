@@ -115,6 +115,11 @@ interface ICompositeInputController {
      * @exception binder::Status EX_ILLEGAL_STATE if port is not in STARTED state.
      *
      * @see PortProperty, ICompositeInputPort.getProperty()
+     *
+     * @deprecated Deprecated since 2026-11-11. Read Metric values through
+     * ICompositeInputPort.getMetrics() and difference two snapshots.
+     * Reason: metrics count from service initialisation and are never reset,
+     * so several clients can measure intervals without disturbing each other.
      */
     void resetMetrics();
 }

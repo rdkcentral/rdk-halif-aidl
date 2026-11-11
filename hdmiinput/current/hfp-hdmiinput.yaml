@@ -28,6 +28,11 @@
 hdmiinput:
   interfaceVersion: current  # (optional) Version of the interface definition
 
+  # Metrics this product serves through IHDMIInput.getMetrics(), for
+  # every resource instance. Names are members of the Metric enum.
+  supportedMetrics:
+    - PACKET_ERRORS
+
   ports:
     - id: 0  # IHDMIInput.Id
       supportedVersions:     # Capabilities.supportedVersions[]

@@ -29,6 +29,8 @@ import com.rdk.hal.compositeinput.PortProperty;
 import com.rdk.hal.compositeinput.PortStatus;
 import com.rdk.hal.compositeinput.PropertyKVPair;
 import com.rdk.hal.compositeinput.State;
+import com.rdk.hal.compositeinput.metrics.Metric;
+import com.rdk.hal.compositeinput.metrics.MetricSnapshot;
 
 /**
  * @brief     Composite Input Port HAL interface.
@@ -228,4 +230,51 @@ interface ICompositeInputPort {
      * @see registerEventListener()
      */
     void unregisterEventListener(in ICompositeInputEventListener listener);
+
+    /**
+     * Reads metrics, latched at one instant.
+     *
+     * Callable in any state. The values returned are those of this resource
+     * instance since the service initialised.
+     *
+     * Counters only rise and no call resets them. A figure for a session or an
+     * interval is the difference of two snapshots, and a rate is that
+     * difference divided by the difference of their timestampNs. A counter
+     * lower than in an earlier snapshot means the service restarted; the later
+     * snapshot is then the new baseline.
+     *
+     * @param[in] metrics    The metrics wanted. An empty array asks for every
+     * metric the product supports.
+     *
+     * @returns The latch time and one entry per requested metric that is
+     * supported and has a value. A metric that is not supported, or has no
+     * value at present, is left out; it is not an error.
+     *
+     * @exception binder::Status::Exception::EX_NONE for success.
+     *
+     * @see Metric, getMetric()
+     */
+    MetricSnapshot getMetrics(in Metric[] metrics);
+
+    /**
+     * Reads one metric.
+     *
+     * Callable in any state. Use getMetrics() where two figures are to be
+     * compared, or a rate taken, since this call returns no latch time.
+     *
+     * @param[in] metric    The metric wanted.
+     *
+     * @returns The value, in the unit documented on the Metric member.
+     *
+     * @exception binder::Status::Exception::EX_NONE for success.
+     *
+     * @exception binder::Status::Exception::EX_UNSUPPORTED_OPERATION if the
+     * product does not support the metric.
+     *
+     * @exception binder::Status::Exception::EX_ILLEGAL_STATE if the metric is
+     * supported but has no value at present.
+     *
+     * @see Metric, getMetrics()
+     */
+    long getMetric(in Metric metric);
 }

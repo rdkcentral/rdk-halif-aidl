@@ -2,6 +2,7 @@ aidl_interface:
   name: compositeinput
   srcs:
     - com/rdk/hal/compositeinput/*.aidl
+    - com/rdk/hal/compositeinput/metrics/*.aidl
   imports:
     - common@current
   stability: vintf

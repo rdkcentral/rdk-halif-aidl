@@ -50,6 +50,8 @@ The `IHDMIInputManager` provides discovery of port IDs and exposes global `Platf
 | **HAL.HDMIINPUT.3** | Must enforce SVP when HDCP 2.2 is engaged                 | Secure Video Path required            |
 | **HAL.HDMIINPUT.4** | CEC remains active even in CLOSED state                   | Required for hotplug detection        |
 | **HAL.HDMIINPUT.5** | HPD is unasserted until `STARTED` state                   | Avoid false negotiation before config |
+| **HAL.HDMIINPUT.6** | Shall serve every metric listed under `supportedMetrics` in the HAL Feature Profile through `getMetrics()` and `getMetric()`, in any state, counting from service initialisation. | See [metrics](#metrics). |
+| **HAL.HDMIINPUT.7** | Shall raise `onMetricEpisodeStarted()` when an episode of a supported metric starts and `onMetricEpisodeResolved()` when it ends. | See [metrics](#metrics). |
 
 ---
 
@@ -69,6 +71,12 @@ The `IHDMIInputManager` provides discovery of port IDs and exposes global `Platf
 | `HDMIVersion.aidl`, `VIC.aidl`, `HDCPProtocolVersion.aidl`, `HDCPStatus.aidl`, `FreeSync.aidl` | Enums and constants used throughout              |
 | `State.aidl`                                                                                   | State machine for HDMI input lifecycle           |
 | `SignalState.aidl`                                                                             | HDMI signal state enum                           |
+| `metrics/Metric.aidl` | Enum list of the metrics the HDMI input port serves. |
+| `metrics/MetricValue.aidl` | Parcelable pairing a `Metric` with its value. |
+| `metrics/MetricSnapshot.aidl` | Parcelable holding metric values latched at one instant. |
+| `metrics/Episode.aidl` | Enum list of the episodes the HDMI input port reports. |
+| `metrics/EpisodeStarted.aidl` | Parcelable carried by `onMetricEpisodeStarted()`. |
+| `metrics/EpisodeResolved.aidl` | Parcelable carried by `onMetricEpisodeResolved()`. |
 
 ---
 
@@ -180,6 +188,22 @@ sequenceDiagram
 | `onEDIDChange(edid)`               | EDID changed via setEDID()                                         |
 
 ---
+
+## Metrics
+
+`IHDMIInput.getMetrics()` returns the metrics asked for, latched at one instant with a `CLOCK_MONOTONIC_RAW` timestamp; `getMetric()` returns one. Both are callable in any state. Counters count from service initialisation and are never reset, so a session or interval figure is the difference of two snapshots. The rules common to every component are in the [HAL Metrics Pattern](../standards/hal_metrics_pattern.md); what each metric measures, excludes and is used for is in the Doxygen of `Metric.aidl`.
+
+| Metric | Unit | Kind | Meaning |
+|---|---|---|---|
+| `PACKET_ERRORS` | packets | counter | HDMI packet errors detected. |
+
+Events are episodes only: nothing is raised per occurrence. `IHDMIInputEventListener.onMetricEpisodeStarted()` is raised once when an episode starts and `onMetricEpisodeResolved()` once when it ends, each naming the `Episode`. The resolved event carries the episode's `durationNs` and `count`. Both events carry `metrics`, a `MetricSnapshot` of every supported metric latched at the event, so no second read is needed.
+
+| Episode | Starts and ends |
+|---|---|
+| `PACKET_ERROR` | Covers errors counted by PACKET_ERRORS. The episode starts at the first packet error when no such episode is open and ends when 1 second has passed without another. |
+
+The `METRIC_*` properties that these metrics replace are deprecated and remain readable.
 
 ## State Machine / Lifecycle
 

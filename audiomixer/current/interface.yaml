@@ -2,6 +2,7 @@ aidl_interface:
   name: audiomixer
   srcs:
     - com/rdk/hal/audiomixer/*.aidl
+    - com/rdk/hal/audiomixer/metrics/*.aidl
   imports:
     - audiodecoder@current
     - audiosink@current

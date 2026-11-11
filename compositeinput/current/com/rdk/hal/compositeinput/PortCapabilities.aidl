@@ -38,7 +38,8 @@ parcelable PortCapabilities {
      * when ports differ. Values correspond to entries declared in the platform
      * HFP under ports[].supportedProperties.
      *
-     * A port supports metrics if this array contains any METRIC_* key.
+     * The METRIC_* keys are deprecated; the metrics a product serves are
+     * listed as supportedMetrics in the HAL Feature Profile.
      */
     PortProperty[] supportedProperties;
 

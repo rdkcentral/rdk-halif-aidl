@@ -20,6 +20,8 @@ package com.rdk.hal.audiomixer;
 
 import com.rdk.hal.PropertyValue;
 import com.rdk.hal.audiomixer.OutputPortProperty;
+import com.rdk.hal.audiomixer.metrics.EpisodeResolved;
+import com.rdk.hal.audiomixer.metrics.EpisodeStarted;
 
 /**
  * @brief     Listener interface for audio output port events.
@@ -65,4 +67,27 @@ oneway interface IAudioOutputPortListener {
      * @param[in] newValue   The new PropertyValue.
      */
     void onPropertyChanged(in OutputPortProperty property, in PropertyValue newValue);
+
+    /**
+     * Raised once when an episode starts. onMetricEpisodeResolved() follows,
+     * with the same Episode, when it ends.
+     *
+     * Episodes are the only metric events: nothing is raised per occurrence,
+     * and per-occurrence figures are read with IAudioOutputPort.getMetrics().
+     *
+     * @param[in] event    Which episode started, and when.
+     *
+     * @see Episode, EpisodeStarted
+     */
+    void onMetricEpisodeStarted(in EpisodeStarted event);
+
+    /**
+     * Raised once when the episode reported by onMetricEpisodeStarted() ends.
+     *
+     * @param[in] event    Which episode ended, when, how long it lasted and
+     * what it counted.
+     *
+     * @see Episode, EpisodeResolved
+     */
+    void onMetricEpisodeResolved(in EpisodeResolved event);
 }

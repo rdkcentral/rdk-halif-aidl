@@ -18,6 +18,8 @@
  */
 package com.rdk.hal.hdmiinput;
 import com.rdk.hal.hdmiinput.State;
+import com.rdk.hal.hdmiinput.metrics.EpisodeResolved;
+import com.rdk.hal.hdmiinput.metrics.EpisodeStarted;
 
 /**
  *  @brief     Event callbacks listener interface from HDMI input.
@@ -44,4 +46,27 @@ oneway interface IHDMIInputEventListener {
      * @param[in] edid  The new EDID data as a byte array.
      */
     void onEDIDChange(in byte[] edid);
+
+    /**
+     * Raised once when an episode starts. onMetricEpisodeResolved() follows,
+     * with the same Episode, when it ends.
+     *
+     * Episodes are the only metric events: nothing is raised per occurrence,
+     * and per-occurrence figures are read with IHDMIInput.getMetrics().
+     *
+     * @param[in] event    Which episode started, and when.
+     *
+     * @see Episode, EpisodeStarted
+     */
+    void onMetricEpisodeStarted(in EpisodeStarted event);
+
+    /**
+     * Raised once when the episode reported by onMetricEpisodeStarted() ends.
+     *
+     * @param[in] event    Which episode ended, when, how long it lasted and
+     * what it counted.
+     *
+     * @see Episode, EpisodeResolved
+     */
+    void onMetricEpisodeResolved(in EpisodeResolved event);
 }
