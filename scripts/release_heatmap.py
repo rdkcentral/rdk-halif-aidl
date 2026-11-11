@@ -327,9 +327,12 @@ def pr_entries(nodes):
         if not p or "number" not in p or (p.get("repository") or {}).get("isPrivate"):
             continue   # not a PR, or a private repository's PR, which never goes on the public wiki
         k = pr_state(p)
-        if k != "closed":
-            out[p["url"]] = {"number": p["number"], "url": p["url"], "state": k, "base": p.get("baseRefName")}
-    return sorted(out.values(), key=lambda p: (-p["number"], p["url"]))
+        # The same PR can arrive in several snapshots taken moments apart. Closed
+        # and merged are final, so they win over an earlier or later open one.
+        if (out.get(p["url"]) or {}).get("state") in ("closed", "merged"):
+            continue
+        out[p["url"]] = {"number": p["number"], "url": p["url"], "state": k, "base": p.get("baseRefName")}
+    return sorted((e for e in out.values() if e["state"] != "closed"), key=lambda p: (-p["number"], p["url"]))
 
 
 def pr_states(issue):

@@ -173,6 +173,11 @@ class Render(unittest.TestCase):
         t = issue(prs=[{"number": 962, "state": "OPEN"}], ref_prs=[{"number": 962, "state": "OPEN"}])
         self.assertEqual([p["number"] for p in rh.open_prs(t)], [962])
 
+    def test_a_pr_closed_between_snapshots_is_not_open(self):
+        for first, second in (("OPEN", "CLOSED"), ("CLOSED", "OPEN"), ("OPEN", "MERGED")):
+            t = issue(prs=[{"number": 5, "state": first}], ref_prs=[{"number": 5, "state": second}])
+            self.assertEqual(rh.open_prs(t), [], (first, second))
+
     def test_same_number_in_another_repo_is_a_different_pr(self):
         t = issue(prs=[{"number": 12, "state": "OPEN", "url": "https://github.com/a/x/pull/12"},
                        {"number": 12, "state": "OPEN", "url": "https://github.com/b/y/pull/12"}])
