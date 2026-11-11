@@ -49,6 +49,8 @@ The interaction between the RDK GStreamer Audio Sink element and the Audio Sink 
 | **HAL.AUDIOSINK.7** | Shall serve every metric listed under `supportedMetrics` in the HAL Feature Profile through `getMetrics()` and `getMetric()`, in any state, counting from service initialisation. | See [metrics](#metrics). |
 | **HAL.AUDIOSINK.8** | Shall raise `onMetricEpisodeStarted()` when an episode of a supported metric starts and `onMetricEpisodeResolved()` when it ends. | See [metrics](#metrics). |
 | **HAL.AUDIOSINK.9** | Shall report audio it fails to render with `onRenderError()`, separately from `queueAudioFrame()` returning false for a full queue. | Lets middleware tell a render failure from back-pressure. |
+| **HAL.AUDIOSINK.10** | Shall notify the client with `onAudioUnderflow()` when the frame queue is empty at the presentation time of the next frame on the attached AV Clock. | Not raised before the first frame of a session, after a flush, while paused or after end of stream. |
+| **HAL.AUDIOSINK.11** | Shall raise `onAudioResumed()` once when audio plays again after an underflow; `onAudioUnderflow()` is not raised again until `onAudioResumed()` has been. | Edge-triggered, one pair per `UNDERFLOW` episode. |
 
 ## Interface Definition
 
@@ -254,7 +256,7 @@ For audio decoded by the Audio Decoder, the middleware forwards each decoded fra
 
 ## Metrics
 
-`IAudioSink.getMetrics()` returns the metrics asked for, latched at one instant with a `CLOCK_MONOTONIC_RAW` timestamp; `getMetric()` returns one. Both are callable in any state. Counters count from service initialisation and are never reset, so a session or interval figure is the difference of two snapshots. The rules common to every component are in the [HAL Metrics Pattern](../standards/hal_metrics_pattern.md); what each metric measures, excludes and is used for is in the Doxygen of `Metric.aidl`.
+`IAudioSink.getMetrics()` returns the metrics asked for, latched at one instant with a `CLOCK_MONOTONIC_RAW` timestamp; `getMetric()` returns one. Both are callable in any state. Counters count from service initialisation and are never reset, so a session or interval figure is the difference of two snapshots. The rules common to every component are in the [HAL Metrics Pattern](../standards/hal_metrics_pattern.md); what each metric measures, excludes and is used for is in the Doxygen of `Metric.aidl`. The product lists what it supports as `supportedMetrics` and `supportedEpisodes` in the HAL Feature Profile, and `getCapabilities()` reports the same lists at run time in `Capabilities`.
 
 | Metric | Unit | Kind | Meaning |
 |---|---|---|---|
