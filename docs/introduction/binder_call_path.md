@@ -2,7 +2,7 @@
 
 What one HAL call costs when it crosses binder, traced from the client's generated proxy through the kernel driver to the HAL's implementation and back.
 
-Each synchronous call passes through libbinder twice per side and makes one blocking `ioctl` per side. The kernel copies once in each direction, and there are two context switches. There is no third process and no dispatcher thread.
+Each synchronous call passes through libbinder twice per side. The client makes one blocking `ioctl`; the HAL's pool thread makes two, one to send the reply and one to wait for the next call. The kernel copies once in each direction, and an ideal hand-off takes two context switches. There is no third process and no dispatcher thread.
 
 ## Layers a call passes through
 
@@ -26,19 +26,20 @@ sequenceDiagram
     St->>Impl: unmarshal, call getMetrics()
     Impl-->>St: MetricSnapshot
     St-->>LB: marshal reply Parcel
-    LB->>K: ioctl: BC_REPLY, then wait for next call
+    LB->>K: ioctl: BC_REPLY, returns once the reply is queued
     K->>K: copy reply into the client's mmap buffer
     K-->>LA: wake client thread: BR_REPLY
     LA-->>Px: unmarshal reply
     Px-->>App: MetricSnapshot
+    LB->>K: ioctl: wait for the next call
 ```
 
 | Cost per round trip | Count |
 | --- | --- |
 | Passes through libbinder | 4: client out, HAL in, HAL out, client in |
-| Syscalls | 2: one `ioctl` per side, each combining a send with the wait for what comes next |
+| Syscalls | 3: one client `ioctl` that sends and waits for the reply; two on the HAL, one to send the reply and one to wait for the next call |
 | Kernel copies | 2: request into the HAL, reply into the client |
-| Context switches | 2: client to HAL, HAL to client |
+| Context switches | 2 in an ideal hand-off: client to HAL, HAL to client. Scheduling can add more. |
 
 When client and HAL share a process, libbinder finds a local `BBinder` and makes a direct C++ call, with no kernel involvement.
 
@@ -58,7 +59,8 @@ sequenceDiagram
     K->>H: wake: context switch 1
     activate H
     Note over H: unmarshal, getMetrics(), marshal
-    H->>K: ioctl: reply and wait
+    H->>K: ioctl: reply
+    H->>K: ioctl: wait for the next call
     deactivate H
     Note over H: asleep for the next call
     K->>C: wake: context switch 2
@@ -69,7 +71,7 @@ sequenceDiagram
 
 The calling thread does not move to the HAL. It sleeps, and a thread from the HAL's binder pool runs the method in the HAL's address space. If every pool thread is busy, the call queues until one is free; the driver can send `BR_SPAWN_LOOPER` to ask the HAL for another thread, up to its maximum.
 
-On a multi-core SoC the HAL thread may wake on another core. There is then no context switch on the client's core, but the wake-up crosses cores and the HAL thread starts with a cold cache.
+On a multi-core SoC the HAL thread may wake on another core. The client's core still switches away when the client blocks, and the wake-up crosses cores. Whether either thread's cache is still warm depends on what the scheduler ran in between.
 
 ## One copy in each direction
 
@@ -105,7 +107,7 @@ flowchart TB
 
 | | Thread pool | Event loop |
 | --- | --- | --- |
-| Syscalls per incoming call | 1 | 2 or more |
+| Syscalls per incoming call | 2: wait, reply | 3 or more: poll, read, reply |
 | Concurrency | Calls run in parallel | One thread; calls run one at a time |
 | Typical user | HAL services | A daemon that already has a main loop |
 
