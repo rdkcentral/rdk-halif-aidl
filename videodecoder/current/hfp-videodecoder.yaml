@@ -57,6 +57,16 @@ videodecoder:                   # Component object begins
   supportedEpisodes:
     - FRAME_DROP
     - DECODE_ERROR
+  # Error codes this product raises through onDecodeError(). Names are
+  # members of the ErrorCode enum.
+  supportedErrorCodes:
+    - CODEC_UNSUPPORTED
+    - CODEC_EXCEEDS_CAPABILITIES
+    - BITSTREAM_RECOVERED
+    - BITSTREAM_FRAMEDROP
+    - DECODER_LOCK
+    - INTERNAL_ERROR
+
   IVideoDecoder:                # Resource list
     - 0:                        # Resource object begins (high-tier decoder)
       supportedCodecs:          # Array of CodecCapabilities

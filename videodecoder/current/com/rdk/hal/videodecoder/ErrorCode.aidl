@@ -29,36 +29,38 @@ package com.rdk.hal.videodecoder;
 @Backing(type = "int")
 enum ErrorCode {
     /**
-     * The input bitstream could not be parsed or decoded: a syntax
-     * error or corrupt data.
+     * The stream's codec is not one the decoder supports.
      */
-    MALFORMED_STREAM = 2,
+    CODEC_UNSUPPORTED = 1,
 
     /**
-     * The stream uses a profile, level, frame size, bit depth or
-     * feature beyond the capabilities the product declares.
+     * The stream is in a supported codec but beyond the capabilities
+     * the product declares: profile, level, frame size, frame rate, bit
+     * depth, or an output pixel format the decoder cannot produce.
      */
-    UNSUPPORTED_STREAM = 3,
+    CODEC_EXCEEDS_CAPABILITIES = 2,
 
     /**
-     * The decoded frames cannot be output in a supported pixel format.
+     * Corruption was detected in the bitstream and concealed; the frame
+     * was output and decoding carries on.
      */
-    UNSUPPORTED_OUTPUT_FORMAT = 4,
+    BITSTREAM_RECOVERED = 3,
 
     /**
-     * Memory or decoder hardware needed to continue is not available,
-     * for example after a resolution increase.
+     * Corruption was detected in the bitstream and the frames it
+     * affects were dropped; decoding carries on from the next decodable
+     * frame.
      */
-    INSUFFICIENT_RESOURCE = 5,
+    BITSTREAM_FRAMEDROP = 4,
 
     /**
-     * Encrypted input could not be decrypted: the key is not loaded,
-     * or the output protection required is not met.
+     * The decoder stopped making progress: input is queued but no
+     * output or error has followed within the decoder's own time limit.
      */
-    DECRYPT_FAILED = 6,
+    DECODER_LOCK = 5,
 
     /**
-     * The decoder hardware failed and needs a reset.
+     * The decoder failed for a reason no other code describes.
      */
-    HARDWARE_FAILURE = 7,
+    INTERNAL_ERROR = 6,
 }

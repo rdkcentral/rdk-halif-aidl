@@ -41,6 +41,14 @@ audiosink:
     - FRAME_DROP
     - GAP
     - UNDERFLOW
+  # Error codes this product raises through onRenderError(). Names are
+  # members of the ErrorCode enum.
+  supportedErrorCodes:
+    - RENDER_FAILED
+    - UNSUPPORTED_FORMAT
+    - OUTPUT_UNAVAILABLE
+    - SECURE_PATH_FAILURE
+    - HARDWARE_FAILURE
 
   IAudioSink:
     - id: 0

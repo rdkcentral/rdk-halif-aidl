@@ -18,6 +18,7 @@
  */
 package com.rdk.hal.audiosink;
 import com.rdk.hal.audiosink.ContentType;
+import com.rdk.hal.audiosink.ErrorCode;
 import com.rdk.hal.audiosink.metrics.Episode;
 import com.rdk.hal.audiosink.metrics.Metric;
 
@@ -56,4 +57,11 @@ parcelable Capabilities {
      * supportedEpisodes in the HAL Feature Profile. No other member is raised.
      */
     Episode[] supportedEpisodes;
+
+    /**
+     * The error codes this resource instance raises through onRenderError(),
+     * as listed under supportedErrorCodes in the HAL Feature Profile. No
+     * other code is raised.
+     */
+    ErrorCode[] supportedErrorCodes;
 }

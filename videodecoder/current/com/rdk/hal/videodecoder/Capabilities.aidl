@@ -20,6 +20,7 @@ package com.rdk.hal.videodecoder;
 import com.rdk.hal.videodecoder.CodecCapabilities;
 import com.rdk.hal.videodecoder.Colorimetry;
 import com.rdk.hal.videodecoder.DynamicRange;
+import com.rdk.hal.videodecoder.ErrorCode;
 import com.rdk.hal.videodecoder.metrics.Episode;
 import com.rdk.hal.videodecoder.metrics.Metric;
 
@@ -68,4 +69,11 @@ parcelable Capabilities {
      * supportedEpisodes in the HAL Feature Profile. No other member is raised.
      */
     Episode[] supportedEpisodes;
+
+    /**
+     * The error codes this resource instance raises through onDecodeError(),
+     * as listed under supportedErrorCodes in the HAL Feature Profile. No
+     * other code is raised.
+     */
+    ErrorCode[] supportedErrorCodes;
 }
