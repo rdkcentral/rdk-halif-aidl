@@ -457,36 +457,47 @@ For these constrained arguments, out-of-range values shall raise `EX_ILLEGAL_ARG
 
 ### Mapping from the Device Settings audio HAL
 
-A platform migrating from the Device Settings audio HAL declares MS12 support as a
-bitmask in `Sink_AudioSettings.yaml`:
+The Device Settings audio HAL declares MS12 support as a bitmask in
+`Sink_AudioSettings.yaml`. The AIDL audiomixer has no bitmask: it declares the same
+support as one boolean per `IDolbyMs12_2_6_Dap` command in
+`DolbyMs12_2_6_DapCapabilities`, returned by `IDolbyMs12_2_6_Dap.getCapabilities()`.
+A platform migrating a Device Settings profile sets each boolean from the bit, or the
+Device Settings API, shown below.
 
 ```yaml
-MS12_Capabilities: 0xFFF   # OR of the dsMS12SUPPORT_* bits
+MS12_Capabilities: 0xFFF   # Device Settings: OR of the dsMS12SUPPORT_* bits
 ```
 
-Each bit becomes one boolean in `DolbyMs12_2_6_DapCapabilities`, returned by
-`IDolbyMs12_2_6_Dap.getCapabilities()`.
+```cpp
+DolbyMs12_2_6_DapCapabilities caps;   // AIDL: one field per command
+caps.supportsBassEnhancer   = true;   // dsMS12SUPPORT_BassEnhancer set
+caps.supportsVolumeLeveller = true;   // dsMS12SUPPORT_Volumeleveller set
+caps.supportsAtmosLock      = false;  // dsSetAudioAtmosOutputMode() not supported
+```
 
-| `dsMS12SUPPORT_*` bit | `DolbyMs12_2_6_DapCapabilities` field |
-| --------------------- | ------------------------------------- |
-| `InteligentEqualizer` (1 << 1) | `supportsIntelligentEqualizerMode` |
-| `DialogueEnhancer` (1 << 2) | `supportsDialogueEnhancer` |
-| `Volumeleveller` (1 << 3) | `supportsVolumeLeveller` |
-| `BassEnhancer` (1 << 4) | `supportsBassEnhancer` |
-| `SurroundDecoder` (1 << 5) | `supportsSurroundDecoderEnabled` |
-| `DRCMode` (1 << 6) | `supportsDynamicRangeControlMode` |
-| `SurroundVirtualizer` (1 << 7) | `supportsSurroundVirtualizer` |
-| `MISteering` (1 << 8) | `supportsMediaIntelligentSteering` |
-| `GraphicEqualizer` (1 << 9) | `supportsGraphicEqualizerMode` |
+| Device Settings | `DolbyMs12_2_6_DapCapabilities` field |
+| --------------- | ------------------------------------- |
+| `dsMS12SUPPORT_InteligentEqualizer` (1 << 1) | `supportsIntelligentEqualizerMode` |
+| `dsMS12SUPPORT_DialogueEnhancer` (1 << 2) | `supportsDialogueEnhancer` |
+| `dsMS12SUPPORT_Volumeleveller` (1 << 3) | `supportsVolumeLeveller` |
+| `dsMS12SUPPORT_BassEnhancer` (1 << 4) | `supportsBassEnhancer` |
+| `dsMS12SUPPORT_SurroundDecoder` (1 << 5) | `supportsSurroundDecoderEnabled` |
+| `dsMS12SUPPORT_DRCMode` (1 << 6) | `supportsDynamicRangeControlMode` |
+| `dsMS12SUPPORT_SurroundVirtualizer` (1 << 7) | `supportsSurroundVirtualizer` |
+| `dsMS12SUPPORT_MISteering` (1 << 8) | `supportsMediaIntelligentSteering` |
+| `dsMS12SUPPORT_GraphicEqualizer` (1 << 9) | `supportsGraphicEqualizerMode` |
+| `dsSetAudioGain()`, which sets the DAP post gain on a sink's speaker port; no capability bit | `supportsPostGain`: true on a sink's speaker port. Every MS12 version certified for TV platforms (2.4, 2.5, 2.6, 2.8) supports it. |
+| `dsSetAudioAtmosOutputMode()`, which sets the MS12 Atmos lock; no capability bit | `supportsAtmosLock`: true where the platform supported that call |
+| None: the SoC configures these at its defaults and never exposes them | `supportsDownmixMode`, `supportsCenterSpreadingEnabled`, `supportsActiveDownmixEnabled`: false |
 
-`dsMS12SUPPORT_DolbyVolume` (1 << 0) and `dsMS12SUPPORT_LEConfig` (1 << 10) have no
-agreed counterpart; the correspondence to `supportsVolumeModelerEnabled` and
-`supportsPostGain` is unconfirmed and is tracked by #839.
+Two bits have no counterpart in the MS12 2.6 DAP:
 
-`supportsAtmosLock`, `supportsDownmixMode`, `supportsCenterSpreadingEnabled` and
-`supportsActiveDownmixEnabled` have no bit in the Device Settings mask. A platform
-that supports those commands declares them in the HFP YAML; a platform migrating a
-Device Settings profile with no further information declares them false.
+- `dsMS12SUPPORT_LEConfig` (1 << 10) belongs to `dsEnableLEConfig()`, Loudness
+  Equivalence, which older non-MS12 products required. It is not post gain.
+- `dsMS12SUPPORT_DolbyVolume` (1 << 0) is the pre-MS12 loudness control. Volume
+  Modeler replaces it in MS12 but is a different control, so
+  `supportsVolumeModelerEnabled` is set from the platform's MS12 configuration, not
+  from this bit.
 
 The `MS12_AudioProfiles` list and its `ms12_audio_profiles.ini` names become
 `OutputPortCapabilities.dolbyMs12AudioProfiles`, selected through
