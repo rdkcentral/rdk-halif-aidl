@@ -27,7 +27,7 @@ hdmicec:                        # Component object begins
     interfaceVersion: current
 
     # Metrics this product serves through IHdmiCec.getMetrics(), for
-    # every resource instance. Names are members of the Metric enum.
+    # every resource instance, and reported in Capabilities.supportedMetrics.
     supportedMetrics:
       - DIRECTED_MESSAGES_SENT
       - BROADCAST_MESSAGES_SENT

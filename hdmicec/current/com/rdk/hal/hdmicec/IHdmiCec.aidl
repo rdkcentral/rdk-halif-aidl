@@ -18,6 +18,7 @@
  */
 package com.rdk.hal.hdmicec;
 import com.rdk.hal.PropertyValue;
+import com.rdk.hal.hdmicec.Capabilities;
 import com.rdk.hal.hdmicec.IHdmiCecController;
 import com.rdk.hal.hdmicec.IHdmiCecEventListener;
 import com.rdk.hal.hdmicec.Property;
@@ -218,4 +219,15 @@ interface IHdmiCec {
      * @see Metric, getMetrics()
      */
     long getMetric(in Metric metric);
+
+    /**
+     * Gets the capabilities of the service.
+     *
+     * Callable in any state. The returned value does not change between calls.
+     *
+     * @returns The capabilities.
+     *
+     * @exception binder::Status::Exception::EX_NONE for success.
+     */
+    Capabilities getCapabilities();
 }

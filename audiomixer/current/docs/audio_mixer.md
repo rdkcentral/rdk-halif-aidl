@@ -482,7 +482,7 @@ For these constrained arguments, out-of-range values shall raise `EX_ILLEGAL_ARG
 
 ## Metrics
 
-`IAudioOutputPort.getMetrics()` returns the metrics asked for, latched at one instant with a `CLOCK_MONOTONIC_RAW` timestamp; `getMetric()` returns one. Both are callable in any state. Counters count from service initialisation and are never reset, so a session or interval figure is the difference of two snapshots. The rules common to every component are in the [HAL Metrics Pattern](../standards/hal_metrics_pattern.md); what each metric measures, excludes and is used for is in the Doxygen of `Metric.aidl`.
+`IAudioOutputPort.getMetrics()` returns the metrics asked for, latched at one instant with a `CLOCK_MONOTONIC_RAW` timestamp; `getMetric()` returns one. Both are callable in any state. Counters count from service initialisation and are never reset, so a session or interval figure is the difference of two snapshots. The rules common to every component are in the [HAL Metrics Pattern](../standards/hal_metrics_pattern.md); what each metric measures, excludes and is used for is in the Doxygen of `Metric.aidl`. The product lists what it supports as `supportedMetrics` and `supportedEpisodes` in the HAL Feature Profile, and `getCapabilities()` reports the same lists at run time in `OutputPortCapabilities`.
 
 | Metric | Unit | Kind | Meaning |
 |---|---|---|---|

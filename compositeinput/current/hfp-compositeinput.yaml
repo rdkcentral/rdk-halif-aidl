@@ -37,13 +37,17 @@ compositeinput:
   interfaceVersion: current
 
   # Metrics this product serves through ICompositeInputPort.getMetrics(), for
-  # every resource instance. Names are members of the Metric enum.
+  # every resource instance, and reported in PortCapabilities.supportedMetrics.
   supportedMetrics:
     - SIGNAL_LOCKS
     - SIGNAL_DROPS
     - LOCK_ACQUISITION_TIME_NS
     - LAST_LOCK_ACQUISITION_TIME_NS
     - STARTED_DURATION_NS
+  # Episodes this product raises through onMetricEpisodeStarted() and
+  # onMetricEpisodeResolved(). Names are members of the Episode enum.
+  supportedEpisodes:
+    - SIGNAL_LOSS
 
   # Per-port configuration
   ports:
