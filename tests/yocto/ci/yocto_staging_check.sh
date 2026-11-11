@@ -189,8 +189,9 @@ if cmake --build "${WORK}/neg" > "${WORK}/neg.compile.log" 2>&1; then
     fail "negative control unexpectedly SUCCEEDED - ${MOD_COMP} built without ${DEP_COMP} staged"
 fi
 # common is package com.rdk.hal (no subdirectory); every other component
-# is com.rdk.hal.<comp>.
-grep -qE "com/rdk/hal/(${DEP_COMP}/)?[A-Z][A-Za-z0-9_]*\.h: No such file|cannot find -l${DEP_COMP}-v${DEP_VER}-cpp" \
+# is com.rdk.hal.<comp>.  GCC reports "<hdr>.h: No such file or directory";
+# clang reports "fatal error: '<hdr>.h' file not found".
+grep -qE "com/rdk/hal/(${DEP_COMP}/)?[A-Z][A-Za-z0-9_]*\.h('? file not found|: No such file)|cannot find -l${DEP_COMP}-v${DEP_VER}-cpp" \
         "${WORK}/neg.compile.log" \
     || { grep -m5 -E 'error' "${WORK}/neg.compile.log" | sed 's/^/    /'
          fail "negative control failed, but not on the missing ${DEP_COMP}@${DEP_VER}"; }
