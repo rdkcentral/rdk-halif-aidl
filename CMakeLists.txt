@@ -56,6 +56,9 @@ include(HandleModules)
 find_package(Binder REQUIRED)
 find_package(AndroidUtils REQUIRED)
 
+add_subdirectory("CMakeModules")
+add_subdirectory("contrib")
+
 if(NOT INTERFACE_RELEASE_FILE)
     set(INTERFACE_RELEASE_FILE "${CMAKE_CURRENT_SOURCE_DIR}/versions_released.yaml")
 endif()
