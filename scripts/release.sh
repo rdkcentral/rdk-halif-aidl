@@ -1050,6 +1050,8 @@ Environment:
 Behavior (#712 change-class labels — label names mean what the fields mean):
   - "Major Change"    label   => major bump (0.g.m.p -> 0.(g+1).0.0) — breaking
   - "Minor Change"    label   => minor bump (0.g.m.p -> 0.g.(m+1).0) — additive
+  - "New Interface"   label   => a new component starts at 0.1.0.0; any existing
+                                 component the PR touches takes a minor bump
   - "documentation"   label   => bugfix bump (0.g.m.p -> 0.g.m.(p+1))
   - "Breaking Change" label   => retired; accepted as a deprecated alias of
                                  Major Change during transition
@@ -2152,7 +2154,9 @@ for sha in "${FP_COMMITS[@]}"; do
 
     # Change-class labels (#712): the label names mean what the version
     # fields mean — Major Change = breaking (major bump), Minor Change =
-    # additive (minor bump), documentation = bugfix bump. The retired
+    # additive (minor bump), documentation = bugfix bump. New Interface adds
+    # a component, which releases at 0.1.0.0 on its own; for any existing
+    # component the PR also touches it reads as Minor (#973). The retired
     # "Breaking Change" label (and its legacy lowercase form) is accepted
     # as a deprecated alias of Major Change while in-flight PRs migrate.
     has_major_label=0
@@ -2162,7 +2166,7 @@ for sha in "${FP_COMMITS[@]}"; do
         [[ -n "${lbl}" ]] || continue
         case "${lbl}" in
             "Major Change"|"Breaking Change"|"breaking-change") has_major_label=1 ;;
-            "Minor Change")                                     has_minor_label=1 ;;
+            "Minor Change"|"New Interface")                     has_minor_label=1 ;;
             "documentation")                                    has_bugfix_label=1 ;;
         esac
     done <<< "${labels}"
@@ -4366,10 +4370,19 @@ _SYNC_LABEL=([3]="Major Change" [2]="Minor Change" [1]="documentation")
 _sync_rank() {
     case "$1" in major) echo 3 ;; minor) echo 2 ;; bugfix) echo 1 ;; *) echo 0 ;; esac
 }
+_sync_verb() {   # want have all-owned labels -> raise | lower | keep
+    local want="$1" have="$2" all="$3" labels="$4"
+    if [[ "${want}" -gt "${have}" ]]; then echo raise
+    # New Interface is the new-component marker as well as a Minor floor, and
+    # the label cleanup never removes it: lowering would retry on every run.
+    elif [[ "${want}" -lt "${have}" && "${all}" -eq 1 ]] && ! grep -qx 'New Interface' <<<"${labels}"; then echo lower
+    else echo keep
+    fi
+}
 _sync_label_rank() {   # labels (newline-separated) -> rank of the class they carry
     local labels="$1"
     if grep -qxE 'Major Change|Breaking Change' <<<"${labels}"; then echo 3
-    elif grep -qx 'Minor Change' <<<"${labels}"; then echo 2
+    elif grep -qxE 'Minor Change|New Interface' <<<"${labels}"; then echo 2
     elif grep -qx 'documentation' <<<"${labels}"; then echo 1
     else echo 0
     fi
@@ -4435,10 +4448,7 @@ run_sync_labels() {
         for c in ${PR_TOUCHED[$pr]}; do
             [[ " ${PR_OWNED[$pr]} " == *" ${c} "* ]] || all=0
         done
-        verb="keep"
-        if [[ "${want}" -gt "${have}" ]]; then verb="raise"
-        elif [[ "${want}" -lt "${have}" && "${all}" -eq 1 ]]; then verb="lower"
-        fi
+        verb="$(_sync_verb "${want}" "${have}" "${all}" "${labels}")"
         log "$(printf "  %-6s %-14s %-14s %s" "$(_link "https://github.com/${GH_REPO}/pull/${pr}" "#${pr}")" \
             "${_SYNC_LABEL[$have]:-none}" "${_SYNC_LABEL[$want]}" \
             "$(_cell 0 "$([[ "${verb}" == keep ]] && printf '%s' "${_C_DIM}" || printf '%s' "${_C_YELLOW}${_C_BOLD}")" "${verb}")")"

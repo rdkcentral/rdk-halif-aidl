@@ -125,30 +125,40 @@ print(" ".join(sorted(comps)))
     # the version fields mean). The selection cascade below is
     # *predicate-based*, not severity-based — each branch checks the
     # condition that signals that class:
-    #   Major Change    — the PR carries `CR` or `New Interface`, or the
-    #                     title has a conventional-commit "!:" marker
+    #   Major Change    — the PR carries `CR`, or the title has a
+    #                     conventional-commit "!:" marker
     #                     (breaking => major bump)
+    #   New Interface   — the PR carries `New Interface` and is not breaking:
+    #                     it is the class, and no other class label is added
+    #                     (a new component releases at 0.1.0.0, #973). With
+    #                     `Major Change` already on it, Major stays.
     #   documentation   — every changed file is doc-like (else branch;
     #                     bugfix bump)
     #   Minor Change    — fallback when neither predicate matches
     #                     (additive interface work => minor bump)
     #
-    # `CR` and `New Interface` are orthogonal governance markers rather than
-    # classes, and both describe a change that alters the shape of the
-    # interface, so the class that belongs with them is Major. Checking them
-    # first matters: a CR whose title lacks the `!:` marker would otherwise be
-    # demoted to `Minor Change` here and promoted straight back by
+    # `CR` is an orthogonal governance marker that describes a change to the
+    # shape of the interface, so the class that belongs with it is Major.
+    # Checking it first matters: a CR whose title lacks the `!:` marker would
+    # otherwise be demoted to `Minor Change` here and promoted straight back by
     # scripts/project_interface_effect.py, leaving the two automations to
     # fight over the label.
     #
     # The `is_doc()` predicate mirrors scripts/release.sh:is_doc_like_path
     # so the two scripts agree on what counts as docs-only.
     local change_class=""
-    if [[ ",${current_labels}," == *",CR,"* ]] || \
-       [[ ",${current_labels}," == *",New Interface,"* ]]; then
+    if [[ ",${current_labels}," == *",CR,"* ]]; then
         change_class="Major Change"
     elif [[ "$title" =~ ^[a-z]+(\([^\)]*\))?!: ]]; then
         change_class="Major Change"
+    elif [[ ",${current_labels}," == *",New Interface,"* ]] && \
+         [[ ",${current_labels}," == *",Major Change,"* || ",${current_labels}," == *",Breaking Change,"* ]]; then
+        # A new component that also breaks an existing one: the Major
+        # Change the change-class check asked for stays (#973). The retired
+        # alias Breaking Change counts too, normalised to Major Change.
+        change_class="Major Change"
+    elif [[ ",${current_labels}," == *",New Interface,"* ]]; then
+        change_class="New Interface"
     else
         local docs_only
         docs_only=$(echo "$meta" | python3 -c '
@@ -179,6 +189,9 @@ print("yes" if fs and all(is_doc(p) for p in fs) else "no")
     # never leaves duplicates behind during the #712 transition.
     local remove_labels=()
     local cls
+    # New Interface is never removed here: it records that the PR adds a
+    # component, which this script cannot tell from the title, and it can sit
+    # beside Major Change.
     for cls in "Major Change" "Minor Change" "documentation" "Breaking Change"; do
         [ "$cls" = "$change_class" ] && continue
         if [[ ",${current_labels}," == *",${cls},"* ]]; then remove_labels+=("$cls"); fi
