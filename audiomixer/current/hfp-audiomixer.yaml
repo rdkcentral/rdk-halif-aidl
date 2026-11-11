@@ -26,15 +26,17 @@ audiomixer:
 
   # Metrics this product serves through IAudioOutputPort.getMetrics(), for
   # every resource instance, and reported in OutputPortCapabilities.supportedMetrics.
+  # Entries marked mandatory are listed by every product; optional
+  # ones only where the product serves them.
   supportedMetrics:
-    - UNDERFLOW_EPISODES
-    - UNDERFLOW_DURATION_NS
-    - OVERFLOWS
+    - UNDERFLOW_EPISODES      # mandatory
+    - UNDERFLOW_DURATION_NS   # mandatory
+    - OVERFLOWS               # optional
   # Episodes this product raises through onMetricEpisodeStarted() and
   # onMetricEpisodeResolved(). Names are members of the Episode enum.
   supportedEpisodes:
-    - UNDERFLOW
-    - OVERFLOW
+    - UNDERFLOW               # mandatory
+    - OVERFLOW                # optional
 
   # List of mixer resources available on this platform.
   # Each resources entry describes a single logical audio mixer instance and its input capabilities
