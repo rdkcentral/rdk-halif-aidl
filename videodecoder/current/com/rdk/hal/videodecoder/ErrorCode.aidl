@@ -29,38 +29,46 @@ package com.rdk.hal.videodecoder;
 @Backing(type = "int")
 enum ErrorCode {
     /**
+     * Placeholder, never raised.
+     *
+     * @deprecated Deprecated since 2026-11-11. Use the codes below.
+     * Reason: it carried no meaning; the defined codes replace it.
+     */
+    xxxx = 1,
+
+    /**
      * The stream's codec is not one the decoder supports.
      */
-    CODEC_UNSUPPORTED = 1,
+    CODEC_UNSUPPORTED = 2,
 
     /**
      * The stream is in a supported codec but beyond the capabilities
      * the product declares: profile, level, frame size, frame rate, bit
      * depth, or an output pixel format the decoder cannot produce.
      */
-    CODEC_EXCEEDS_CAPABILITIES = 2,
+    CODEC_EXCEEDS_CAPABILITIES = 3,
 
     /**
      * Corruption was detected in the bitstream and concealed; the frame
      * was output and decoding carries on.
      */
-    BITSTREAM_RECOVERED = 3,
+    BITSTREAM_RECOVERED = 4,
 
     /**
      * Corruption was detected in the bitstream and the frames it
      * affects were dropped; decoding carries on from the next decodable
      * frame.
      */
-    BITSTREAM_FRAMEDROP = 4,
+    BITSTREAM_FRAMEDROP = 5,
 
     /**
      * The decoder stopped making progress: input is queued but no
      * output or error has followed within the decoder's own time limit.
      */
-    DECODER_LOCK = 5,
+    DECODER_LOCK = 6,
 
     /**
      * The decoder failed for a reason no other code describes.
      */
-    INTERNAL_ERROR = 6,
+    INTERNAL_ERROR = 7,
 }
