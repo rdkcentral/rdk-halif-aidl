@@ -52,8 +52,8 @@ The `ICompositeInputManager` provides discovery of port IDs and exposes global `
 | **HAL.CompositeInput.6**    | Port lifecycle shall follow the open/close + start/stop controller pattern. | Mirrors the HDMI input controller pattern |
 | **HAL.CompositeInput.7**    | Property keys shall be `PortProperty` enum values declared in the HFP YAML. | Discoverable via `PortCapabilities.supportedProperties` |
 | **HAL.CompositeInput.8**    | Telemetry metrics shall be served as `Metric` values through `getMetrics()`. | See [metrics](#metrics); the `METRIC_*` keys are deprecated. |
-| **HAL.CompositeInput.9** | Shall serve every metric listed under `supportedMetrics` in the HAL Feature Profile through `getMetrics()` and `getMetric()`, in any state, counting from service initialisation. The list includes every metric marked mandatory. | See [metrics](#metrics). |
-| **HAL.CompositeInput.10** | Shall raise `onMetricEpisodeStarted()` when an episode of a supported metric starts and `onMetricEpisodeResolved()` when it ends, for every episode listed under `supportedEpisodes`, which includes every episode marked mandatory. | See [metrics](#metrics). |
+| **HAL.CompositeInput.9** | Shall serve every metric listed under `metrics.supported` in the HAL Feature Profile through `getMetrics()` and `getMetric()`, in any state, counting from service initialisation. The list includes every metric marked mandatory. | See [metrics](#metrics). |
+| **HAL.CompositeInput.10** | Shall raise `onMetricEpisodeStarted()` when an episode of a supported metric starts and `onMetricEpisodeResolved()` when it ends, for every episode listed under `metrics.supportedEpisodes`, which includes every episode marked mandatory. | See [metrics](#metrics). |
 
 ---
 
@@ -300,7 +300,7 @@ All `METRIC_*` keys are reset atomically by `ICompositeInputController.resetMetr
 
 ## Metrics
 
-`ICompositeInputPort.getMetrics()` returns the metrics asked for, latched at one instant with a `CLOCK_MONOTONIC_RAW` timestamp; `getMetric()` returns one. Both are callable in any state. Counters count from service initialisation and are never reset, so a session or interval figure is the difference of two snapshots. The rules common to every component are in the [HAL Metrics Pattern](../standards/hal_metrics_pattern.md); what each metric measures, excludes and is used for is in the Doxygen of `Metric.aidl`. The product lists what it supports as `supportedMetrics` and `supportedEpisodes` in the HAL Feature Profile, and `getCapabilities()` reports the same lists at run time in `PortCapabilities`.
+`ICompositeInputPort.getMetrics()` returns the metrics asked for, latched at one instant with a `CLOCK_MONOTONIC_RAW` timestamp; `getMetric()` returns one. Both are callable in any state. Counters count from service initialisation and are never reset, so a session or interval figure is the difference of two snapshots. The rules common to every component are in the [HAL Metrics Pattern](../standards/hal_metrics_pattern.md); what each metric measures, excludes and is used for is in the Doxygen of `Metric.aidl`. The product lists what it supports under `metrics.supported` and `metrics.supportedEpisodes` in the HAL Feature Profile, and `getCapabilities()` reports the same lists at run time in `PortCapabilities`.
 
 | Metric | Unit | Kind | Support | Meaning |
 |---|---|---|---|---|

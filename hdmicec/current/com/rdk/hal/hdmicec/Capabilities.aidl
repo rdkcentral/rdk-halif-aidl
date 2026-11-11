@@ -27,7 +27,7 @@ import com.rdk.hal.hdmicec.metrics.Metric;
 parcelable Capabilities {
     /**
      * The metrics this resource instance serves through getMetrics(), as
-     * listed under supportedMetrics in the HAL Feature Profile. getMetric()
+     * listed under metrics.supported in the HAL Feature Profile. getMetric()
      * throws EX_UNSUPPORTED_OPERATION for any other member.
      */
     Metric[] supportedMetrics;
