@@ -28,7 +28,36 @@ package com.rdk.hal.audiosink;
 @VintfStability
 @Backing(type = "int")
 enum ErrorCode {
-    /** Placeholder. No audio sink error codes are defined yet. */
+    /**
+     * Placeholder, never raised.
+     *
+     * @deprecated Deprecated since 2026-11-11. Use the codes below.
+     * Reason: it carried no meaning; the defined codes replace it.
+     */
     xxx = 1,
 
+    /**
+     * A queued frame could not be played.
+     */
+    RENDER_FAILED = 2,
+
+    /**
+     * The output in use cannot play the frame's format.
+     */
+    UNSUPPORTED_FORMAT = 3,
+
+    /**
+     * The output path the sink renders to has been lost.
+     */
+    OUTPUT_UNAVAILABLE = 4,
+
+    /**
+     * A secure audio buffer could not be processed.
+     */
+    SECURE_PATH_FAILURE = 5,
+
+    /**
+     * The audio output hardware failed and needs a reset.
+     */
+    HARDWARE_FAILURE = 6,
 }

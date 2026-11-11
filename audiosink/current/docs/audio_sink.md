@@ -48,6 +48,7 @@ The interaction between the RDK GStreamer Audio Sink element and the Audio Sink 
 | **HAL.AUDIOSINK.6** | Shall run a session with no mixer input routed, consuming queued frames and freeing their buffers against the attached AV Clock while producing no audio. | The routing is owned by the Audio Mixer and may be set or cleared at any point in the session, including while the sink is `STARTED`. |
 | **HAL.AUDIOSINK.7** | Shall serve every metric listed under `supportedMetrics` in the HAL Feature Profile through `getMetrics()` and `getMetric()`, in any state, counting from service initialisation. | See [metrics](#metrics). |
 | **HAL.AUDIOSINK.8** | Shall raise `onMetricEpisodeStarted()` when an episode of a supported metric starts and `onMetricEpisodeResolved()` when it ends. | See [metrics](#metrics). |
+| **HAL.AUDIOSINK.9** | Shall report audio it fails to render with `onRenderError()`, separately from `queueAudioFrame()` returning false for a full queue. | Lets middleware tell a render failure from back-pressure. |
 
 ## Interface Definition
 

@@ -28,7 +28,45 @@ package com.rdk.hal.videodecoder;
 @VintfStability
 @Backing(type = "int")
 enum ErrorCode {
-    /** Placeholder. No video decoder error codes are defined yet. */
+    /**
+     * Placeholder, never raised.
+     *
+     * @deprecated Deprecated since 2026-11-11. Use the codes below.
+     * Reason: it carried no meaning; the defined codes replace it.
+     */
     xxxx = 1,
 
+    /**
+     * The input bitstream could not be parsed or decoded: a syntax
+     * error or corrupt data.
+     */
+    MALFORMED_STREAM = 2,
+
+    /**
+     * The stream uses a profile, level, frame size, bit depth or
+     * feature beyond the capabilities the product declares.
+     */
+    UNSUPPORTED_STREAM = 3,
+
+    /**
+     * The decoded frames cannot be output in a supported pixel format.
+     */
+    UNSUPPORTED_OUTPUT_FORMAT = 4,
+
+    /**
+     * Memory or decoder hardware needed to continue is not available,
+     * for example after a resolution increase.
+     */
+    INSUFFICIENT_RESOURCE = 5,
+
+    /**
+     * Encrypted input could not be decrypted: the key is not loaded,
+     * or the output protection required is not met.
+     */
+    DECRYPT_FAILED = 6,
+
+    /**
+     * The decoder hardware failed and needs a reset.
+     */
+    HARDWARE_FAILURE = 7,
 }

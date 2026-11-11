@@ -114,4 +114,15 @@ oneway interface IAudioSinkEventListener {
      * @see Episode, EpisodeResolved
      */
     void onMetricEpisodeResolved(in EpisodeResolved event);
+
+    /**
+     * Raised when the sink fails to render audio.
+     *
+     * A full queue is not an error: queueAudioFrame() returns false for it and
+     * nothing is raised here.
+     *
+     * @param[in] errorCode         An ErrorCode enum value.
+     * @param[in] vendorErrorCode   A vendor specific error code.
+     */
+    void onRenderError(in ErrorCode errorCode, in int vendorErrorCode);
 }
