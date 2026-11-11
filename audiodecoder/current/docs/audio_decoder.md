@@ -57,8 +57,8 @@ Uncompressed PCM audio streams do not require decoding. Therefore, they bypass t
 | **HAL.AUDIODECODER.10** | Audio frame metadata shall be returned to a controlling client on the first audio frame decoded after an open or flush, and thereafter only when the frame metadata changes. | Not sent on every decoded audio frame buffer unless changed since previous. In non-tunnelled mode, a frame with a non-zero trim always carries metadata — see [The trim contract](#the-trim-contract). |
 | **HAL.AUDIODECODER.11** | The audio frame output buffer from an audio decoder shall match the platform PCM audio format required for mixing. | See com.rdk.hal.audiosink.PlatformCapabilities |
 | **HAL.AUDIODECODER.12** | If a client process exits, the Audio Decoder server shall automatically stop and close any Audio Decoder instance controlled by that client. |
-| **HAL.AUDIODECODER.13** | Shall serve every metric listed under `supportedMetrics` in the HAL Feature Profile through `getMetrics()` and `getMetric()`, in any state, counting from service initialisation. The list includes every metric marked mandatory. | See [metrics](#metrics). |
-| **HAL.AUDIODECODER.14** | Shall raise `onMetricEpisodeStarted()` when an episode of a supported metric starts and `onMetricEpisodeResolved()` when it ends, for every episode listed under `supportedEpisodes`, which includes every episode marked mandatory. | See [metrics](#metrics). |
+| **HAL.AUDIODECODER.13** | Shall serve every metric listed under `metrics.supported` in the HAL Feature Profile through `getMetrics()` and `getMetric()`, in any state, counting from service initialisation. The list includes every metric marked mandatory. | See [metrics](#metrics). |
+| **HAL.AUDIODECODER.14** | Shall raise `onMetricEpisodeStarted()` when an episode of a supported metric starts and `onMetricEpisodeResolved()` when it ends, for every episode listed under `metrics.supportedEpisodes`, which includes every episode marked mandatory. | See [metrics](#metrics). |
 
 ## Interface Definition
 
@@ -574,7 +574,7 @@ The Audio Decoder also provides properties which allow for an override of the pl
 
 ## Metrics
 
-`IAudioDecoder.getMetrics()` returns the metrics asked for, latched at one instant with a `CLOCK_MONOTONIC_RAW` timestamp; `getMetric()` returns one. Both are callable in any state. Counters count from service initialisation and are never reset, so a session or interval figure is the difference of two snapshots. The rules common to every component are in the [HAL Metrics Pattern](../standards/hal_metrics_pattern.md); what each metric measures, excludes and is used for is in the Doxygen of `Metric.aidl`. The product lists what it supports as `supportedMetrics` and `supportedEpisodes` in the HAL Feature Profile, and `getCapabilities()` reports the same lists at run time in `Capabilities`.
+`IAudioDecoder.getMetrics()` returns the metrics asked for, latched at one instant with a `CLOCK_MONOTONIC_RAW` timestamp; `getMetric()` returns one. Both are callable in any state. Counters count from service initialisation and are never reset, so a session or interval figure is the difference of two snapshots. The rules common to every component are in the [HAL Metrics Pattern](../standards/hal_metrics_pattern.md); what each metric measures, excludes and is used for is in the Doxygen of `Metric.aidl`. The product lists what it supports under `metrics.supported` and `metrics.supportedEpisodes` in the HAL Feature Profile, and `getCapabilities()` reports the same lists at run time in `Capabilities`.
 
 | Metric | Unit | Kind | Support | Meaning |
 |---|---|---|---|---|

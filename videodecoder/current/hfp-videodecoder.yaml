@@ -45,29 +45,29 @@
 videodecoder:                   # Component object begins
   interfaceVersion: current
 
-  # Metrics this product serves through IVideoDecoder.getMetrics(), for
-  # every resource instance, and reported in Capabilities.supportedMetrics.
-  # Entries marked mandatory are listed by every product; optional
-  # ones only where the product serves them.
-  supportedMetrics:
-    - FRAMES_DECODED          # optional
-    - FRAMES_DROPPED          # mandatory
-    - FRAMES_CORRUPTED        # mandatory
-    - DECODE_ERRORS           # mandatory
-  # Episodes this product raises through onMetricEpisodeStarted() and
-  # onMetricEpisodeResolved(). Names are members of the Episode enum.
-  supportedEpisodes:
-    - FRAME_DROP              # mandatory
-    - DECODE_ERROR            # mandatory
-  # Error codes this product raises through onDecodeError(). Names are
-  # members of the ErrorCode enum.
-  supportedErrorCodes:
-    - CODEC_UNSUPPORTED
-    - CODEC_EXCEEDS_CAPABILITIES
-    - BITSTREAM_RECOVERED
-    - BITSTREAM_FRAMEDROP
-    - DECODER_LOCK
-    - INTERNAL_ERROR
+  # Metrics this product serves through IVideoDecoder.getMetrics(), for every
+  # resource instance, and the episodes it raises; getCapabilities() reports
+  # the same lists in Capabilities. Entries marked mandatory are listed by every
+  # product; optional ones only where the product serves them.
+  metrics:
+    supported:
+      - FRAMES_DECODED    # optional
+      - FRAMES_DROPPED    # mandatory
+      - FRAMES_CORRUPTED  # mandatory
+      - DECODE_ERRORS     # mandatory
+    supportedEpisodes:
+      - FRAME_DROP    # mandatory
+      - DECODE_ERROR  # mandatory
+  # Error codes this product raises through onDecodeError(), also reported in
+  # Capabilities.supportedErrorCodes. Mandatory codes are raised by every product.
+  errorCodes:
+    raised:
+      - CODEC_UNSUPPORTED           # mandatory
+      - CODEC_EXCEEDS_CAPABILITIES  # mandatory
+      - BITSTREAM_RECOVERED         # optional
+      - BITSTREAM_FRAMEDROP         # optional
+      - DECODER_LOCK                # optional
+      - INTERNAL_ERROR              # mandatory
 
   IVideoDecoder:                # Resource list
     - 0:                        # Resource object begins (high-tier decoder)

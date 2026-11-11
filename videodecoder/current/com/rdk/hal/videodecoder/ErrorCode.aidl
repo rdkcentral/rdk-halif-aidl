@@ -43,6 +43,8 @@ enum ErrorCode {
 
     /**
      * The stream's codec is not one the decoder supports.
+     *
+     * Support: mandatory.
      */
     CODEC_UNSUPPORTED = 2,
 
@@ -50,12 +52,16 @@ enum ErrorCode {
      * The stream is in a supported codec but beyond the capabilities
      * the product declares: profile, level, frame size, frame rate, bit
      * depth, or an output pixel format the decoder cannot produce.
+     *
+     * Support: mandatory.
      */
     CODEC_EXCEEDS_CAPABILITIES = 3,
 
     /**
      * Corruption was detected in the bitstream and concealed; the frame
      * was output and decoding carries on.
+     *
+     * Support: optional.
      */
     BITSTREAM_RECOVERED = 4,
 
@@ -63,17 +69,23 @@ enum ErrorCode {
      * Corruption was detected in the bitstream and the frames it
      * affects were dropped; decoding carries on from the next decodable
      * frame.
+     *
+     * Support: optional.
      */
     BITSTREAM_FRAMEDROP = 5,
 
     /**
      * The decoder stopped making progress: input is queued but no
      * output or error has followed within the decoder's own time limit.
+     *
+     * Support: optional.
      */
     DECODER_LOCK = 6,
 
     /**
      * The decoder failed for a reason no other code describes.
+     *
+     * Support: mandatory.
      */
     INTERNAL_ERROR = 7,
 }

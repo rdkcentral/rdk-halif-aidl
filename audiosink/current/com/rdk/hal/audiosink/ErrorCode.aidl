@@ -43,26 +43,36 @@ enum ErrorCode {
 
     /**
      * A queued frame could not be played.
+     *
+     * Support: mandatory.
      */
     RENDER_FAILED = 2,
 
     /**
      * The output in use cannot play the frame's format.
+     *
+     * Support: mandatory.
      */
     UNSUPPORTED_FORMAT = 3,
 
     /**
      * The output path the sink renders to has been lost.
+     *
+     * Support: optional.
      */
     OUTPUT_UNAVAILABLE = 4,
 
     /**
      * A secure audio buffer could not be processed.
+     *
+     * Support: optional.
      */
     SECURE_PATH_FAILURE = 5,
 
     /**
      * The audio output hardware failed and needs a reset.
+     *
+     * Support: optional.
      */
     HARDWARE_FAILURE = 6,
 }

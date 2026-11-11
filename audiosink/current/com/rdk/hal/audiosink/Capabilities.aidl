@@ -46,7 +46,7 @@ parcelable Capabilities {
 
     /**
      * The metrics this resource instance serves through getMetrics(), as
-     * listed under supportedMetrics in the HAL Feature Profile. getMetric()
+     * listed under metrics.supported in the HAL Feature Profile. getMetric()
      * throws EX_UNSUPPORTED_OPERATION for any other member.
      */
     Metric[] supportedMetrics;
@@ -54,13 +54,13 @@ parcelable Capabilities {
     /**
      * The episodes this resource instance raises through
      * onMetricEpisodeStarted() and onMetricEpisodeResolved(), as listed under
-     * supportedEpisodes in the HAL Feature Profile. No other member is raised.
+     * metrics.supportedEpisodes in the HAL Feature Profile. No other member is raised.
      */
     Episode[] supportedEpisodes;
 
     /**
      * The error codes this resource instance raises through onRenderError(),
-     * as listed under supportedErrorCodes in the HAL Feature Profile. No
+     * as listed under errorCodes.raised in the HAL Feature Profile. No
      * other code is raised.
      */
     ErrorCode[] supportedErrorCodes;

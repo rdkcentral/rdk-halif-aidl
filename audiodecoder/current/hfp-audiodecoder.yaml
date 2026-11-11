@@ -25,19 +25,18 @@
 audiodecoder:                   # Component object begins
     interfaceVersion: current
 
-    # Metrics this product serves through IAudioDecoder.getMetrics(), for
-    # every resource instance, and reported in Capabilities.supportedMetrics.
-    # Entries marked mandatory are listed by every product; optional
-    # ones only where the product serves them.
-    supportedMetrics:
-      - FRAMES_DECODED        # optional
-      - FRAMES_DROPPED        # mandatory
-      - DECODE_ERRORS         # mandatory
-    # Episodes this product raises through onMetricEpisodeStarted() and
-    # onMetricEpisodeResolved(). Names are members of the Episode enum.
-    supportedEpisodes:
-      - FRAME_DROP            # mandatory
-      - DECODE_ERROR          # mandatory
+    # Metrics this product serves through IAudioDecoder.getMetrics(), for every
+    # resource instance, and the episodes it raises; getCapabilities() reports
+    # the same lists in Capabilities. Entries marked mandatory are listed by every
+    # product; optional ones only where the product serves them.
+    metrics:
+      supported:
+        - FRAMES_DECODED  # optional
+        - FRAMES_DROPPED  # mandatory
+        - DECODE_ERRORS   # mandatory
+      supportedEpisodes:
+        - FRAME_DROP    # mandatory
+        - DECODE_ERROR  # mandatory
     IAudioDecoder:              # Resource list
       - 0:                      # Resource object begins
          supportedCodecs:       # Array of codec capabilities

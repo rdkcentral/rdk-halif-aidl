@@ -31,7 +31,7 @@ sequenceDiagram
 | M6 | Each `MetricValue` carries its `Metric` id. A metric that is not supported, or has no value at present, has no entry in the snapshot; there is no sentinel value and no status field. |
 | M7 | `getMetric(in Metric metric)` returns one value. It throws `EX_UNSUPPORTED_OPERATION` for a metric the product does not support and `EX_ILLEGAL_STATE` for one that has no value at present. |
 | M8 | Both accessors are callable in any state. |
-| M9 | The metrics a product serves are listed as `supportedMetrics`, and the episodes it raises as `supportedEpisodes`, under the component in its HAL Feature Profile; both apply to every resource instance. The interface's `Capabilities` parcelable, from `getCapabilities()`, carries the same two lists at run time. A component with no `Capabilities` adds one. Each member is mandatory or optional, as its Doxygen states: every product lists every mandatory member, and adds the optional ones it serves. |
+| M9 | The metrics a product serves are listed under `metrics.supported`, and the episodes it raises under `metrics.supportedEpisodes`, in the component's HAL Feature Profile; both apply to every resource instance. The interface's `Capabilities` parcelable, from `getCapabilities()`, carries the same two lists at run time as `supportedMetrics` and `supportedEpisodes`. A component with no `Capabilities` adds one. Each member is mandatory or optional, as its Doxygen states: every product lists every mandatory member, and adds the optional ones it serves. |
 | M10 | Events are episodes only. An episode is something with a start and an end; it is a member of the component's `Episode` enum (`@VintfStability`, `@Backing(type = "int")`, numbered from 0, append-only) and is reported once when it starts, by `onMetricEpisodeStarted()`, and once when it ends, by `onMetricEpisodeResolved()`. Nothing is raised per frame or per occurrence: those figures are read with `getMetrics()`. A new episode is a new enum member, never a new callback. |
 | M11 | `EpisodeStarted` carries the `Episode` id, `timestampNs` (the `CLOCK_MONOTONIC_RAW` time the service detected the event), `presentationTimeNs` (`-1` where the frame carried none) and `metrics`, a `MetricSnapshot` of every supported metric latched at `timestampNs`, so an event is a complete record and needs no second read. `EpisodeResolved` carries the same and adds `durationNs` and `count`. Each `Episode` member documents what its duration and count measure; a member with nothing to count reports 0. |
 | M12 | An episode whose occurrences are separate in time, such as dropped frames or decode errors, starts at the first occurrence when none is open and ends when 1 second has passed without another. Its duration runs from the first occurrence to the last. An episode still open at `flush()` or `stop()` ends there. |
@@ -52,7 +52,7 @@ sequenceDiagram
 | `I<Component>.aidl` | `getMetrics()` and `getMetric()`, appended after the existing methods. |
 | `I<Component>EventListener.aidl` | `onMetricEpisodeStarted()` and `onMetricEpisodeResolved()`, appended after the existing methods. |
 | `Capabilities.aidl` | `Metric[] supportedMetrics` and `Episode[] supportedEpisodes`, appended. |
-| `hfp-<component>.yaml` | `supportedMetrics` and `supportedEpisodes`. |
+| `hfp-<component>.yaml` | A `metrics:` section with `supported` and `supportedEpisodes`. |
 | `docs/<component>.md` | A `Metrics` section, the requirement rows and the new files in the interface table. |
 
 ## Metric documentation
@@ -106,7 +106,7 @@ Every `Metric` member carries the same six paragraphs, in this order. A reader m
 - [ ] Both episode parcelables carry `metrics`, latched at the event's `timestampNs`.
 - [ ] `interface.yaml` lists `com/rdk/hal/<component>/metrics/*.aidl` under `srcs`.
 - [ ] `onMetricEpisodeStarted()` and `onMetricEpisodeResolved()` are appended to the event listener; no existing method or callback is changed or removed.
-- [ ] `supportedMetrics` and `supportedEpisodes` in `hfp-<component>.yaml` list members of the enums by name, each followed by `# mandatory` or `# optional` as its Doxygen states.
+- [ ] `metrics.supported` and `metrics.supportedEpisodes` in `hfp-<component>.yaml` list members of the enums by name, each followed by `# mandatory` or `# optional` as its Doxygen states.
 - [ ] `Capabilities` carries `supportedMetrics` and `supportedEpisodes`, matching the HAL Feature Profile.
 - [ ] The component document has a `Metrics` section, a requirement for the accessors and one for the episodes.
 - [ ] Any property or callback the metrics replace is marked `@deprecated` under the [HAL API Deprecation Governance](../key_concepts/hal/hal_api_deprecation_governance.md) process.

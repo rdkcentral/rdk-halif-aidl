@@ -48,7 +48,7 @@ Audio and video sinks associated with a given AV Clock instance comprise a synch
 | **HAL.AVCLOCK.8** | For non-PCR driven playback, the playback rate shall be adjustable between 0.0 and 2.0, where 0 is paused and 1.0 is normal speed. |YouTube requirement is to play between 0.5 and 2.0 with pitch correction.|
 | **HAL.AVCLOCK.9** | A client shall be able to read the current AV clock time.|For PCR mode. It should return the "invalid" value until the first PCR is received. |
 | **HAL.AVCLOCK.10** | If a client process exits, the AV Clock server shall automatically stop and close any AV Clock instance controlled by that client. |
-| **HAL.AVCLOCK.11** | Shall serve every metric listed under `supportedMetrics` in the HAL Feature Profile through `getMetrics()` and `getMetric()`, in any state, counting from service initialisation. The list includes every metric marked mandatory. | See [metrics](#metrics). |
+| **HAL.AVCLOCK.11** | Shall serve every metric listed under `metrics.supported` in the HAL Feature Profile through `getMetrics()` and `getMetric()`, in any state, counting from service initialisation. The list includes every metric marked mandatory. | See [metrics](#metrics). |
 
 ### Interface Definition
 
@@ -330,7 +330,7 @@ Live broadcasts which are driven by a PCR clock source cannot support playback r
 
 ## Metrics
 
-`IAVClock.getMetrics()` returns the metrics asked for, latched at one instant with a `CLOCK_MONOTONIC_RAW` timestamp; `getMetric()` returns one. Both are callable in any state. Counters count from service initialisation and are never reset, so a session or interval figure is the difference of two snapshots. The rules common to every component are in the [HAL Metrics Pattern](../standards/hal_metrics_pattern.md); what each metric measures, excludes and is used for is in the Doxygen of `Metric.aidl`. The product lists what it supports as `supportedMetrics` in the HAL Feature Profile, and `getCapabilities()` reports the same lists at run time in `Capabilities`.
+`IAVClock.getMetrics()` returns the metrics asked for, latched at one instant with a `CLOCK_MONOTONIC_RAW` timestamp; `getMetric()` returns one. Both are callable in any state. Counters count from service initialisation and are never reset, so a session or interval figure is the difference of two snapshots. The rules common to every component are in the [HAL Metrics Pattern](../standards/hal_metrics_pattern.md); what each metric measures, excludes and is used for is in the Doxygen of `Metric.aidl`. The product lists what it supports under `metrics.supported` in the HAL Feature Profile, and `getCapabilities()` reports the same lists at run time in `Capabilities`.
 
 | Metric | Unit | Kind | Support | Meaning |
 |---|---|---|---|---|

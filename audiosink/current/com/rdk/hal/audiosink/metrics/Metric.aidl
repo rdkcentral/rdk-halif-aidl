@@ -30,7 +30,7 @@ package com.rdk.hal.audiosink.metrics;
  * Each resource instance keeps its own figures: a counter covers that
  * instance only, across every session opened on it.
  *
- * The metrics a product serves are listed under supportedMetrics in its HAL
+ * The metrics a product serves are listed under metrics.supported in its HAL
  * Feature Profile. Values are append-only: a member is never renumbered or
  * reused.
  */

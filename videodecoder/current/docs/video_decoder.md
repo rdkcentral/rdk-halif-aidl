@@ -50,8 +50,8 @@ The **RDK middleware GStreamer pipeline** includes a dedicated **RDK Video Decod
 | **HAL.VIDEODECODER.11** | The video decoder shall be able to decode back to back I-frames.| Used in I-frame trick modes. |
 | **HAL.VIDEODECODER.12** | The video decoder shall discard any frames until the first reference frame has been received. |
 | **HAL.VIDEODECODER.13** | If a client process exits, the Video Decoder server shall automatically stop and close any Video Decoder instance controlled by that client. |
-| **HAL.VIDEODECODER.14** | Shall serve every metric listed under `supportedMetrics` in the HAL Feature Profile through `getMetrics()` and `getMetric()`, in any state, counting from service initialisation. The list includes every metric marked mandatory. | See [metrics](#metrics). |
-| **HAL.VIDEODECODER.15** | Shall raise `onMetricEpisodeStarted()` when an episode of a supported metric starts and `onMetricEpisodeResolved()` when it ends, for every episode listed under `supportedEpisodes`, which includes every episode marked mandatory. | See [metrics](#metrics). |
+| **HAL.VIDEODECODER.14** | Shall serve every metric listed under `metrics.supported` in the HAL Feature Profile through `getMetrics()` and `getMetric()`, in any state, counting from service initialisation. The list includes every metric marked mandatory. | See [metrics](#metrics). |
+| **HAL.VIDEODECODER.15** | Shall raise `onMetricEpisodeStarted()` when an episode of a supported metric starts and `onMetricEpisodeResolved()` when it ends, for every episode listed under `metrics.supportedEpisodes`, which includes every episode marked mandatory. | See [metrics](#metrics). |
 
 ## Interface Definition
 
@@ -417,7 +417,7 @@ The RDK media pipeline is responsible for parsing the SEI user data from the byt
 
 ## Metrics
 
-`IVideoDecoder.getMetrics()` returns the metrics asked for, latched at one instant with a `CLOCK_MONOTONIC_RAW` timestamp; `getMetric()` returns one. Both are callable in any state. Counters count from service initialisation and are never reset, so a session or interval figure is the difference of two snapshots. The rules common to every component are in the [HAL Metrics Pattern](../standards/hal_metrics_pattern.md); what each metric measures, excludes and is used for is in the Doxygen of `Metric.aidl`. The product lists what it supports as `supportedMetrics` and `supportedEpisodes` in the HAL Feature Profile, and `getCapabilities()` reports the same lists at run time in `Capabilities`.
+`IVideoDecoder.getMetrics()` returns the metrics asked for, latched at one instant with a `CLOCK_MONOTONIC_RAW` timestamp; `getMetric()` returns one. Both are callable in any state. Counters count from service initialisation and are never reset, so a session or interval figure is the difference of two snapshots. The rules common to every component are in the [HAL Metrics Pattern](../standards/hal_metrics_pattern.md); what each metric measures, excludes and is used for is in the Doxygen of `Metric.aidl`. The product lists what it supports under `metrics.supported` and `metrics.supportedEpisodes` in the HAL Feature Profile, and `getCapabilities()` reports the same lists at run time in `Capabilities`.
 
 | Metric | Unit | Kind | Support | Meaning |
 |---|---|---|---|---|
