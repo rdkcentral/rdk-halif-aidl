@@ -170,4 +170,45 @@ enum Metric {
      * Unit: nanoseconds. Kind: counter.
      */
     UNDERFLOW_DURATION_NS = 6,
+
+    /**
+     * @brief Latency from leaving the sink queue to leaving the device.
+     *
+     * Measures: the time from a frame being taken from the sink's queue to
+     * its sound leaving the output in use (HDMI, ARC, Bluetooth or the
+     * internal speakers), as the sink currently estimates it for that output.
+     *
+     * Excludes: time the frame spends queued in the sink (QUEUE_DEPTH_NS) and
+     * any latency added by an external device after the output.
+     *
+     * Used for: aligning audio with video or with other outputs, and checking
+     * the latency a product declares for each output.
+     *
+     * How to use: sample it at intervals or after an output change; it is a
+     * level, so do not difference it.
+     *
+     * Unit: nanoseconds. Kind: gauge.
+     */
+    RENDER_LATENCY_NS = 7,
+
+    /**
+     * @brief Audio queued in the sink and not yet played, as time.
+     *
+     * Measures: the playing time of the audio held in the sink's queue and
+     * output path at the latch, from the next frame to be played to the last
+     * frame queued.
+     *
+     * Excludes: audio still in the decoder or in the client, and the output
+     * latency counted by RENDER_LATENCY_NS.
+     *
+     * Used for: seeing how close the sink is to underflow, and sizing how far
+     * ahead a client feeds.
+     *
+     * How to use: sample it at intervals; it is a level, so do not difference
+     * it. A value that falls towards zero while STARTED precedes an
+     * Episode::UNDERFLOW episode.
+     *
+     * Unit: nanoseconds. Kind: gauge.
+     */
+    QUEUE_DEPTH_NS = 8,
 }

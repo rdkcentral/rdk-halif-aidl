@@ -33,6 +33,8 @@ audiosink:
     - GAP_DURATION_NS
     - UNDERFLOW_EPISODES
     - UNDERFLOW_DURATION_NS
+    - RENDER_LATENCY_NS
+    - QUEUE_DEPTH_NS
 
   IAudioSink:
     - id: 0

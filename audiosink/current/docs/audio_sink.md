@@ -264,6 +264,8 @@ For audio decoded by the Audio Decoder, the middleware forwards each decoded fra
 | `GAP_DURATION_NS` | nanoseconds | counter | Total time spent in audio gaps. |
 | `UNDERFLOW_EPISODES` | episodes | counter | Underflows started. |
 | `UNDERFLOW_DURATION_NS` | nanoseconds | counter | Total time spent in underflow. |
+| `RENDER_LATENCY_NS` | nanoseconds | gauge | Latency from leaving the sink queue to leaving the device. |
+| `QUEUE_DEPTH_NS` | nanoseconds | gauge | Audio queued in the sink and not yet played, as time. |
 
 Events are episodes only: nothing is raised per frame. `IAudioSinkEventListener.onMetricEpisodeStarted()` is raised once when an episode starts and `onMetricEpisodeResolved()` once when it ends, each naming the `Episode`. The resolved event carries the episode's `durationNs` and `count`. Both events carry `metrics`, a `MetricSnapshot` of every supported metric latched at the event, so no second read is needed. A product raises an episode where it supports the metric shown.
 
@@ -274,6 +276,8 @@ Events are episodes only: nothing is raised per frame. `IAudioSinkEventListener.
 | `UNDERFLOW` | Starts when the frame queue is empty at the presentation time of the next frame, and ends when a frame is played. | `UNDERFLOW_EPISODES` |
 
 Frames lost before they reach the sink are counted by the [Audio Decoder](../audiodecoder/audio_decoder.md). The two components latch separately, so figures read from both are not one atomic read.
+
+The `RENDER_LATENCY_NS` and `QUEUE_DEPTH_NS` properties, which these gauges replace, are deprecated and remain readable.
 
 ## Audio Sink States
 
