@@ -152,9 +152,10 @@ print(" ".join(sorted(comps)))
     elif [[ "$title" =~ ^[a-z]+(\([^\)]*\))?!: ]]; then
         change_class="Major Change"
     elif [[ ",${current_labels}," == *",New Interface,"* ]] && \
-         [[ ",${current_labels}," == *",Major Change,"* ]]; then
+         [[ ",${current_labels}," == *",Major Change,"* || ",${current_labels}," == *",Breaking Change,"* ]]; then
         # A new component that also breaks an existing one: the Major
-        # Change the change-class check asked for stays (#973).
+        # Change the change-class check asked for stays (#973). The retired
+        # alias Breaking Change counts too, normalised to Major Change.
         change_class="Major Change"
     elif [[ ",${current_labels}," == *",New Interface,"* ]]; then
         change_class="New Interface"

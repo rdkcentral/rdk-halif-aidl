@@ -17,6 +17,7 @@ set -euo pipefail
 REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 REPO="rdkcentral/rdk-halif-aidl"
 DRY_RUN=false
+FAILED=0
 
 if [ "${1:-}" = "--dry-run" ]; then
     DRY_RUN=true
@@ -41,10 +42,14 @@ create_label() {
         printf "  Would create:  %-40s  #%-6s  %s\n" "$name" "$color" "$description"
         return
     fi
-    if gh label create "$name" --repo "$REPO" --color "$color" --description "$description" 2>/dev/null; then
-        echo "  Created: $name"
+    # --force updates an existing label, so colours and descriptions stay in
+    # step with this file; a real failure (a description over GitHub's
+    # 100-character limit, say) is reported rather than read as "Exists".
+    if gh label create "$name" --repo "$REPO" --color "$color" --description "$description" --force 2>/dev/null; then
+        echo "  Set:     $name"
     else
-        echo "  Exists:  $name"
+        echo "  FAILED:  $name" >&2
+        FAILED=$((FAILED + 1))
     fi
 }
 
@@ -121,7 +126,7 @@ echo ""
 echo "Change-class labels (every PR carries exactly one, see #712 — label names mean what the fields mean):"
 create_label "Major Change"         "b60205" "Breaking interface change (renames/removals/signature changes) — bumps major"
 create_label "Minor Change"         "a2eeef" "Additive, backwards-compatible interface change — bumps minor; the default for real work"
-create_label "documentation"        "0075ca" "Surface-untouched change (docs/comments/metadata/trivial fixes) — bumps bugfix; auto-applied when every changed file is doc-like"
+create_label "documentation"        "0075ca" "Surface untouched (docs, comments, metadata): bumps bugfix; auto-applied when every file is doc-like"
 create_label "Breaking Change"      "d4c5f9" "RETIRED (#712): alias of Major Change accepted during transition — do not apply to new PRs"
 
 echo ""
@@ -146,7 +151,7 @@ echo ""
 
 echo "Process / governance labels:"
 create_label "CR"                    "5319e7" "Change Request — ABI change needing wider review sign-off + separate release scheduling"
-create_label "New Interface"         "d93f0b" "Brand-new interface surface (new component) — its own change class, not Major; the component releases at 0.1.0.0"
+create_label "New Interface"         "d93f0b" "New component: its own change class, below Major, above Minor; releases at 0.1.0.0"
 
 echo ""
 
@@ -159,4 +164,8 @@ create_label "scope:infrastructure"  "bfd4f2" "Repo tooling, CI/CD, scripts, gov
 create_label "scope:overview"        "d4c5f9" "Overview / tracking ticket spanning multiple components"
 
 echo ""
+if [ "${FAILED}" -gt 0 ]; then
+    echo "Done, with ${FAILED} label(s) not set." >&2
+    exit 1
+fi
 echo "Done."
