@@ -2,8 +2,9 @@
 # =============================================================================
 # GitHub Label Setup
 # Creates component, workflow, and scope labels on the GitHub repository.
-# Removes any legacy labels from earlier versions of this script.
-# Idempotent — safe to re-run; existing labels are skipped.
+# Removes legacy labels from earlier versions of this script, except any a
+# ticket still carries, which are kept and reported (#1020).
+# Idempotent — safe to re-run; existing labels are updated to this file.
 #
 # Components are discovered from the directory structure — any directory
 # containing a metadata.yaml file is treated as a component.
@@ -18,6 +19,7 @@ REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 REPO="rdkcentral/rdk-halif-aidl"
 DRY_RUN=false
 FAILED=0
+KEPT=0
 
 if [ "${1:-}" = "--dry-run" ]; then
     DRY_RUN=true
@@ -53,8 +55,29 @@ create_label() {
     fi
 }
 
+# Deleting a label strips it from every ticket that carries it, so a legacy
+# label still in use is kept and reported, never deleted (#1020). If the use
+# count cannot be read, the label is kept too.
 delete_label() {
-    local name="$1"
+    local name="$1" used
+    # Counted from the label's own issue and PR lists (every state), not from
+    # search, whose index lags and can return incomplete results.
+    used=$(gh api graphql -f owner="${REPO%%/*}" -f repo="${REPO##*/}" -f name="${name}" -f query='
+        query($owner:String!,$repo:String!,$name:String!){ repository(owner:$owner,name:$repo){
+          label(name:$name){ issues(states:[OPEN,CLOSED]){ totalCount }
+                             pullRequests(states:[OPEN,CLOSED,MERGED]){ totalCount } } } }' \
+        --jq '.data.repository.label | if . == null then 0 else .issues.totalCount + .pullRequests.totalCount end' \
+        2>/dev/null) || used=""
+    if [[ ! "${used}" =~ ^[0-9]+$ ]]; then
+        echo "  Kept:    ${name} (could not count its tickets)" >&2
+        KEPT=$((KEPT + 1))
+        return
+    fi
+    if [ "${used}" -gt 0 ]; then
+        echo "  Kept:    ${name} (still on ${used} ticket(s); migrate them first)" >&2
+        KEPT=$((KEPT + 1))
+        return
+    fi
     if $DRY_RUN; then
         printf "  Would delete:  %s\n" "$name"
         return
@@ -164,6 +187,9 @@ create_label "scope:infrastructure"  "bfd4f2" "Repo tooling, CI/CD, scripts, gov
 create_label "scope:overview"        "d4c5f9" "Overview / tracking ticket spanning multiple components"
 
 echo ""
+if [ "${KEPT}" -gt 0 ]; then
+    echo "${KEPT} legacy label(s) kept because tickets still carry them." >&2
+fi
 if [ "${FAILED}" -gt 0 ]; then
     echo "Done, with ${FAILED} label(s) not set." >&2
     exit 1
