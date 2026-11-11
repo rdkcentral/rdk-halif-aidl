@@ -26,6 +26,8 @@ Run: python3 -m unittest discover -s tests/scripts
 
 import importlib.util
 import os
+import re
+import subprocess
 import unittest
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -75,3 +77,27 @@ class PrChangeClass(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class SyncVerb(unittest.TestCase):
+    """release.sh sync-labels: when a PR's class label is raised, lowered or kept (#973)."""
+
+    @staticmethod
+    def verb(want, have, all_owned, labels):
+        src = open(os.path.join(os.path.dirname(__file__), "..", "..", "scripts", "release.sh")).read()
+        func = re.search(r"^_sync_verb\(\) \{.*?^\}", src, re.M | re.S).group(0)
+        out = subprocess.run(["bash", "-c", func + '\n_sync_verb "$@"', "-", str(want), str(have), str(all_owned),
+                              "\n".join(labels)], capture_output=True, text=True, check=True)
+        return out.stdout.strip()
+
+    def test_raise(self):
+        self.assertEqual(self.verb(3, 2, 1, ["Minor Change"]), "raise")
+
+    def test_lower_when_every_component_is_owned(self):
+        self.assertEqual(self.verb(1, 2, 1, ["Minor Change"]), "lower")
+
+    def test_keep_when_a_component_is_not_owned(self):
+        self.assertEqual(self.verb(1, 2, 0, ["Minor Change"]), "keep")
+
+    def test_new_interface_is_never_lowered(self):
+        self.assertEqual(self.verb(1, 2, 1, ["New Interface"]), "keep")
