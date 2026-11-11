@@ -27,9 +27,13 @@ package com.rdk.hal.audiomixer.metrics;
  * per occurrence. Per-occurrence figures are read with
  * IAudioOutputPort.getMetrics().
  *
- * An episode still open at stop() or close() ends there. A product raises
- * an episode where it supports the metric named on the member. Values are
- * append-only: a member is never renumbered or reused.
+ * An episode still open ends when the port is disabled
+ * (OutputPortProperty::ENABLED set false) and when the owning mixer is
+ * stopped or flushed (IAudioMixerController.stop() and flush()). Closing
+ * the port's controller alone does not end it, since that releases write
+ * ownership and does not stop playback. A product raises an episode where
+ * it supports the metric named on the member. Values are append-only: a
+ * member is never renumbered or reused.
  */
 @VintfStability
 @Backing(type = "int")
