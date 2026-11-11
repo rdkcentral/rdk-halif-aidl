@@ -173,10 +173,12 @@ sequenceDiagram
     participant Sink as IAudioSinkController / IVideoSinkController
 
     MW->>Dec: open(codec, secure, listener)
+    Ctl-->>MW: onStateChanged(OPENING, READY)
     MW->>Ctl: setProperty(LOW_LATENCY_MODE, 1)
     Note over MW,Ctl: Configuration fixed in READY
     MW->>Sink: setAudioDecoder(id) / setVideoDecoder(id)
     MW->>Ctl: start()
+    Ctl-->>MW: onStateChanged(STARTING, STARTED)
     MW->>Dec: getCurrentOperationalMode()
     Dec-->>MW: TUNNELLED or NON_TUNNELLED
     alt NON_TUNNELLED
@@ -188,6 +190,8 @@ sequenceDiagram
     end
 ```
 
+`open()` and `start()` return before their transition completes; the client waits for `onStateChanged()` to report `READY` after `open()` and `STARTED` after `start()` ([HAL Session State Management](hal_session_state_management.md)). If the transition falls back to the previous state, the session did not start and the client does not query the mode.
+
 The mode is decided by the time `start()` succeeds and is constant until `stop()`. It depends only on the codec, the `secure` argument and the properties set in `READY`, never on stream content. The client reads it with `getCurrentOperationalMode()` after every `start()`; the same codec can run in different modes in different sessions.
 
 A sink has no mode of its own. Its mode is the `getCurrentOperationalMode()` of the decoder associated through `setAudioDecoder()` / `setVideoDecoder()`.
@@ -197,19 +201,31 @@ A sink has no mode of its own. Its mode is the `getCurrentOperationalMode()` of 
 Three products share one video decoder resource `0`. Product A has no `operationalMode` entry; product B declares `default: TUNNELLED`; product C declares a `LOW_LATENCY_MODE: 1` override to `TUNNELLED` on resource `0`. The client code is identical on all three:
 
 ```cpp
+#include <com/rdk/hal/PropertyValue.h>
+#include <com/rdk/hal/videodecoder/IVideoDecoder.h>
+#include <com/rdk/hal/videodecoder/IVideoDecoderController.h>
+#include <utils/StrongPointer.h>
+
+using android::sp;
+using namespace com::rdk::hal;
 using namespace com::rdk::hal::videodecoder;
 
+// listener->waitFor(state) blocks until onStateChanged() reports the state,
+// and returns false if the session falls back to an earlier one.
 sp<IVideoDecoderController> ctl;
 decoder->open(Codec::H264_AVC, /*secure=*/false, listener, &ctl);
+if (!ctl || !listener->waitFor(State::READY)) return;
 
+PropertyValue lowLatency;                                     // optional, in READY
+lowLatency.value = PropertyValue::Value::make<PropertyValue::Value::intValue>(1);
 bool ok;
-ctl->setProperty(Property::LOW_LATENCY_MODE,                  // optional, in READY
-                 PropertyValue::make<PropertyValue::intValue>(1), &ok);
+ctl->setProperty(Property::LOW_LATENCY_MODE, lowLatency, &ok);
 sink->setVideoDecoder(decoderId, &ok);
 
 OperationalMode mode;
 decoder->getCurrentOperationalMode(&mode);                    // EX_ILLEGAL_STATE: not STARTED
 ctl->start();
+if (!listener->waitFor(State::STARTED)) return;               // start failed: back in READY
 decoder->getCurrentOperationalMode(&mode);                    // EX_NONE
 
 if (mode == OperationalMode::NON_TUNNELLED) {
@@ -250,7 +266,7 @@ The same codec on the same decoder runs in different modes in product C, so the 
 
 For every codec in each decoder resource, VTS resolves the expected mode for the default configuration and for each `when` entry, then:
 
-1. `open()` with the entry's `secure` value, sets the entry's properties in `READY`, and calls `start()`.
+1. `open()` with the entry's `secure` value and waits for `READY`, sets the entry's properties, calls `start()` and waits for `STARTED`. A transition that falls back to the previous state fails the test.
 2. Asserts `getCurrentOperationalMode()` equals the resolved mode.
 3. In `NON_TUNNELLED` mode, asserts decoded frame buffers are returned and accepted by the sink.
 4. In `TUNNELLED` mode, asserts frame buffer handle `-1`, `EX_UNSUPPORTED_OPERATION` from the sink's queue method, and end-of-stream delivery at the sink.
