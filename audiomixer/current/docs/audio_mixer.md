@@ -465,7 +465,7 @@ A platform migrating a Device Settings profile sets each boolean from the bit, o
 Device Settings API, shown below.
 
 ```yaml
-MS12_Capabilities: 0xFFF   # Device Settings: OR of the dsMS12SUPPORT_* bits
+MS12_Capabilities: 0x7FF   # Device Settings: OR of bits 0-10, the dsMS12SUPPORT_* bits
 ```
 
 ```cpp
@@ -488,9 +488,9 @@ caps.supportsAtmosLock      = false;  // dsSetAudioAtmosOutputMode() not support
 | `dsMS12SUPPORT_GraphicEqualizer` (1 << 9) | `supportsGraphicEqualizerMode` |
 | `dsSetAudioGain()`, which sets the DAP post gain on a sink's speaker port; no capability bit | `supportsPostGain`: true on a sink's speaker port. Every MS12 version certified for TV platforms (2.4, 2.5, 2.6, 2.8) supports it. |
 | `dsSetAudioAtmosOutputMode()`, which sets the MS12 Atmos lock; no capability bit | `supportsAtmosLock`: true where the platform supported that call |
-| None: the SoC configures these at its defaults and never exposes them | `supportsDownmixMode`, `supportsCenterSpreadingEnabled`, `supportsActiveDownmixEnabled`: false |
+| None: no capability bit, and the SoC configures these at its defaults | `supportsDownmixMode`, `supportsCenterSpreadingEnabled`, `supportsActiveDownmixEnabled`: set from the MS12 support the platform actually has, as declared in its `hfp-audiomixer.yaml`; absence of a bit does not mean unsupported |
 
-Two bits have no counterpart in the MS12 2.6 DAP:
+Two bits have no confirmed counterpart in the MS12 2.6 DAP. The mappings below are provisional until [#839 audiomixer: confirm the Device Settings dsMS12SUPPORT_DolbyVolume and LEConfig capability mappings](https://github.com/rdkcentral/rdk-halif-aidl/issues/839) is resolved:
 
 - `dsMS12SUPPORT_LEConfig` (1 << 10) belongs to `dsEnableLEConfig()`, Loudness
   Equivalence, which older non-MS12 products required. It is not post gain.
