@@ -31,7 +31,7 @@ sequenceDiagram
 | M6 | Each `MetricValue` carries its `Metric` id. A metric that is not supported, or has no value at present, has no entry in the snapshot; there is no sentinel value and no status field. |
 | M7 | `getMetric(in Metric metric)` returns one value. It throws `EX_UNSUPPORTED_OPERATION` for a metric the product does not support and `EX_ILLEGAL_STATE` for one that has no value at present. |
 | M8 | Both accessors are callable in any state. |
-| M9 | The metrics a product serves are listed as `supportedMetrics`, and the episodes it raises as `supportedEpisodes`, under the component in its HAL Feature Profile; both apply to every resource instance. The interface's `Capabilities` parcelable, from `getCapabilities()`, carries the same two lists at run time. A component with no `Capabilities` adds one. |
+| M9 | The metrics a product serves are listed as `supportedMetrics`, and the episodes it raises as `supportedEpisodes`, under the component in its HAL Feature Profile; both apply to every resource instance. The interface's `Capabilities` parcelable, from `getCapabilities()`, carries the same two lists at run time. A component with no `Capabilities` adds one. Each member is mandatory or optional, as its Doxygen states: every product lists every mandatory member, and adds the optional ones it serves. |
 | M10 | Events are episodes only. An episode is something with a start and an end; it is a member of the component's `Episode` enum (`@VintfStability`, `@Backing(type = "int")`, numbered from 0, append-only) and is reported once when it starts, by `onMetricEpisodeStarted()`, and once when it ends, by `onMetricEpisodeResolved()`. Nothing is raised per frame or per occurrence: those figures are read with `getMetrics()`. A new episode is a new enum member, never a new callback. |
 | M11 | `EpisodeStarted` carries the `Episode` id, `timestampNs` (the `CLOCK_MONOTONIC_RAW` time the service detected the event), `presentationTimeNs` (`-1` where the frame carried none) and `metrics`, a `MetricSnapshot` of every supported metric latched at `timestampNs`, so an event is a complete record and needs no second read. `EpisodeResolved` carries the same and adds `durationNs` and `count`. Each `Episode` member documents what its duration and count measure; a member with nothing to count reports 0. |
 | M12 | An episode whose occurrences are separate in time, such as dropped frames or decode errors, starts at the first occurrence when none is open and ends when 1 second has passed without another. Its duration runs from the first occurrence to the last. An episode still open at `flush()` or `stop()` ends there. |
@@ -76,7 +76,7 @@ Every `Metric` member carries the same six paragraphs, in this order. A reader m
 | `Excludes:` | What is deliberately left out, and which metric counts it instead. |
 | `Used for:` | The question the figure answers. |
 | `How to use:` | The calculation: what to difference, what to divide by, which episode reports it. |
-| `Unit:` / `Kind:` | The unit, and counter or gauge. |
+| `Unit:` / `Kind:` / `Support:` | The unit, counter or gauge, and mandatory or optional. |
 
 ```aidl
     /**
@@ -97,7 +97,7 @@ Every `Metric` member carries the same six paragraphs, in this order. A reader m
      * FRAMES_DROPPED), from one getMetrics() call per snapshot. A run of drops
      * is reported as an Episode::FRAME_DROP episode.
      *
-     * Unit: frames. Kind: counter.
+     * Unit: frames. Kind: counter. Support: mandatory.
      */
     FRAMES_DROPPED = 1,
 ```
@@ -107,6 +107,7 @@ Every `Metric` member carries the same six paragraphs, in this order. A reader m
 - [ ] Every type is in the component's own `metrics` sub-package; nothing is imported from another component for metrics.
 - [ ] `Metric` is `@VintfStability`, `@Backing(type = "int")`, numbered from 0, with new members appended.
 - [ ] Every member has the six paragraphs of [metric-documentation](#metric-documentation).
+- [ ] Every `Metric` and `Episode` member states `Support: mandatory.` or `Support: optional.`, and the component document's tables show the same.
 - [ ] Every member names its unit; every time value is in nanoseconds and its name ends `_NS`.
 - [ ] No member has a sentinel value, and `MetricValue` has no status field.
 - [ ] `getMetrics()` and `getMetric()` are the last methods of the main interface, with the exceptions of rule M7.

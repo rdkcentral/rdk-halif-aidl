@@ -43,6 +43,8 @@ enum Episode {
      * durationNs runs from the first dropped frame to the last; count is the
      * frames dropped. presentationTimeNs is that of the first dropped frame on
      * the started event and of the last on the resolved event.
+     *
+     * Support: mandatory.
      */
     FRAME_DROP = 0,
 
@@ -57,6 +59,8 @@ enum Episode {
      * the repeats, as counted by Metric::FRAMES_REPEATED. presentationTimeNs is
      * that of the frame repeated on the started event and of the new frame on
      * the resolved event.
+     *
+     * Support: mandatory.
      */
     FRAME_REPEAT = 1,
 
@@ -73,6 +77,8 @@ enum Episode {
      * not used and is 0. presentationTimeNs is that of the first frame due and
      * missing on the started event and of the frame that ended the underflow on
      * the resolved event.
+     *
+     * Support: mandatory.
      */
     UNDERFLOW = 2,
 }

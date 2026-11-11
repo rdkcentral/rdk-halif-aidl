@@ -53,7 +53,7 @@ enum Metric {
      * divides; difference two snapshots and divide by the difference in
      * timestampNs for a frame rate.
      *
-     * Unit: frames. Kind: counter.
+     * Unit: frames. Kind: counter. Support: optional.
      */
     FRAMES_DECODED = 0,
 
@@ -75,7 +75,7 @@ enum Metric {
      * FRAMES_DROPPED) between two snapshots. A run of drops is
      * reported as an Episode::FRAME_DROP episode.
      *
-     * Unit: frames. Kind: counter.
+     * Unit: frames. Kind: counter. Support: mandatory.
      */
     FRAMES_DROPPED = 1,
 
@@ -96,7 +96,7 @@ enum Metric {
      * whole-pipeline view; the two components latch separately, so treat that
      * pairing as approximate.
      *
-     * Unit: frames. Kind: counter.
+     * Unit: frames. Kind: counter. Support: mandatory.
      */
     FRAMES_CORRUPTED = 2,
 
@@ -115,7 +115,7 @@ enum Metric {
      * How to use: difference two snapshots for errors in the interval; use the
      * events for the time, the frame and the cause of each.
      *
-     * Unit: errors. Kind: counter.
+     * Unit: errors. Kind: counter. Support: mandatory.
      */
     DECODE_ERRORS = 3,
 }

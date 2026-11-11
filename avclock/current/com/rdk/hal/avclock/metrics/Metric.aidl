@@ -52,7 +52,7 @@ enum Metric {
      * How to use: sample it at intervals; it is a level, so do not difference
      * it. Read it with RESYNC_COUNT to see whether an offset was corrected.
      *
-     * Unit: nanoseconds, signed. Kind: gauge.
+     * Unit: nanoseconds, signed. Kind: gauge. Support: optional.
      */
     SYNC_OFFSET_NS = 0,
 
@@ -70,7 +70,7 @@ enum Metric {
      * How to use: difference two snapshots and divide by the difference in
      * timestampNs for corrections per unit time.
      *
-     * Unit: corrections. Kind: counter.
+     * Unit: corrections. Kind: counter. Support: optional.
      */
     RESYNC_COUNT = 1,
 }

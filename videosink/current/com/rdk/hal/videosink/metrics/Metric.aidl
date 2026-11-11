@@ -55,7 +55,7 @@ enum Metric {
      * asked for in one getMetrics() call; difference two snapshots and divide
      * by the difference in timestampNs for the delivered frame rate.
      *
-     * Unit: frames. Kind: counter.
+     * Unit: frames. Kind: counter. Support: mandatory.
      */
     FRAMES_RENDERED = 0,
 
@@ -76,7 +76,7 @@ enum Metric {
      * FRAMES_DROPPED), from one getMetrics() call per snapshot. A run of drops
      * is reported as an Episode::FRAME_DROP episode.
      *
-     * Unit: frames. Kind: counter.
+     * Unit: frames. Kind: counter. Support: mandatory.
      */
     FRAMES_DROPPED = 1,
 
@@ -95,7 +95,7 @@ enum Metric {
      * How to use: divide delta FRAMES_REPEATED by delta FRAME_REPEAT_EPISODES
      * for the mean length of a freeze in frames.
      *
-     * Unit: frames. Kind: counter.
+     * Unit: frames. Kind: counter. Support: mandatory.
      */
     FRAMES_REPEATED = 2,
 
@@ -112,7 +112,7 @@ enum Metric {
      * How to use: difference two snapshots; pair with FRAMES_REPEATED for the
      * mean length.
      *
-     * Unit: episodes. Kind: counter.
+     * Unit: episodes. Kind: counter. Support: mandatory.
      */
     FRAME_REPEAT_EPISODES = 3,
 
@@ -136,7 +136,7 @@ enum Metric {
      * How to use: difference two snapshots; pair with UNDERFLOW_DURATION_NS for
      * the mean stall length.
      *
-     * Unit: episodes. Kind: counter.
+     * Unit: episodes. Kind: counter. Support: mandatory.
      */
     UNDERFLOW_EPISODES = 4,
 
@@ -155,7 +155,7 @@ enum Metric {
      * between two snapshots; mean stall = delta UNDERFLOW_DURATION_NS / delta
      * UNDERFLOW_EPISODES.
      *
-     * Unit: nanoseconds. Kind: counter.
+     * Unit: nanoseconds. Kind: counter. Support: mandatory.
      */
     UNDERFLOW_DURATION_NS = 5,
 }

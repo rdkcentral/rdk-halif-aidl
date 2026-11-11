@@ -43,6 +43,8 @@ enum Episode {
      * durationNs runs from the first dropped frame to the last; count is the
      * frames dropped. presentationTimeNs is that of the first dropped frame on
      * the started event and of the last on the resolved event.
+     *
+     * Support: mandatory.
      */
     FRAME_DROP = 0,
 
@@ -57,6 +59,8 @@ enum Episode {
      * durationNs runs from the first error to the last; count is the errors
      * raised. presentationTimeNs is that of the frame being decoded at the
      * first error on the started event and at the last on the resolved event.
+     *
+     * Support: mandatory.
      */
     DECODE_ERROR = 1,
 }

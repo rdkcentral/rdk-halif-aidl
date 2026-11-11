@@ -51,7 +51,7 @@ enum Metric {
      * How to use: FRAMES_RENDERED and FRAMES_DROPPED come from one latch when
      * asked for in one getMetrics() call.
      *
-     * Unit: frames. Kind: counter.
+     * Unit: frames. Kind: counter. Support: optional.
      */
     FRAMES_RENDERED = 0,
 
@@ -72,7 +72,7 @@ enum Metric {
      * FRAMES_DROPPED), from one getMetrics() call per snapshot. A run of drops
      * is reported as an Episode::FRAME_DROP episode.
      *
-     * Unit: frames. Kind: counter.
+     * Unit: frames. Kind: counter. Support: mandatory.
      */
     FRAMES_DROPPED = 1,
 
@@ -91,7 +91,7 @@ enum Metric {
      * How to use: difference two snapshots; pair with GAP_DURATION_NS for the
      * mean dropout length.
      *
-     * Unit: episodes. Kind: counter.
+     * Unit: episodes. Kind: counter. Support: mandatory.
      */
     GAP_EPISODES = 2,
 
@@ -108,7 +108,7 @@ enum Metric {
      * How to use: gap ratio = delta GAP_FRAMES / (delta FRAMES_RENDERED + delta
      * GAP_FRAMES).
      *
-     * Unit: frames. Kind: counter.
+     * Unit: frames. Kind: counter. Support: mandatory.
      */
     GAP_FRAMES = 3,
 
@@ -125,7 +125,7 @@ enum Metric {
      * How to use: mean gap = delta GAP_DURATION_NS / delta GAP_EPISODES between
      * two snapshots.
      *
-     * Unit: nanoseconds. Kind: counter.
+     * Unit: nanoseconds. Kind: counter. Support: mandatory.
      */
     GAP_DURATION_NS = 4,
 
@@ -149,7 +149,7 @@ enum Metric {
      * How to use: difference two snapshots; pair with UNDERFLOW_DURATION_NS for
      * the mean stall length.
      *
-     * Unit: episodes. Kind: counter.
+     * Unit: episodes. Kind: counter. Support: mandatory.
      */
     UNDERFLOW_EPISODES = 5,
 
@@ -167,7 +167,7 @@ enum Metric {
      * How to use: stall ratio = delta UNDERFLOW_DURATION_NS / delta timestampNs
      * between two snapshots.
      *
-     * Unit: nanoseconds. Kind: counter.
+     * Unit: nanoseconds. Kind: counter. Support: mandatory.
      */
     UNDERFLOW_DURATION_NS = 6,
 
@@ -188,7 +188,7 @@ enum Metric {
      * How to use: sample it at intervals or after an output change; it is a
      * level, so do not difference it.
      *
-     * Unit: nanoseconds. Kind: gauge.
+     * Unit: nanoseconds. Kind: gauge. Support: optional.
      */
     RENDER_LATENCY_NS = 7,
 
@@ -209,7 +209,7 @@ enum Metric {
      * it. A value that falls towards zero while STARTED precedes an
      * Episode::UNDERFLOW episode.
      *
-     * Unit: nanoseconds. Kind: gauge.
+     * Unit: nanoseconds. Kind: gauge. Support: optional.
      */
     QUEUE_DEPTH_NS = 8,
 }
