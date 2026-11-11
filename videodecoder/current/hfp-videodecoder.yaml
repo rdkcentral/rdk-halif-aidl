@@ -47,16 +47,18 @@ videodecoder:                   # Component object begins
 
   # Metrics this product serves through IVideoDecoder.getMetrics(), for
   # every resource instance, and reported in Capabilities.supportedMetrics.
+  # Entries marked mandatory are listed by every product; optional
+  # ones only where the product serves them.
   supportedMetrics:
-    - FRAMES_DECODED
-    - FRAMES_DROPPED
-    - FRAMES_CORRUPTED
-    - DECODE_ERRORS
+    - FRAMES_DECODED          # optional
+    - FRAMES_DROPPED          # mandatory
+    - FRAMES_CORRUPTED        # mandatory
+    - DECODE_ERRORS           # mandatory
   # Episodes this product raises through onMetricEpisodeStarted() and
   # onMetricEpisodeResolved(). Names are members of the Episode enum.
   supportedEpisodes:
-    - FRAME_DROP
-    - DECODE_ERROR
+    - FRAME_DROP              # mandatory
+    - DECODE_ERROR            # mandatory
   # Error codes this product raises through onDecodeError(). Names are
   # members of the ErrorCode enum.
   supportedErrorCodes:

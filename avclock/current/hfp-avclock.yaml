@@ -27,9 +27,11 @@ avclock:                        # Component object begins
 
   # Metrics this product serves through IAVClock.getMetrics(), for
   # every resource instance, and reported in Capabilities.supportedMetrics.
+  # Entries marked mandatory are listed by every product; optional
+  # ones only where the product serves them.
   supportedMetrics:
-    - SYNC_OFFSET_NS
-    - RESYNC_COUNT
+    - SYNC_OFFSET_NS          # optional
+    - RESYNC_COUNT            # optional
   IAVClock:                     # Resource list
     - 0
     - 1

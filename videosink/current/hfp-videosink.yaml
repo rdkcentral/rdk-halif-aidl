@@ -27,19 +27,21 @@ videosink:
 
   # Metrics this product serves through IVideoSink.getMetrics(), for
   # every resource instance, and reported in Capabilities.supportedMetrics.
+  # Entries marked mandatory are listed by every product; optional
+  # ones only where the product serves them.
   supportedMetrics:
-    - FRAMES_RENDERED
-    - FRAMES_DROPPED
-    - FRAMES_REPEATED
-    - FRAME_REPEAT_EPISODES
-    - UNDERFLOW_EPISODES
-    - UNDERFLOW_DURATION_NS
+    - FRAMES_RENDERED         # mandatory
+    - FRAMES_DROPPED          # mandatory
+    - FRAMES_REPEATED         # mandatory
+    - FRAME_REPEAT_EPISODES   # mandatory
+    - UNDERFLOW_EPISODES      # mandatory
+    - UNDERFLOW_DURATION_NS   # mandatory
   # Episodes this product raises through onMetricEpisodeStarted() and
   # onMetricEpisodeResolved(). Names are members of the Episode enum.
   supportedEpisodes:
-    - FRAME_DROP
-    - FRAME_REPEAT
-    - UNDERFLOW
+    - FRAME_DROP              # mandatory
+    - FRAME_REPEAT            # mandatory
+    - UNDERFLOW               # mandatory
 
   IVideoSink:
     - id: 0

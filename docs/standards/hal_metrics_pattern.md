@@ -106,7 +106,7 @@ Every `Metric` member carries the same six paragraphs, in this order. A reader m
 - [ ] Both episode parcelables carry `metrics`, latched at the event's `timestampNs`.
 - [ ] `interface.yaml` lists `com/rdk/hal/<component>/metrics/*.aidl` under `srcs`.
 - [ ] `onMetricEpisodeStarted()` and `onMetricEpisodeResolved()` are appended to the event listener; no existing method or callback is changed or removed.
-- [ ] `supportedMetrics` and `supportedEpisodes` in `hfp-<component>.yaml` list members of the enums by name.
+- [ ] `supportedMetrics` and `supportedEpisodes` in `hfp-<component>.yaml` list members of the enums by name, each followed by `# mandatory` or `# optional` as its Doxygen states.
 - [ ] `Capabilities` carries `supportedMetrics` and `supportedEpisodes`, matching the HAL Feature Profile.
 - [ ] The component document has a `Metrics` section, a requirement for the accessors and one for the episodes.
 - [ ] Any property or callback the metrics replace is marked `@deprecated` under the [HAL API Deprecation Governance](../key_concepts/hal/hal_api_deprecation_governance.md) process.
