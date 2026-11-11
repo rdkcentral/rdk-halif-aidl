@@ -15,7 +15,8 @@ sequenceDiagram
     C->>H: getMetric(FRAMES_DROPPED)
     H-->>C: value
     Note over H: 1 second with no drop
-    H-)C: onMetricEpisodeResolved(FRAME_DROP, durationNs, count)
+    H-)C: onMetricEpisodeResolved(FRAME_DROP)
+    Note over C: carries durationNs, count
 ```
 
 ## Rules
