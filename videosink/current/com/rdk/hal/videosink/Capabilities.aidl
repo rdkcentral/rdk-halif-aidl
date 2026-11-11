@@ -18,6 +18,9 @@
  */
 package com.rdk.hal.videosink;
 
+import com.rdk.hal.videosink.metrics.Episode;
+import com.rdk.hal.videosink.metrics.Metric;
+
 /**
  *  @brief     Video Sink capabilities parcelable definition.
  *  @author    Luc Kennedy-Lamb
@@ -64,4 +67,18 @@ parcelable Capabilities {
      * content. Mirrors `IVideoSink[i].supportsSecure` in the HFP.
      */
     boolean supportsSecure;
+
+    /**
+     * The metrics this resource instance serves through getMetrics(), as
+     * listed under metrics.supported in the HAL Feature Profile. getMetric()
+     * throws EX_UNSUPPORTED_OPERATION for any other member.
+     */
+    Metric[] supportedMetrics;
+
+    /**
+     * The episodes this resource instance raises through
+     * onMetricEpisodeStarted() and onMetricEpisodeResolved(), as listed under
+     * metrics.supportedEpisodes in the HAL Feature Profile. No other member is raised.
+     */
+    Episode[] supportedEpisodes;
 }

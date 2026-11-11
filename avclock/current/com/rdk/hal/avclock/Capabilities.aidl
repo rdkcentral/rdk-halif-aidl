@@ -18,6 +18,8 @@
  */
 package com.rdk.hal.avclock;
 
+import com.rdk.hal.avclock.metrics.Metric;
+
 /**
  *  @brief     AV Clock capabilities definition.
  *  @author    Luc Kennedy-Lamb
@@ -26,4 +28,11 @@ package com.rdk.hal.avclock;
  */
 
 @VintfStability
-parcelable Capabilities {}
+parcelable Capabilities {
+    /**
+     * The metrics this resource instance serves through getMetrics(), as
+     * listed under metrics.supported in the HAL Feature Profile. getMetric()
+     * throws EX_UNSUPPORTED_OPERATION for any other member.
+     */
+    Metric[] supportedMetrics;
+}

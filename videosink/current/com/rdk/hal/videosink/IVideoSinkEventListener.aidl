@@ -18,6 +18,8 @@
  */
 package com.rdk.hal.videosink;
 import com.rdk.hal.videosink.State;
+import com.rdk.hal.videosink.metrics.EpisodeResolved;
+import com.rdk.hal.videosink.metrics.EpisodeStarted;
 
 /**
  *  @brief     Callbacks event listener interface for Video Sink.
@@ -103,4 +105,27 @@ oneway interface IVideoSinkEventListener {
      * @param[in] newState  The new state that the sink has transitioned to.
      */
     void onStateChanged(in State oldState, in State newState);
+
+    /**
+     * Raised once when an episode starts. onMetricEpisodeResolved() follows, with the
+     * same Episode, when it ends.
+     *
+     * Episodes are the only metric events: nothing is raised per frame, and
+     * per-frame figures are read with IVideoSink.getMetrics().
+     *
+     * @param[in] event    Which episode started, and when.
+     *
+     * @see Episode, EpisodeStarted
+     */
+    void onMetricEpisodeStarted(in EpisodeStarted event);
+
+    /**
+     * Raised once when the episode reported by onMetricEpisodeStarted() ends.
+     *
+     * @param[in] event    Which episode ended, when, how long it lasted and
+     * what it counted.
+     *
+     * @see Episode, EpisodeResolved
+     */
+    void onMetricEpisodeResolved(in EpisodeResolved event);
 }

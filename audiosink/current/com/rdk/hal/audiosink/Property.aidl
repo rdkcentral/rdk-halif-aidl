@@ -60,6 +60,8 @@ enum Property {
      * The render output latency in nanoseconds.
      * This is the time from an audio frame being rendered from the queue to being output (HDMI/ARC/BT/internal
      * speakers).
+     * It excludes the per-port delay set by
+     * com.rdk.hal.audiomixer.OutputPortProperty::DELAY_MS.
      *
      * Type: Integer
      * Access: Read-only.
@@ -67,6 +69,10 @@ enum Property {
      * @exception binder::Status::Exception::EX_NONE for success
      * @exception binder::Status::Exception::EX_UNSUPPORTED_OPERATION if try to modify Read-only property.
      *
+     * @deprecated Deprecated since 2026-11-11. Use Metric::RENDER_LATENCY_NS through
+     * IAudioSink.getMetrics().
+     * Reason: as an Integer the value overflows at about 2.1 s of nanoseconds;
+     * the metric is a long, latched with a timestamp.
      */
     RENDER_LATENCY_NS = 2,
 
@@ -82,6 +88,10 @@ enum Property {
      * @exception binder::Status::Exception::EX_NONE for success
      * @exception binder::Status::Exception::EX_UNSUPPORTED_OPERATION if try to modify Read-only property.
      *
+     * @deprecated Deprecated since 2026-11-11. Use Metric::QUEUE_DEPTH_NS through
+     * IAudioSink.getMetrics().
+     * Reason: as an Integer the value overflows at about 2.1 s of nanoseconds;
+     * the metric is a long, latched with a timestamp.
      */
     QUEUE_DEPTH_NS = 3,
 

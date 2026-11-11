@@ -40,6 +40,9 @@ The RDK middleware’s GStreamer pipeline includes a dedicated RDK Video Sink el
 | **HAL.VIDEOSINK.7** | Shall run a session with no video plane mapped, consuming queued frames and freeing their buffers against the attached AV Clock while displaying nothing. | The plane mapping is owned by Plane Control and may be set or cleared at any point in the session, including while the sink is `STARTED`. |
 | **HAL.VIDEOSINK.8** | Video frames decoupled from video planes (destination plane -1) shall continue to be delivered and remain in sync with audio.  When coupled to a video plane they shall immediately become visible and be in lip sync. |To ensure if/when a video sink source is assigned to a video plane it appears in sync with audio. |
 | **HAL.VIDEOSINK.9** | If a client process exits, the Video Sink server shall automatically stop and close any `IVideoSink` instance controlled by that client. ||
+| **HAL.VIDEOSINK.10** | Shall serve every metric listed under `metrics.supported` in the HAL Feature Profile through `getMetrics()` and `getMetric()`, in any state, counting from service initialisation. The list includes every metric marked mandatory. | See [metrics](#metrics). |
+| **HAL.VIDEOSINK.11** | Shall raise `onMetricEpisodeStarted()` when an episode of a supported metric starts and `onMetricEpisodeResolved()` when it ends, for every episode listed under `metrics.supportedEpisodes`, which includes every episode marked mandatory. | See [metrics](#metrics). |
+| **HAL.VIDEOSINK.12** | Shall raise `onVideoUnderflow()` once when an underflow starts and `onVideoResumed()` once when presentation restarts; `onVideoUnderflow()` is not raised again until `onVideoResumed()` has been. | Edge-triggered, one pair per `UNDERFLOW` episode, whether or not a video plane is mapped. |
 
 ## Interface Definition
 
@@ -52,6 +55,12 @@ The RDK middleware’s GStreamer pipeline includes a dedicated RDK Video Sink el
 | `IVideoSinkEventListener.aidl` | Listener callbacks interface to clients from an `IVideoSink`. |
 | `Capabilities.aidl` | Parcelable describing the capabilities of an `IVideoSink` resource instance. |
 | `Property.aidl` | Enum list of video sink properties. |
+| `metrics/Metric.aidl` | Enum list of the metrics the video sink serves. |
+| `metrics/MetricValue.aidl` | Parcelable pairing a `Metric` with its value. |
+| `metrics/MetricSnapshot.aidl` | Parcelable holding metric values latched at one instant. |
+| `metrics/Episode.aidl` | Enum list of the episodes the component reports. |
+| `metrics/EpisodeStarted.aidl` | Parcelable carried by `onMetricEpisodeStarted()`. |
+| `metrics/EpisodeResolved.aidl` | Parcelable carried by `onMetricEpisodeResolved()`. |
 
 ## Initialization
 
@@ -278,6 +287,31 @@ sequenceDiagram
 ```
 
 This is what makes dual-decode session switching seamless. Two decoder → sink chains run concurrently against the same AV Clock (or an explicitly synchronised pair of clocks), with exactly one mapped to the plane at a time. Switching between them is a mapping swap with no stop, flush or resync on either chain: the newly mapped sink was already consuming at the shared clock's correct presentation times, so video is rendered from the switch point onwards. Paired with the equivalent mixer-input routing swap on the [Audio Sink](../audiosink/audio_sink.md), a full A/V session switch is one mapping change plus one routing change while both sessions keep running.
+
+## Metrics
+
+`IVideoSink.getMetrics()` returns the metrics asked for, latched at one instant with a `CLOCK_MONOTONIC_RAW` timestamp; `getMetric()` returns one. Both are callable in any state. Counters count from service initialisation and are never reset, so a session or interval figure is the difference of two snapshots. The rules common to every component are in the [HAL Metrics Pattern](../standards/hal_metrics_pattern.md); what each metric measures, excludes and is used for is in the Doxygen of `Metric.aidl`. The product lists what it supports under `metrics.supported` and `metrics.supportedEpisodes` in the HAL Feature Profile, and `getCapabilities()` reports the same lists at run time in `Capabilities`.
+
+| Metric | Unit | Kind | Support | Meaning |
+|---|---|---|---|---|
+| `FRAMES_RENDERED` | frames | counter | mandatory | Frames presented at their time. |
+| `FRAMES_DROPPED` | frames | counter | mandatory | Frames discarded because they arrived too late. |
+| `FRAMES_REPEATED` | frames | counter | mandatory | Extra display periods spent on a frame already shown. |
+| `FRAME_REPEAT_EPISODES` | episodes | counter | mandatory | Freezes started. |
+| `UNDERFLOW_EPISODES` | episodes | counter | mandatory | Underflows started. |
+| `UNDERFLOW_DURATION_NS` | nanoseconds | counter | mandatory | Total time spent in underflow. |
+
+Events are episodes only: nothing is raised per frame. `IVideoSinkEventListener.onMetricEpisodeStarted()` is raised once when an episode starts and `onMetricEpisodeResolved()` once when it ends, each naming the `Episode`. The resolved event carries the episode's `durationNs` and `count`. Both events carry `metrics`, a `MetricSnapshot` of every supported metric latched at the event, so no second read is needed. A product raises an episode where it supports the metric shown.
+
+| Episode | Support | Starts and ends | Metric |
+|---|---|---|---|
+| `FRAME_DROP` | mandatory | Covers frames counted by FRAMES_DROPPED. The episode starts at the first dropped frame when no such episode is open and ends when 1 second has passed without another. | `FRAMES_DROPPED` |
+| `FRAME_REPEAT` | mandatory | Starts when the sink shows a frame again because the frame due was missing or late, and ends when a new frame is presented. | `FRAME_REPEAT_EPISODES` |
+| `UNDERFLOW` | mandatory | Starts when the frame queue is empty at the presentation time of the next frame, and ends when a frame is presented. | `UNDERFLOW_EPISODES` |
+
+Frames lost or damaged before they reach the sink are counted by the [Video Decoder](../videodecoder/video_decoder.md). The two components latch separately, so figures read from both are not one atomic read.
+
+The `METRIC_*` properties that these metrics replace are deprecated and remain readable.
 
 ## Video Sink States
 
