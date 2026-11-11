@@ -9,25 +9,33 @@ Each synchronous call passes through libbinder twice per side. The client makes 
 ```mermaid
 sequenceDiagram
     autonumber
+    box rgba(21,101,192,0.18) Client process
     participant App as Client code
     participant Px as BpVideoDecoder (proxy)
     participant LA as libbinder (client)
+    end
+    box rgba(97,97,97,0.18) Kernel
     participant K as binder driver
+    end
+    box rgba(46,125,50,0.18) HAL process
     participant LB as libbinder (HAL)
     participant St as BnVideoDecoder (stub)
     participant Impl as HAL implementation
+    end
     App->>Px: getState()
     Px->>LA: marshal into Parcel, BpBinder::transact
     LA->>K: ioctl(BINDER_WRITE_READ): BC_TRANSACTION, then wait
-    Note over LA,K: client thread sleeps inside this ioctl
-    K->>K: copy Parcel into the HAL's mmap buffer
-    K->>LB: wake pool thread: BR_TRANSACTION
-    LB->>St: IPCThreadState → BBinder::transact → onTransact
-    St->>Impl: unmarshal, call getState()
-    Impl-->>St: State
-    St-->>LB: marshal reply Parcel
-    LB->>K: ioctl: BC_REPLY, returns once the reply is queued
-    K->>K: copy reply into the client's mmap buffer
+    rect rgba(255,183,77,0.25)
+        Note over LA,K: client thread sleeps inside this ioctl
+        K->>K: copy Parcel into the HAL's mmap buffer
+        K->>LB: wake pool thread: BR_TRANSACTION
+        LB->>St: IPCThreadState → BBinder::transact → onTransact
+        St->>Impl: unmarshal, call getState()
+        Impl-->>St: State
+        St-->>LB: marshal reply Parcel
+        LB->>K: ioctl: BC_REPLY, returns once the reply is queued
+        K->>K: copy reply into the client's mmap buffer
+    end
     K-->>LA: wake client thread: BR_REPLY
     LA-->>Px: unmarshal reply
     Px-->>App: State
@@ -49,22 +57,30 @@ When client and HAL share a process, libbinder finds a local `BBinder` and makes
 
 ```mermaid
 sequenceDiagram
+    box rgba(21,101,192,0.18) Client process
     participant C as Client thread
+    end
+    box rgba(97,97,97,0.18) Kernel
     participant K as binder driver
+    end
+    box rgba(46,125,50,0.18) HAL process
     participant H as HAL pool thread
+    end
     Note over H: asleep in ioctl, no CPU
     activate C
     Note over C: marshal
     C->>K: ioctl: send and wait
     deactivate C
-    Note over C: asleep in the same ioctl, no CPU
-    K->>H: wake: context switch 1
-    activate H
-    Note over H: unmarshal, getState(), marshal
-    H->>K: ioctl: reply
-    H->>K: ioctl: wait for the next call
-    deactivate H
-    Note over H: asleep for the next call
+    rect rgba(255,183,77,0.25)
+        Note over C: asleep in the same ioctl, no CPU
+        K->>H: wake: context switch 1
+        activate H
+        Note over H: unmarshal, getState(), marshal
+        H->>K: ioctl: reply
+        H->>K: ioctl: wait for the next call
+        deactivate H
+        Note over H: asleep for the next call
+    end
     K->>C: wake: context switch 2
     activate C
     Note over C: unmarshal, return
@@ -88,6 +104,14 @@ flowchart LR
         A2[Client buffer] -- copy 1 --> S[Kernel buffer]
         S -- copy 2 --> B2[Server buffer]
     end
+    classDef client fill:#1565C0,stroke:#0D47A1,color:#FFFFFF
+    classDef kernel fill:#616161,stroke:#424242,color:#FFFFFF
+    classDef hal fill:#2E7D32,stroke:#1B5E20,color:#FFFFFF
+    class A1,A2 client
+    class P,S kernel
+    class B1,B2 hal
+    linkStyle 0,1 stroke:#2E7D32,stroke-width:3px
+    linkStyle 2,3 stroke:#E65100,stroke-width:2px
 ```
 
 Each process maps a receive area through the driver: about 1 MB less two pages in libbinder, shared by every transaction in flight to that process. A reply that does not fit fails with `FAILED_TRANSACTION`. Oneway calls may use only half of it.
@@ -106,6 +130,12 @@ flowchart TB
         E --> H["handlePolledCommands(): ioctl read, run, reply"]
         H --> E
     end
+    classDef kernel fill:#616161,stroke:#424242,color:#FFFFFF
+    classDef pool fill:#2E7D32,stroke:#1B5E20,color:#FFFFFF
+    classDef loop fill:#FFB74D,stroke:#E65100,color:#000000
+    class D1,D2 kernel
+    class T1,T2,TN pool
+    class E,H loop
 ```
 
 | | Thread pool | Event loop |
@@ -122,6 +152,12 @@ A client must also run a pool or poll its binder fd, or its listener callbacks a
 flowchart LR
     C["Caller thread<br/>SCHED_FIFO 50"] -- sync call --> ACK["Android Common Kernel<br/>HAL thread SCHED_FIFO 50<br/>when the node sets inherit_rt"]
     C -- sync call --> ML["Mainline Linux<br/>HAL thread SCHED_NORMAL<br/>nice value only"]
+    classDef client fill:#1565C0,stroke:#0D47A1,color:#FFFFFF
+    classDef boosted fill:#2E7D32,stroke:#1B5E20,color:#FFFFFF
+    classDef normal fill:#FFB74D,stroke:#E65100,color:#000000
+    class C client
+    class ACK boosted
+    class ML normal
 ```
 
 | | Mainline Linux driver | Android Common Kernel driver |
@@ -144,6 +180,12 @@ flowchart LR
         e1[onDecodeError] --> e2[onStateChanged] --> e3[onStateChanged] --> e4[onDecodeError]
     end
     Q --> L[Client listener<br/>one call at a time]
+    classDef hal fill:#2E7D32,stroke:#1B5E20,color:#FFFFFF
+    classDef event fill:#FFB74D,stroke:#E65100,color:#000000
+    classDef client fill:#1565C0,stroke:#0D47A1,color:#FFFFFF
+    class H hal
+    class e1,e2,e3,e4 event
+    class L client
 ```
 
 The kernel delivers one oneway call at a time to a given binder object, and the next waits until the client has finished the current one. Order is preserved, but a slow listener delays every callback on that object. When the async half of the client's buffer is full, the HAL's next oneway send fails.
