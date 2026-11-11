@@ -18,6 +18,8 @@
  */
 package com.rdk.hal.audiodecoder;
 import com.rdk.hal.audiodecoder.Codec;
+import com.rdk.hal.audiodecoder.metrics.Episode;
+import com.rdk.hal.audiodecoder.metrics.Metric;
 
 /**
  *  @brief     Audio decoder resource definition.
@@ -38,4 +40,18 @@ parcelable Capabilities {
      * @see Property.SECURE_AUDIO
      */
     boolean supportsSecure;
+
+    /**
+     * The metrics this resource instance serves through getMetrics(), as
+     * listed under supportedMetrics in the HAL Feature Profile. getMetric()
+     * throws EX_UNSUPPORTED_OPERATION for any other member.
+     */
+    Metric[] supportedMetrics;
+
+    /**
+     * The episodes this resource instance raises through
+     * onMetricEpisodeStarted() and onMetricEpisodeResolved(), as listed under
+     * supportedEpisodes in the HAL Feature Profile. No other member is raised.
+     */
+    Episode[] supportedEpisodes;
 }

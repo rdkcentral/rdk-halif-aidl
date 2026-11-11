@@ -46,12 +46,17 @@ videodecoder:                   # Component object begins
   interfaceVersion: current
 
   # Metrics this product serves through IVideoDecoder.getMetrics(), for
-  # every resource instance. Names are members of the Metric enum.
+  # every resource instance, and reported in Capabilities.supportedMetrics.
   supportedMetrics:
     - FRAMES_DECODED
     - FRAMES_DROPPED
     - FRAMES_CORRUPTED
     - DECODE_ERRORS
+  # Episodes this product raises through onMetricEpisodeStarted() and
+  # onMetricEpisodeResolved(). Names are members of the Episode enum.
+  supportedEpisodes:
+    - FRAME_DROP
+    - DECODE_ERROR
   IVideoDecoder:                # Resource list
     - 0:                        # Resource object begins (high-tier decoder)
       supportedCodecs:          # Array of CodecCapabilities

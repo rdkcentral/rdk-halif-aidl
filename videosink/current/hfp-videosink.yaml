@@ -26,7 +26,7 @@ videosink:
   interfaceVersion: current
 
   # Metrics this product serves through IVideoSink.getMetrics(), for
-  # every resource instance. Names are members of the Metric enum.
+  # every resource instance, and reported in Capabilities.supportedMetrics.
   supportedMetrics:
     - FRAMES_RENDERED
     - FRAMES_DROPPED
@@ -34,6 +34,12 @@ videosink:
     - FRAME_REPEAT_EPISODES
     - UNDERFLOW_EPISODES
     - UNDERFLOW_DURATION_NS
+  # Episodes this product raises through onMetricEpisodeStarted() and
+  # onMetricEpisodeResolved(). Names are members of the Episode enum.
+  supportedEpisodes:
+    - FRAME_DROP
+    - FRAME_REPEAT
+    - UNDERFLOW
 
   IVideoSink:
     - id: 0

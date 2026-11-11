@@ -18,6 +18,8 @@
  */
 package com.rdk.hal.audiosink;
 import com.rdk.hal.audiosink.ContentType;
+import com.rdk.hal.audiosink.metrics.Episode;
+import com.rdk.hal.audiosink.metrics.Metric;
 
 /**
  *  @brief     Audio Sink capabilities parcelable definition.
@@ -40,4 +42,18 @@ parcelable Capabilities {
      * @see IAudioSink.open()
      */
     ContentType[] supportedContentTypes;
+
+    /**
+     * The metrics this resource instance serves through getMetrics(), as
+     * listed under supportedMetrics in the HAL Feature Profile. getMetric()
+     * throws EX_UNSUPPORTED_OPERATION for any other member.
+     */
+    Metric[] supportedMetrics;
+
+    /**
+     * The episodes this resource instance raises through
+     * onMetricEpisodeStarted() and onMetricEpisodeResolved(), as listed under
+     * supportedEpisodes in the HAL Feature Profile. No other member is raised.
+     */
+    Episode[] supportedEpisodes;
 }

@@ -20,6 +20,8 @@ package com.rdk.hal.videodecoder;
 import com.rdk.hal.videodecoder.CodecCapabilities;
 import com.rdk.hal.videodecoder.Colorimetry;
 import com.rdk.hal.videodecoder.DynamicRange;
+import com.rdk.hal.videodecoder.metrics.Episode;
+import com.rdk.hal.videodecoder.metrics.Metric;
 
 /**
  *  @brief     Video decoder capabilities definition.
@@ -52,4 +54,18 @@ parcelable Capabilities {
      * @see Property.SECURE_VIDEO
      */
     boolean supportsSecure;
+
+    /**
+     * The metrics this resource instance serves through getMetrics(), as
+     * listed under supportedMetrics in the HAL Feature Profile. getMetric()
+     * throws EX_UNSUPPORTED_OPERATION for any other member.
+     */
+    Metric[] supportedMetrics;
+
+    /**
+     * The episodes this resource instance raises through
+     * onMetricEpisodeStarted() and onMetricEpisodeResolved(), as listed under
+     * supportedEpisodes in the HAL Feature Profile. No other member is raised.
+     */
+    Episode[] supportedEpisodes;
 }
