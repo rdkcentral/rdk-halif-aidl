@@ -148,7 +148,10 @@ add or correct them as needed.
 Every PR carries **exactly one change-class label**. The label mirrors the
 **Interface effect** field on the PR's `halif_aidl` project item, which is
 the source of truth; the label exists so that `release.sh` and reviewers can
-read the class from the PR itself. There is no implicit-default class: an
+read the class from the PR itself. `scripts/configure_pr.sh` and
+`scripts/merge_pr.sh` keep the two in step, and carry the PR's class to its
+linked issues, under the maintainer's own `gh` login. Merge with
+`scripts/merge_pr.sh <PR>` so the merged class reaches the project. There is no implicit-default class: an
 unlabelled PR, or one whose label and Interface effect disagree, is an
 unfinished PR.
 

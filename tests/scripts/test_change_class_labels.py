@@ -99,5 +99,8 @@ class SyncVerb(unittest.TestCase):
     def test_keep_when_a_component_is_not_owned(self):
         self.assertEqual(self.verb(1, 2, 0, ["Minor Change"]), "keep")
 
+    def test_cr_is_never_lowered(self):
+        self.assertEqual(self.verb(2, 3, 1, ["CR", "Major Change"]), "keep")
+
     def test_new_interface_is_never_lowered(self):
         self.assertEqual(self.verb(1, 2, 1, ["New Interface"]), "keep")
