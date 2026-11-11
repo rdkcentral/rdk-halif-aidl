@@ -39,6 +39,7 @@ mapping:
           mapping:
             regex;(^\d+$):
               type: map
+              required: true
               mapping:
                 type:
                   type: str
@@ -52,6 +53,13 @@ mapping:
                   required: true
                   sequence:
                   - type: str
+                    desc: AIDL enum com.rdk.hal.videodecoder.PixelFormat
+                    enum:
+                    - YCBCR422
+                    - YCBCR444
+                    - YCBCR420
+                    - RGB
+                    - NATIVE
                 sourceTypes:
                   type: seq
                   required: true
@@ -80,6 +88,14 @@ mapping:
                   required: true
                   sequence:
                   - type: str
+                    desc: AIDL enum com.rdk.hal.videodecoder.DynamicRange
+                    enum:
+                    - UNKNOWN
+                    - SDR
+                    - HLG
+                    - HDR10
+                    - HDR10_PLUS
+                    - DOLBY_VISION
                 colorDepth:
                   type: int
                   required: true

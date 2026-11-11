@@ -72,6 +72,38 @@ mapping:
             required: true
             sequence:
             - type: str
+              desc: AIDL enum com.rdk.hal.audiodecoder.PCMFormat
+              enum:
+              - F64LE
+              - F64BE
+              - F32LE
+              - F32BE
+              - S32LE
+              - S32BE
+              - U32LE
+              - U32BE
+              - S24_32LE
+              - S24_32BE
+              - U24_32LE
+              - U24_32BE
+              - S24LE
+              - S24BE
+              - U24LE
+              - U24BE
+              - S20LE
+              - S20BE
+              - U20LE
+              - U20BE
+              - S18LE
+              - S18BE
+              - U18LE
+              - U18BE
+              - S16LE
+              - S16BE
+              - U16LE
+              - U16BE
+              - S8
+              - U8
           supportsPlanarFormat:
             type: bool
             required: true

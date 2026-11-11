@@ -39,6 +39,7 @@ mapping:
           mapping:
             regex;(^\d+$):
               type: map
+              required: true
               mapping:
                 supportedCodecs:
                   type: seq
@@ -74,3 +75,55 @@ mapping:
                 supportsSecure:
                   type: bool
                   required: true
+                operationalMode:
+                  type: map
+                  mapping:
+                    default:
+                      type: str
+                      enum:
+                      - TUNNELLED
+                      - NON_TUNNELLED
+                    when:
+                      type: seq
+                      sequence:
+                      - type: map
+                        mapping:
+                          properties:
+                            type: map
+                            mapping:
+                              ? regex;(^(RESOURCE_ID|LOW_LATENCY_MODE|AV_SOURCE|SECURE_AUDIO|AC4_PRESENTATION_GROUP_INDEX|AC4_PREFERRED_LANG1|AC4_PREFERRED_LANG2|AC4_ASSOCIATED_TYPE|AC4_AUTO_SELECTION_PRIORITY|AC4_MIXER_BALANCE|AC4_ASSOCIATED_AUDIO_MIXING_ENABLE|METRIC_FRAMES_DECODED|METRIC_DECODE_ERRORS|METRIC_FRAMES_DROPPED)$)
+                              : type: int
+                          secure:
+                            type: bool
+                          mode:
+                            required: true
+                            type: str
+                            enum:
+                            - TUNNELLED
+                            - NON_TUNNELLED
+      operationalMode:
+        type: map
+        mapping:
+          default:
+            type: str
+            enum:
+            - TUNNELLED
+            - NON_TUNNELLED
+          when:
+            type: seq
+            sequence:
+            - type: map
+              mapping:
+                properties:
+                  type: map
+                  mapping:
+                    ? regex;(^(RESOURCE_ID|LOW_LATENCY_MODE|AV_SOURCE|SECURE_AUDIO|AC4_PRESENTATION_GROUP_INDEX|AC4_PREFERRED_LANG1|AC4_PREFERRED_LANG2|AC4_ASSOCIATED_TYPE|AC4_AUTO_SELECTION_PRIORITY|AC4_MIXER_BALANCE|AC4_ASSOCIATED_AUDIO_MIXING_ENABLE|METRIC_FRAMES_DECODED|METRIC_DECODE_ERRORS|METRIC_FRAMES_DROPPED)$)
+                    : type: int
+                secure:
+                  type: bool
+                mode:
+                  required: true
+                  type: str
+                  enum:
+                  - TUNNELLED
+                  - NON_TUNNELLED

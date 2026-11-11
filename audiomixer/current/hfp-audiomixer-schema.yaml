@@ -90,6 +90,32 @@ mapping:
                     required: true
                     sequence:
                     - type: str
+                      desc: AIDL enum com.rdk.hal.audiodecoder.Codec
+                      enum:
+                      - PCM
+                      - AAC_LC
+                      - HE_AAC
+                      - HE_AAC2
+                      - AAC_ELD
+                      - DOLBY_AC3
+                      - DOLBY_AC3_PLUS
+                      - DOLBY_AC3_PLUS_JOC
+                      - DOLBY_AC4
+                      - DOLBY_MAT
+                      - DOLBY_MAT2
+                      - DOLBY_TRUEHD
+                      - MPEG2
+                      - MP3
+                      - FLAC
+                      - VORBIS
+                      - DTS
+                      - OPUS
+                      - WMA
+                      - REALAUDIO
+                      - USAC
+                      - X_HE_AAC
+                      - SBC
+                      - AVS
       outputPorts:
         type: seq
         required: true
@@ -238,6 +264,11 @@ mapping:
                                 required: true
                                 sequence:
                                 - type: str
+                                  desc: AIDL enum com.rdk.hal.audiomixer.DolbyMs12_2_6_LevellerMode
+                                  enum:
+                                  - OFF
+                                  - MANUAL
+                                  - AUTO
                               level:
                                 type: map
                                 required: true
@@ -255,6 +286,11 @@ mapping:
                               mode:
                                 type: str
                                 required: true
+                                desc: AIDL enum com.rdk.hal.audiomixer.DolbyMs12_2_6_LevellerMode
+                                enum:
+                                - OFF
+                                - MANUAL
+                                - AUTO
                               level:
                                 type: int
                                 required: true
@@ -274,6 +310,11 @@ mapping:
                                 required: true
                                 sequence:
                                 - type: str
+                                  desc: AIDL enum com.rdk.hal.audiomixer.DolbyMs12_2_6_LevellerMode
+                                  enum:
+                                  - OFF
+                                  - MANUAL
+                                  - AUTO
                               boost:
                                 type: map
                                 required: true
@@ -291,6 +332,11 @@ mapping:
                               mode:
                                 type: str
                                 required: true
+                                desc: AIDL enum com.rdk.hal.audiomixer.DolbyMs12_2_6_LevellerMode
+                                enum:
+                                - OFF
+                                - MANUAL
+                                - AUTO
                               boost:
                                 type: int
                                 required: true

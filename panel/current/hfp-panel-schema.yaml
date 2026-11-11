@@ -76,11 +76,13 @@ mapping:
           mapping:
             regex;(^[A-Za-z0-9_][A-Za-z0-9_ .+-]*$):
               type: seq
+              required: true
               sequence:
               - type: map
                 mapping:
-                  regex;(^[A-Za-z0-9_][A-Za-z0-9_ .+-]*$):
+                  regex;(^(UNKNOWN|SDR|HLG|HDR10|HDR10_PLUS|DOLBY_VISION)$):
                     type: map
+                    required: true
                     mapping:
                       supportedAVSources:
                         type: seq
@@ -117,6 +119,7 @@ mapping:
           mapping:
             regex;(^[A-Za-z0-9_][A-Za-z0-9_ .+-]*$):
               type: map
+              required: true
               mapping:
                 isGlobal:
                   type: bool
@@ -135,11 +138,13 @@ mapping:
                     mapping:
                       regex;(^[A-Za-z0-9_][A-Za-z0-9_ .+-]*$):
                         type: seq
+                        required: true
                         sequence:
                         - type: map
                           mapping:
-                            regex;(^[A-Za-z0-9_][A-Za-z0-9_ .+-]*$):
+                            regex;(^(UNKNOWN|SDR|HLG|HDR10|HDR10_PLUS|DOLBY_VISION)$):
                               type: map
+                              required: true
                               mapping:
                                 supportedAVSources:
                                   type: seq

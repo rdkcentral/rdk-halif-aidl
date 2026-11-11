@@ -37,191 +37,272 @@ mapping:
         sequence:
         - type: map
           mapping:
-            supportedCodecs:
-              type: seq
-              required: true
-              sequence:
-              - type: map
-                mapping:
-                  regex;(^(MPEG2_VIDEO|H264_AVC|H265_HEVC|VP9|AV1)$):
-                    type: map
-                    mapping:
-                      profiles:
-                        type: seq
-                        required: true
-                        sequence:
-                        - type: map
-                          mapping:
-                            profile:
-                              type: str
-                              required: true
-                              desc: AIDL enum com.rdk.hal.videodecoder.CodecProfile
-                              enum:
-                              - MPEG2_SIMPLE
-                              - MPEG2_MAIN
-                              - H264_BASELINE
-                              - H264_MAIN
-                              - H264_HIGH
-                              - H265_MAIN
-                              - H265_MAIN_10
-                              - H265_MAIN_10_HDR10
-                              - VP9_PROFILE_0
-                              - VP9_PROFILE_1
-                              - VP9_PROFILE_2
-                              - VP9_PROFILE_3
-                              - AV1_MAIN
-                              - AV1_HIGH
-                            maxLevel:
-                              type: str
-                              required: true
-                              desc: AIDL enum com.rdk.hal.videodecoder.CodecLevel
-                              enum:
-                              - MPEG2_LEVEL_LOW
-                              - MPEG2_LEVEL_MAIN
-                              - MPEG2_LEVEL_HIGH
-                              - H264_LEVEL_3
-                              - H264_LEVEL_3_1
-                              - H264_LEVEL_4
-                              - H264_LEVEL_4_1
-                              - H264_LEVEL_5
-                              - H264_LEVEL_5_1
-                              - H264_LEVEL_5_2
-                              - H265_LEVEL_4
-                              - H265_LEVEL_4_1
-                              - H265_LEVEL_5
-                              - H265_LEVEL_5_1
-                              - H265_LEVEL_5_2
-                              - H265_LEVEL_6
-                              - H265_LEVEL_6_1
-                              - H265_LEVEL_6_2
-                              - VP9_LEVEL_1
-                              - VP9_LEVEL_1_1
-                              - VP9_LEVEL_2
-                              - VP9_LEVEL_2_1
-                              - VP9_LEVEL_3
-                              - VP9_LEVEL_3_1
-                              - VP9_LEVEL_4
-                              - VP9_LEVEL_4_1
-                              - VP9_LEVEL_5
-                              - VP9_LEVEL_5_1
-                              - VP9_LEVEL_5_2
-                              - VP9_LEVEL_6
-                              - VP9_LEVEL_6_1
-                              - VP9_LEVEL_6_2
-                              - AV1_LEVEL_4_0
-                              - AV1_LEVEL_4_1
-                              - AV1_LEVEL_5_0
-                              - AV1_LEVEL_5_1
-                              - AV1_LEVEL_6_0
-                              - AV1_LEVEL_6_1
-                            maxBitrateInBps:
-                              type: int
-                              required: true
-                      maxFrameRate:
-                        type: int
-                        required: true
-                      maxFrameWidth:
-                        type: int
-                        required: true
-                      maxFrameHeight:
-                        type: int
-                        required: true
-                      supportedOutputPixelFormats:
-                        type: seq
-                        required: true
-                        sequence:
-                        - type: str
-                          desc: AIDL enum com.rdk.hal.videodecoder.PixelFormat
-                          enum:
-                          - YCBCR422
-                          - YCBCR444
-                          - YCBCR420
-                          - RGB
-                          - NATIVE
-            supportedDynamicRanges:
-              type: seq
-              required: true
-              sequence:
-              - type: str
-                desc: AIDL enum com.rdk.hal.videodecoder.DynamicRange
-                enum:
-                - UNKNOWN
-                - SDR
-                - HLG
-                - HDR10
-                - HDR10_PLUS
-                - DOLBY_VISION
-            supportedColorimetries:
-              type: seq
-              required: true
-              sequence:
-              - type: map
-                mapping:
-                  range:
-                    type: str
-                    required: true
-                    desc: AIDL enum com.rdk.hal.videodecoder.ColorRange
-                    enum:
-                    - UNKNOWN
-                    - LIMITED
-                    - FULL
-                  matrix:
-                    type: str
-                    required: true
-                    desc: AIDL enum com.rdk.hal.videodecoder.ColorMatrix
-                    enum:
-                    - UNKNOWN
-                    - IDENTITY
-                    - BT709
-                    - UNSPECIFIED
-                    - BT601_625
-                    - BT601_525
-                    - SMPTE240M
-                    - BT2020_NCL
-                    - BT2020_CL
-                  transfer:
-                    type: str
-                    required: true
-                    desc: AIDL enum com.rdk.hal.videodecoder.TransferCharacteristics
-                    enum:
-                    - UNKNOWN
-                    - BT709
-                    - UNSPECIFIED
-                    - BT470M_GAMMA22
-                    - BT470BG_GAMMA28
-                    - SMPTE170M
-                    - SMPTE240M
-                    - LINEAR
-                    - LOG_100
-                    - LOG_316
-                    - IEC61966_2_4
-                    - BT1361
-                    - SRGB
-                    - BT2020_10
-                    - BT2020_12
-                    - SMPTE2084_PQ
-                    - SMPTE428
-                    - ARIB_STD_B67_HLG
-                  primaries:
-                    type: str
-                    required: true
-                    desc: AIDL enum com.rdk.hal.videodecoder.ColorPrimaries
-                    enum:
-                    - UNKNOWN
-                    - BT709
-                    - UNSPECIFIED
-                    - BT470M
-                    - BT470BG
-                    - BT601_525
-                    - SMPTE240M
-                    - FILM
-                    - BT2020
-                    - SMPTE428
-                    - DCI_P3_D60
-                    - DISPLAY_P3
-                    - EBU3213
-            supportsSecure:
-              type: bool
-              required: true
             regex;(^\d+$):
-              type: any
+              type: map
+              required: true
+              mapping:
+                supportedCodecs:
+                  type: seq
+                  required: true
+                  sequence:
+                  - type: map
+                    mapping:
+                      regex;(^(MPEG2_VIDEO|H264_AVC|H265_HEVC|VP9|AV1)$):
+                        type: map
+                        required: true
+                        mapping:
+                          profiles:
+                            type: seq
+                            required: true
+                            sequence:
+                            - type: map
+                              mapping:
+                                profile:
+                                  type: str
+                                  required: true
+                                  desc: AIDL enum com.rdk.hal.videodecoder.CodecProfile
+                                  enum:
+                                  - MPEG2_SIMPLE
+                                  - MPEG2_MAIN
+                                  - H264_BASELINE
+                                  - H264_MAIN
+                                  - H264_HIGH
+                                  - H265_MAIN
+                                  - H265_MAIN_10
+                                  - H265_MAIN_10_HDR10
+                                  - VP9_PROFILE_0
+                                  - VP9_PROFILE_1
+                                  - VP9_PROFILE_2
+                                  - VP9_PROFILE_3
+                                  - AV1_MAIN
+                                  - AV1_HIGH
+                                maxLevel:
+                                  type: str
+                                  required: true
+                                  desc: AIDL enum com.rdk.hal.videodecoder.CodecLevel
+                                  enum:
+                                  - MPEG2_LEVEL_LOW
+                                  - MPEG2_LEVEL_MAIN
+                                  - MPEG2_LEVEL_HIGH
+                                  - H264_LEVEL_3
+                                  - H264_LEVEL_3_1
+                                  - H264_LEVEL_4
+                                  - H264_LEVEL_4_1
+                                  - H264_LEVEL_5
+                                  - H264_LEVEL_5_1
+                                  - H264_LEVEL_5_2
+                                  - H265_LEVEL_4
+                                  - H265_LEVEL_4_1
+                                  - H265_LEVEL_5
+                                  - H265_LEVEL_5_1
+                                  - H265_LEVEL_5_2
+                                  - H265_LEVEL_6
+                                  - H265_LEVEL_6_1
+                                  - H265_LEVEL_6_2
+                                  - VP9_LEVEL_1
+                                  - VP9_LEVEL_1_1
+                                  - VP9_LEVEL_2
+                                  - VP9_LEVEL_2_1
+                                  - VP9_LEVEL_3
+                                  - VP9_LEVEL_3_1
+                                  - VP9_LEVEL_4
+                                  - VP9_LEVEL_4_1
+                                  - VP9_LEVEL_5
+                                  - VP9_LEVEL_5_1
+                                  - VP9_LEVEL_5_2
+                                  - VP9_LEVEL_6
+                                  - VP9_LEVEL_6_1
+                                  - VP9_LEVEL_6_2
+                                  - AV1_LEVEL_4_0
+                                  - AV1_LEVEL_4_1
+                                  - AV1_LEVEL_5_0
+                                  - AV1_LEVEL_5_1
+                                  - AV1_LEVEL_6_0
+                                  - AV1_LEVEL_6_1
+                                maxBitrateInBps:
+                                  type: int
+                                  required: true
+                          maxFrameRate:
+                            type: int
+                            required: true
+                          maxFrameWidth:
+                            type: int
+                            required: true
+                          maxFrameHeight:
+                            type: int
+                            required: true
+                          supportedOutputPixelFormats:
+                            type: seq
+                            required: true
+                            sequence:
+                            - type: str
+                              desc: AIDL enum com.rdk.hal.videodecoder.PixelFormat
+                              enum:
+                              - YCBCR422
+                              - YCBCR444
+                              - YCBCR420
+                              - RGB
+                              - NATIVE
+                          operationalMode:
+                            type: map
+                            mapping:
+                              default:
+                                type: str
+                                enum:
+                                - TUNNELLED
+                                - NON_TUNNELLED
+                              when:
+                                type: seq
+                                sequence:
+                                - type: map
+                                  mapping:
+                                    properties:
+                                      type: map
+                                      mapping:
+                                        ? regex;(^(RESOURCE_ID|INPUT_QUEUE_DEPTH|OUTPUT_FRAME_POOL_SIZE|LOW_LATENCY_MODE|DECODE_ERROR_POLICY|AV_SOURCE|SHA1_CALC|SECURE_VIDEO|METRIC_FRAMES_DECODED|METRIC_DECODE_ERRORS|METRIC_FRAMES_DROPPED)$)
+                                        : type: int
+                                    secure:
+                                      type: bool
+                                    mode:
+                                      required: true
+                                      type: str
+                                      enum:
+                                      - TUNNELLED
+                                      - NON_TUNNELLED
+                supportedDynamicRanges:
+                  type: seq
+                  required: true
+                  sequence:
+                  - type: str
+                    desc: AIDL enum com.rdk.hal.videodecoder.DynamicRange
+                    enum:
+                    - UNKNOWN
+                    - SDR
+                    - HLG
+                    - HDR10
+                    - HDR10_PLUS
+                    - DOLBY_VISION
+                supportedColorimetries:
+                  type: seq
+                  required: true
+                  sequence:
+                  - type: map
+                    mapping:
+                      range:
+                        type: str
+                        required: true
+                        desc: AIDL enum com.rdk.hal.videodecoder.ColorRange
+                        enum:
+                        - UNKNOWN
+                        - LIMITED
+                        - FULL
+                      matrix:
+                        type: str
+                        required: true
+                        desc: AIDL enum com.rdk.hal.videodecoder.ColorMatrix
+                        enum:
+                        - UNKNOWN
+                        - IDENTITY
+                        - BT709
+                        - UNSPECIFIED
+                        - BT601_625
+                        - BT601_525
+                        - SMPTE240M
+                        - BT2020_NCL
+                        - BT2020_CL
+                      transfer:
+                        type: str
+                        required: true
+                        desc: AIDL enum com.rdk.hal.videodecoder.TransferCharacteristics
+                        enum:
+                        - UNKNOWN
+                        - BT709
+                        - UNSPECIFIED
+                        - BT470M_GAMMA22
+                        - BT470BG_GAMMA28
+                        - SMPTE170M
+                        - SMPTE240M
+                        - LINEAR
+                        - LOG_100
+                        - LOG_316
+                        - IEC61966_2_4
+                        - BT1361
+                        - SRGB
+                        - BT2020_10
+                        - BT2020_12
+                        - SMPTE2084_PQ
+                        - SMPTE428
+                        - ARIB_STD_B67_HLG
+                      primaries:
+                        type: str
+                        required: true
+                        desc: AIDL enum com.rdk.hal.videodecoder.ColorPrimaries
+                        enum:
+                        - UNKNOWN
+                        - BT709
+                        - UNSPECIFIED
+                        - BT470M
+                        - BT470BG
+                        - BT601_525
+                        - SMPTE240M
+                        - FILM
+                        - BT2020
+                        - SMPTE428
+                        - DCI_P3_D60
+                        - DISPLAY_P3
+                        - EBU3213
+                supportsSecure:
+                  type: bool
+                  required: true
+                operationalMode:
+                  type: map
+                  mapping:
+                    default:
+                      type: str
+                      enum:
+                      - TUNNELLED
+                      - NON_TUNNELLED
+                    when:
+                      type: seq
+                      sequence:
+                      - type: map
+                        mapping:
+                          properties:
+                            type: map
+                            mapping:
+                              ? regex;(^(RESOURCE_ID|INPUT_QUEUE_DEPTH|OUTPUT_FRAME_POOL_SIZE|LOW_LATENCY_MODE|DECODE_ERROR_POLICY|AV_SOURCE|SHA1_CALC|SECURE_VIDEO|METRIC_FRAMES_DECODED|METRIC_DECODE_ERRORS|METRIC_FRAMES_DROPPED)$)
+                              : type: int
+                          secure:
+                            type: bool
+                          mode:
+                            required: true
+                            type: str
+                            enum:
+                            - TUNNELLED
+                            - NON_TUNNELLED
+      operationalMode:
+        type: map
+        mapping:
+          default:
+            type: str
+            enum:
+            - TUNNELLED
+            - NON_TUNNELLED
+          when:
+            type: seq
+            sequence:
+            - type: map
+              mapping:
+                properties:
+                  type: map
+                  mapping:
+                    ? regex;(^(RESOURCE_ID|INPUT_QUEUE_DEPTH|OUTPUT_FRAME_POOL_SIZE|LOW_LATENCY_MODE|DECODE_ERROR_POLICY|AV_SOURCE|SHA1_CALC|SECURE_VIDEO|METRIC_FRAMES_DECODED|METRIC_DECODE_ERRORS|METRIC_FRAMES_DROPPED)$)
+                    : type: int
+                secure:
+                  type: bool
+                mode:
+                  required: true
+                  type: str
+                  enum:
+                  - TUNNELLED
+                  - NON_TUNNELLED

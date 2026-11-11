@@ -125,18 +125,41 @@ def parse_enums(aidl_dir):
     return enums
 
 
+def imported_enums(dirs):
+    """Enums the module's AIDL imports from other modules' current/ trees
+    (`import com.rdk.hal.videodecoder.PixelFormat;`), qualified as written."""
+    found = {}
+    for d in dirs:
+        for path in sorted(d.rglob("*.aidl")):
+            text = path.read_text(errors="replace")
+            for m in re.finditer(r"^\s*import\s+(com\.rdk\.hal\.(\w+)\.(\w+))\s*;", text, re.M):
+                qualified, module, _ = m.groups()
+                if qualified in found:
+                    continue
+                src = REPO_ROOT / module / "current" / (qualified.replace(".", "/") + ".aidl")
+                if src.is_file():
+                    found.update({n: v for n, v in parse_enums(src.parent).items()
+                                  if n == qualified})
+    return found
+
+
 def enum_scopes(hfp_path):
     """AIDL enums visible to an HFP, nearest first: the HFP's own directory,
-    the module's current/, then common/current/ while it still exists."""
+    the module's current/, enums the module imports from other modules, then
+    common/current/ while it still exists."""
     parts = hfp_path.relative_to(REPO_ROOT).parts
     current = REPO_ROOT.joinpath(*parts[:parts.index("current") + 1])
     dirs = [hfp_path.parent]
     if current != hfp_path.parent:
         dirs.append(current)
+    scopes = [parse_enums(d) for d in dirs]
+    imported = imported_enums([current])
+    if imported:
+        scopes.append(imported)
     common = REPO_ROOT / "common" / "current"
     if common.is_dir():
-        dirs.append(common)
-    return [parse_enums(d) for d in dirs]
+        scopes.append(parse_enums(common))
+    return scopes
 
 
 def singular(word):
@@ -160,7 +183,8 @@ def resolve_enum(values, key, scopes):
         named = [f for f in fits if hint and singular(f[0].rsplit(".", 1)[-1]) in hint]
         pool = named or fits
         pool.sort(key=lambda f: (len(f[1]), f[0]))
-        if len(pool) > 1 and len(pool[0][1]) == len(pool[1][1]) and not named:
+        tied = [f for f in pool if len(f[1]) == len(pool[0][1])]
+        if len(tied) > 1 and not named and any(set(f[1]) != set(tied[0][1]) for f in tied):
             return None
         return pool[0]
     return None
@@ -183,13 +207,14 @@ def is_dynamic_key(k):
 def infer(node, in_seq=False):
     if isinstance(node, dict):
         shape = {"kind": "map", "fields": {}, "seen": 1,
-                 "dynamic": None, "dyn_keys": set(), "dyn_kind": None}
+                 "dynamic": None, "dyn_keys": set(), "dyn_kind": None, "dyn_seen": 0}
         first = next(iter(node), None)
         named_item = (in_seq and len(node) == 1 and isinstance(first, str)
                       and not first[:1].islower())
         for k, v in node.items():
             if is_dynamic_key(k) or named_item:
                 shape["dyn_kind"] = "id" if is_dynamic_key(k) else "name"
+                shape["dyn_seen"] = 1
                 shape["dyn_keys"].add(k)
                 sub = infer(v)
                 shape["dynamic"] = sub if shape["dynamic"] is None else merge(shape["dynamic"], sub)
@@ -229,7 +254,8 @@ def merge(a, b):
             b["dynamic"] if a["dynamic"] is None else merge(a["dynamic"], b["dynamic"]))
         return {"kind": "map", "fields": fields, "seen": a["seen"] + b["seen"],
                 "dynamic": dyn, "dyn_keys": a["dyn_keys"] | b["dyn_keys"],
-                "dyn_kind": a["dyn_kind"] or b["dyn_kind"]}
+                "dyn_kind": a["dyn_kind"] or b["dyn_kind"],
+                "dyn_seen": a["dyn_seen"] + b["dyn_seen"]}
     return {"kind": "any"}
 
 
@@ -248,10 +274,69 @@ def scalar_type(types):
     return "any"
 
 
+DECODER_COMPONENTS = ("audiodecoder", "videodecoder")
+
+
+def find_enum(scopes, simple_name):
+    for enums in scopes:
+        for name, members in enums.items():
+            if name.rsplit(".", 1)[-1] == simple_name:
+                return name, members
+    return None
+
+
+def add_operational_mode(root):
+    """Add the optional `operationalMode` field to a decoder component's shape
+    at its three scopes: the component, each resource and each codec. The
+    reference HFPs carry none (the default is NON_TUNNELLED), so inference
+    cannot find it."""
+    def add(m):
+        m["fields"].setdefault("operationalMode", ({"kind": "opmode"}, 0))
+
+    for body, _ in root["fields"].values():
+        if body["kind"] != "map":
+            continue
+        add(body)
+        for sub, _ in body["fields"].values():
+            item = sub.get("item") if sub["kind"] == "seq" else None
+            if not item or item["kind"] != "map" or item["dyn_kind"] != "id":
+                continue
+            resource = item["dynamic"]
+            if resource["kind"] != "map":
+                continue
+            add(resource)
+            codecs = resource["fields"].get("supportedCodecs", (None,))[0]
+            codec = codecs["item"] if codecs and codecs["kind"] == "seq" else None
+            if codec and codec["kind"] == "map" and codec["dyn_kind"] == "name" \
+                    and codec["dynamic"]["kind"] == "map":
+                add(codec["dynamic"])
+
+
+def operational_mode_rule(scopes):
+    mode = find_enum(scopes, "OperationalMode")
+    def mode_rule():
+        return {"type": "str", "enum": list(mode[1])} if mode else {"type": "str"}
+
+    prop = find_enum(scopes, "Property")
+    names = "|".join(prop[1]) if prop else None
+    pattern = f"^({names})$" if names else NAME_KEY
+    return {"type": "map", "mapping": {
+        "default": mode_rule(),
+        "when": {"type": "seq", "sequence": [{"type": "map", "mapping": {
+            "properties": {"type": "map",
+                           "mapping": {f"regex;({pattern})": {"type": "int"}}},
+            "secure": {"type": "bool"},
+            "mode": {"required": True, **mode_rule()},
+        }}]},
+    }}
+
+
 def to_rule(shape, key, scopes, required):
     rule = {}
     kind = shape["kind"]
-    if kind == "any":
+    if kind == "opmode":
+        rule = operational_mode_rule(scopes)
+    elif kind == "any":
         rule["type"] = "any"
     elif kind == "scalar":
         rule["type"] = scalar_type(shape["types"])
@@ -276,7 +361,8 @@ def to_rule(shape, key, scopes, required):
                 enum = resolve_enum({str(k) for k in shape["dyn_keys"]}, key, scopes)
                 pattern = "^(" + "|".join(enum[1]) + ")$" if enum else NAME_KEY
                 sub_key = key
-            mapping[f"regex;({pattern})"] = to_rule(shape["dynamic"], sub_key, scopes, False)
+            mapping[f"regex;({pattern})"] = to_rule(
+                shape["dynamic"], sub_key, scopes, shape["dyn_seen"] == shape["seen"])
         rule["mapping"] = mapping
     if required:
         rule = {"type": rule.pop("type"), "required": True, **rule}
@@ -285,7 +371,10 @@ def to_rule(shape, key, scopes, required):
 
 def generate_schema(hfp_path):
     data = load(hfp_path)
-    rule = to_rule(infer(data), None, enum_scopes(hfp_path), False)
+    shape = infer(data)
+    if set(shape["fields"]) & set(DECODER_COMPONENTS):
+        add_operational_mode(shape)
+    rule = to_rule(shape, None, enum_scopes(hfp_path), False)
     buf = io.StringIO()
     yaml_safe().dump(rule, buf)
     rel = hfp_path.relative_to(REPO_ROOT)
