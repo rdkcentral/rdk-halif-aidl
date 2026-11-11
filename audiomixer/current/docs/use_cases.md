@@ -368,7 +368,7 @@ The profile fragment this use case assumes:
 | Port | `portType` | `supportedProperties` | `supportedOutputFormats` |
 |---|---|---|---|
 | 0 `Speakers` | `SPEAKERS` | `VOLUME`, `MUTE`, `ENABLED` | `PCM_STEREO` |
-| 1 `ARC` | `ARC` | `VOLUME`, `MUTE`, `ENABLED`, `OUTPUT_FORMAT`, `CONNECTION_STATE`, `SUPPORTED_AUDIO_FORMATS`, `METRIC_UNDERFLOWS`, `METRIC_OVERFLOWS` | `AUTO`, `PCM_STEREO`, `AC3`, `EAC3` |
+| 1 `ARC` | `ARC` | `VOLUME`, `MUTE`, `ENABLED`, `OUTPUT_FORMAT`, `CONNECTION_STATE`, `SUPPORTED_AUDIO_FORMATS` | `AUTO`, `PCM_STEREO`, `AC3`, `EAC3` |
 
 **Actors.**
 
@@ -413,7 +413,6 @@ sequenceDiagram
 | `setProperty(VOLUME, …)` on port 1 while disconnected | `true`; applied on reconnect |
 | `CONNECTION_STATE` becomes `FAULT` (e.g. HDCP failure) | Audio manager applies the same failover as `DISCONNECTED` |
 | `setProperty(ENABLED, …)` on a port without `ENABLED` in `supportedProperties` | `false`; audio manager falls back to `MUTE` |
-| Port 1 `ENABLED` set `false` then `true` | `METRIC_UNDERFLOWS` / `METRIC_OVERFLOWS` hold while disabled and reset on re-enable |
 | Unplug and re-plug within one handshake | Events arrive in order; the final `CONNECTION_STATE` matches `getProperty(CONNECTION_STATE)` |
 
 No port sleep state exists; `ENABLED = false` is the nearest equivalent.
