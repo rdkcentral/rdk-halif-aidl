@@ -223,10 +223,10 @@ sequenceDiagram
     Note right of DEC: true → decoder owns and frees the input
     DEC-->>MW: onFrameOutput(nsPresentationTime, frameAVBufferHandle, metadata)
     Note right of MW: non-tunnelled only, middleware owns frame
-    MW->>SNK: queueAudioFrame(nsPresentationTime, bufferHandle, metadata)
+    MW->>SNK: queueAudioFrame(nsPresentationTime, frameAVBufferHandle, metadata)
     Note right of SNK: true → sink owns the frame
     SNK->>MIX: samples at presentation time (AV Clock paced)
-    SNK->>BUF: free(bufferHandle) once consumed
+    SNK->>BUF: free(frameAVBufferHandle) once consumed
     Note over MIX: Mixer holds no handles and no PTS
     MIX-->>CAP: copy of port output into ring buffer
     CAP-->>VS: onDataAvailable(offsetBytes, lengthBytes, metadata)

@@ -31,6 +31,7 @@ sequenceDiagram
     participant PC as IAudioOutputPortController
     participant PP as Playback pipeline
     participant SNK as IAudioSinkController 0
+    participant CLK as IAVClockController 0
 
     AM->>MGR: getAudioMixerIds()
     MGR-->>AM: [MIXER_SYSTEM, MIX1]
@@ -53,8 +54,10 @@ sequenceDiagram
     AM->>MC: start()
     MIX-->>AM: onStateChanged(READY, STARTING), (STARTING, STARTED)
     PP->>SNK: start()
+    PP->>CLK: start()
     loop each decoded frame
-        PP->>SNK: queueAudioFrame(nsPresentationTime, bufferHandle, metadata)
+        Note right of PP: onFrameOutput() returns frameAVBufferHandle
+        PP->>SNK: queueAudioFrame(nsPresentationTime, frameAVBufferHandle, metadata)
     end
     MIX-->>AM: onInputCodecChanged(0, codec, STREAM)
     PP->>SNK: signalEndOfStream()
@@ -117,7 +120,6 @@ sequenceDiagram
     AM->>PC0: setProperty(OUTPUT_FORMAT, {intValue = EAC3})
     AM->>PC1: setProperty(OUTPUT_FORMAT, {intValue = AC3})
     BP->>BP: IAudioDecoder 0 and 1 open(DOLBY_AC3, true, listener)
-    BP->>BP: getCurrentOperationalMode() == TUNNELLED
     BP->>BP: sink 0 setAudioDecoder({value = 0}), sink 1 setAudioDecoder({value = 1})
     BP->>BP: sinks 0 and 1 attachClock({value = 0})
     BP->>CLK: setClockMode(PCR)
@@ -127,7 +129,9 @@ sequenceDiagram
     MC-->>AM: true
     AM->>MC: start()
     BP->>CLK: start()
-    BP->>BP: decoders and sinks start(), decodeBufferWithMetadata() per PES
+    BP->>BP: decoders and sinks start()
+    BP->>BP: decoders getCurrentOperationalMode() == TUNNELLED
+    BP->>BP: decodeBufferWithMetadata() per PES
     loop PCR arrivals
         BP->>CLK: notifyPCRSample(pcrTimeNs, sampleTimestampNs)
     end
@@ -311,10 +315,12 @@ sequenceDiagram
     participant MIX as IAudioMixer
     participant UI as UI sound service
     participant SNK1 as IAudioSinkController 1
+    participant CLK1 as IAVClockController 1
 
     UI->>SNK1: setAudioDecoder({value = EXTERNAL})
     UI->>SNK1: attachClock({value = 1})
     UI->>SNK1: start()
+    UI->>CLK1: start()
     AM->>MC: setInputRouting([{AUDIO_SINK,0}, {NONE,0}, {AUDIO_SINK,1}, {NONE,0}])
     MC-->>AM: true
     AM->>MC: setInputVolume(2, 90)
@@ -362,7 +368,7 @@ The profile fragment this use case assumes:
 | Port | `portType` | `supportedProperties` | `supportedOutputFormats` |
 |---|---|---|---|
 | 0 `Speakers` | `SPEAKERS` | `VOLUME`, `MUTE`, `ENABLED` | `PCM_STEREO` |
-| 1 `ARC` | `ARC` | `VOLUME`, `MUTE`, `ENABLED`, `OUTPUT_FORMAT`, `CONNECTION_STATE`, `SUPPORTED_AUDIO_FORMATS` | `AUTO`, `PCM_STEREO`, `AC3`, `EAC3` |
+| 1 `ARC` | `ARC` | `VOLUME`, `MUTE`, `ENABLED`, `OUTPUT_FORMAT`, `CONNECTION_STATE`, `SUPPORTED_AUDIO_FORMATS`, `METRIC_UNDERFLOWS`, `METRIC_OVERFLOWS` | `AUTO`, `PCM_STEREO`, `AC3`, `EAC3` |
 
 **Actors.**
 
@@ -435,8 +441,10 @@ sequenceDiagram
     MIX-->>AM: onInputCodecChanged(0, DOLBY_AC3_PLUS, STREAM)
     Note over AM: User selects HDMI input 1
     AM->>MC: setInputVolumeRamp(0, 0, 100, OUT_CUBIC)
+    Note over AM: Wait 100 ms for the fade-out to finish
     AM->>MC: setInputRouting([{NONE,0}, {NONE,0}, {NONE,0}, {NONE,0}])
     AM->>MC: setInputRouting([{HDMI_INPUT,1}, {NONE,0}, {NONE,0}, {NONE,0}])
+    AM->>MC: setInputVolume(0, 0)
     AM->>MC: signalDiscontinuity()
     AM->>MC: setInputVolumeRamp(0, 100, 100, IN_CUBIC)
     AM->>MIX: getInputRouting()
@@ -479,9 +487,11 @@ sequenceDiagram
     AM->>MC: setInputRouting([{AUDIO_SINK,0}, {NONE,0}, {NONE,0}, {NONE,0}])
     Note over AM: Focus moves to view B
     AM->>MC: setInputVolumeRamp(0, 0, 100, OUT_CUBIC)
+    Note over AM: Wait 100 ms for the fade-out to finish
     AM->>MC: setInputRouting([{NONE,0}, {NONE,0}, {NONE,0}, {NONE,0}])
     AM->>MC: setInputRouting([{AUDIO_SINK,1}, {NONE,0}, {NONE,0}, {NONE,0}])
     MC-->>AM: true
+    AM->>MC: setInputVolume(0, 0)
     AM->>MC: setInputVolumeRamp(0, 100, 100, IN_CUBIC)
     Note over AM: User asks to hear both, B in front
     AM->>MC: setInputRouting([{AUDIO_SINK,1}, {NONE,0}, {AUDIO_SINK,0}, {NONE,0}])
@@ -504,7 +514,7 @@ sequenceDiagram
 | Both sinks routed and B unrouted again | A continues without a gap; B's queue keeps draining |
 | View A's sink routed to `pcm1` (input 2) | Accepted only when its audio is PCM, as `pcm1` lists `supportedCodecs = [PCM]` |
 
-The AIDL does not say whether an input's volume persists across a routing change, so the switch ramps explicitly.
+The AIDL does not say whether an input's volume persists across a routing change, so the switch fades out, waits for the ramp duration before clearing the route (the AIDL has no ramp-complete event), sets the new route's volume to 0 and fades in.
 
 ## UC-AM-09 Concurrent mixers and contention
 
