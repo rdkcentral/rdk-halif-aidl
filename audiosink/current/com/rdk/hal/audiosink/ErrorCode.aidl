@@ -29,14 +29,6 @@ package com.rdk.hal.audiosink;
 @Backing(type = "int")
 enum ErrorCode {
     /**
-     * Placeholder, never raised.
-     *
-     * @deprecated Deprecated since 2026-11-11. Use the codes below.
-     * Reason: it carried no meaning; the defined codes replace it.
-     */
-    xxx = 1,
-
-    /**
      * A queued frame could not be played.
      */
     RENDER_FAILED = 2,

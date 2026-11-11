@@ -29,14 +29,6 @@ package com.rdk.hal.videodecoder;
 @Backing(type = "int")
 enum ErrorCode {
     /**
-     * Placeholder, never raised.
-     *
-     * @deprecated Deprecated since 2026-11-11. Use the codes below.
-     * Reason: it carried no meaning; the defined codes replace it.
-     */
-    xxxx = 1,
-
-    /**
      * The input bitstream could not be parsed or decoded: a syntax
      * error or corrupt data.
      */
