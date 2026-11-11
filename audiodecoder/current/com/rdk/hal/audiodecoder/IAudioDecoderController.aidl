@@ -152,12 +152,33 @@ interface IAudioDecoderController {
      * not yet been decoded are automatically freed.
      * The internal audio decoder state is optionally reset.
      *
-     * @param[in] reset     When true, the internal audio decoder state is fully reset back to its opened READY state.
+     * On completion the decoder transitions from `FLUSHING` to `STARTED` when
+     * reset=false, and accepts input straight away. When reset=true it
+     * transitions to `READY`, and `start()` is required before further input.
+     *
+     * <b>Flush during a pending end-of-stream:</b> if `flush()` is called after
+     * `signalEndOfStream()` has been invoked but before
+     * `IAudioDecoderControllerListener.onEndOfStream()` has fired, the flush
+     * proceeds normally - input buffers not yet decoded are freed and any held
+     * frames are discarded rather than drained, so none are emitted via
+     * `onFrameOutput()`. The requested end-of-stream is still honoured: the HAL
+     * fires `onEndOfStream()` exactly once after the flush completes, whichever
+     * state the flush ends in.
+     * The flush completes first: the decoder has entered `STARTED` or `READY`
+     * and sent the `onStateChanged()` that ends `FLUSHING` before it sends
+     * `onEndOfStream()`. The two callbacks are on separate listeners, so a
+     * client must not rely on receiving them in that order; the state is
+     * settled by the time the EOS is sent.
+     *
+     * @param[in] reset     When true, the internal audio decoder state is fully reset and the decoder
+     *                      ends in `State::READY`. When false, it ends in `State::STARTED`.
      *
      * @exception binder::Status::Exception::EX_NONE for success
      * @exception binder::Status::Exception::EX_ILLEGAL_STATE
      *
      * @pre The resource must be in State::STARTED.
+     *
+     * @see signalEndOfStream(), IAudioDecoderControllerListener.onEndOfStream()
      */
     void flush(in boolean reset);
 
@@ -205,7 +226,11 @@ interface IAudioDecoderController {
      *
      * A second call is a no-op. After this call any `decodeBufferWithMetadata()`
      * throws `EX_ILLEGAL_STATE`. The decoder remains in `STARTED` (drained)
-     * until `flush()` or `stop()` + `start()`.
+     * until `flush(false)`, or `flush(true)` or `stop()` followed by `start()`. If `flush()` arrives after this
+     * call but before `onEndOfStream()` has fired, the held frames are
+     * discarded rather than drained, but the requested end-of-stream is still
+     * honoured - `onEndOfStream()` fires once after the flush completes; see
+     * `flush()`.
      *
      * Behaviour is identical in tunnel and non-tunnel modes - the MW calls this
      * method the same way. In tunnel mode the decoder->sink data flow is

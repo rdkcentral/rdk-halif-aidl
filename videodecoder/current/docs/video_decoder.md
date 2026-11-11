@@ -341,7 +341,9 @@ End-of-stream is a discrete signal, not a per-buffer flag. The client drives it 
 
 This is distinct from `stop()` and `flush()`, which abruptly discard the decoder's reorder/DPB tail. `signalEndOfStream()` drains it: the HAL decodes and emits every held frame in presentation order via `onFrameOutput()` (each with its `FrameMetadata`, plus `onUserDataOutput()` for captions), dropping none.
 
-**Output side:** after the final `onFrameOutput()` of the drained session, the HAL fires `IVideoDecoderControllerListener.onEndOfStream()` exactly once. It is delivered on the same listener and ordered in-band - it follows the last frame on the same ordered callback channel. After this callback the decoder remains in `State::STARTED` but is drained; no further `onFrameOutput()` is delivered until `flush()` or `stop()` + `start()`.
+**Output side:** after the final `onFrameOutput()` of the drained session, the HAL fires `IVideoDecoderControllerListener.onEndOfStream()` exactly once. It is delivered on the same listener and ordered in-band - it follows the last frame on the same ordered callback channel. After this callback the decoder remains in `State::STARTED` but is drained; no further `onFrameOutput()` is delivered until `flush(false)`, or `flush(true)` or `stop()` followed by `start()`.
+
+**Flush during a pending EOS:** if the client calls `flush()` after `signalEndOfStream()` but before `onEndOfStream()` has fired - for example a flushing seek that arrives while the decoder is still draining - the flush takes effect normally: input buffers not yet decoded are freed and the held reorder/DPB tail is discarded rather than drained, so no `onFrameOutput()` is delivered for the pre-flush segment. The requested end-of-stream is still honoured: the HAL fires `onEndOfStream()` exactly once after the flush completes. The flush completes first: the decoder has entered `State::STARTED` (reset=false) or `State::READY` (reset=true) and sent the `onStateChanged()` that ends `FLUSHING` before it sends `onEndOfStream()`. The two callbacks are on separate listeners (`IVideoDecoderEventListener` and `IVideoDecoderControllerListener`), so a client must not rely on receiving them in that order; the state is settled by the time the EOS is sent.
 
 Behaviour is identical in tunnelled and non-tunnelled modes. In tunnelled mode the decoder→sink data flow is vendor-internal, so the vendor propagates the EOS signal from decoder to sink. The middleware observes the same sequencing in both modes: `decoder.onEndOfStream()` (decode complete) followed by `sink.onEndOfStream(nsPresentationTime)` (presentation complete) with the correct presentation timing.
 
@@ -453,9 +455,9 @@ sequenceDiagram
     Controller-->>IVideoDecoderControllerListener: onFrameOutput(pts, frameAVBufferHandle=1000, metadata)
     Controller->>IAVBuffer: free(bufferHandle=1)
 
-    Note over ADC: flush() transitions from STARTED -> FLUSHING -> STARTED
+    Note over ADC: flush(reset=false) transitions from STARTED -> FLUSHING -> STARTED<br>flush(reset=true) ends FLUSHING -> READY; start() before further input
 
-    Client->>Controller: flush()
+    Client->>Controller: flush(reset=false)
     ADC-->>IVideoDecoderEventListener: onStateChanged(STARTED -> FLUSHING)
     Controller->>IAVBuffer: free(bufferHandle=2)
     ADC-->>IVideoDecoderEventListener: onStateChanged(FLUSHING -> STARTED)
