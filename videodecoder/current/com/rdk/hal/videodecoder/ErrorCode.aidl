@@ -29,6 +29,11 @@ package com.rdk.hal.videodecoder;
 @Backing(type = "int")
 enum ErrorCode {
     /**
+     * No error. Never raised; it is the value an unset ErrorCode holds.
+     */
+    NONE = 0,
+
+    /**
      * Placeholder, never raised.
      *
      * @deprecated Deprecated since 2026-11-11. Use the codes below.
