@@ -60,6 +60,7 @@ nav:
       - Semantic Versioning: standards/semantic_versioning.md
       - AIDL Versioning Guide: standards/versioning-guide.md
       - HAL Metrics Pattern: standards/hal_metrics_pattern.md
+      - HAL Metrics Client Use: standards/hal_metrics_client_use.md
       - Third-Party Build Integration: standards/build_integration.md
       - Yocto Integration: standards/yocto_integration.md
   - Vendor HAL Interfaces (VHI):

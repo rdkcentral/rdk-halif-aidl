@@ -1,6 +1,6 @@
 # HAL Metrics Pattern
 
-A HAL component that produces a figure worth measuring serves it itself, from its own interface, with its own types. This page is the pattern to copy when adding metrics to a component, by hand or with an AI assistant. The worked example is [Video Sink](../videosink/video_sink.md#metrics).
+A HAL component that produces a figure worth measuring serves it itself, from its own interface, with its own types. This page is the pattern to copy when adding metrics to a component, by hand or with an AI assistant. How clients use the figures is in [HAL Metrics: Client Use](hal_metrics_client_use.md). The worked example is [Video Sink](../videosink/video_sink.md#metrics).
 
 ```mermaid
 sequenceDiagram
@@ -38,16 +38,6 @@ sequenceDiagram
 | M13 | A figure is counted where it is experienced. Where a decoder and a sink could both report something, the component whose figure describes what the audience saw or heard serves it, and the other does not duplicate it. |
 | M14 | Deliberate behaviour is excluded: frames discarded by a flush, a seek, a reconfiguration, a stop, end of stream or pacing are not drops, and repeats made by frame rate conversion are not freezes. |
 | M15 | Metrics from two components are two reads, latched separately. Document any pairing a client is likely to make as approximate. |
-
-## Using the figures
-
-| To get | Do |
-|---|---|
-| A figure for a session or an interval | Read a snapshot at its start and at its end, with one `getMetrics()` call each, and subtract. |
-| A rate | Divide the difference of a counter by the difference of the two `timestampNs`. |
-| A ratio of two counters | Ask for both in the same `getMetrics()` call, so both are latched together, then divide the differences. |
-| The state at an event | Read `metrics` in the episode event; it is latched at the event's `timestampNs`. |
-| A baseline after a service restart | A counter lower than in an earlier snapshot means the service restarted and counts from zero; take the later snapshot as the new baseline. |
 
 ## Files
 
