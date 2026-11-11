@@ -47,6 +47,12 @@ enum Property {
      * Type: Integer
      * Special Value: -1 if not implemented by the vendor.
      * Access: Read-only
+     *
+     * @deprecated Deprecated since 2026-11-11. Use
+     * Metric::PACKET_ERRORS through IHDMIInput.getMetrics().
+     * Reason: the metric is typed, latched with a timestamp and counts
+     * from service initialisation, where this property resets on
+     * open().
      */
     METRIC_PACKET_ERRORS = 1000
 

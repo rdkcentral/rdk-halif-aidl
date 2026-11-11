@@ -2,6 +2,7 @@ aidl_interface:
   name: hdmiinput
   srcs:
     - com/rdk/hal/hdmiinput/*.aidl
+    - com/rdk/hal/hdmiinput/metrics/*.aidl
   imports:
     - common@current
   stability: vintf

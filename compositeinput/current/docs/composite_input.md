@@ -51,7 +51,9 @@ The `ICompositeInputManager` provides discovery of port IDs and exposes global `
 | **HAL.CompositeInput.5**    | The service shall enforce `maximumConcurrentStartedPorts`.                | `start()` throws `EX_ILLEGAL_STATE` if limit exceeded |
 | **HAL.CompositeInput.6**    | Port lifecycle shall follow the open/close + start/stop controller pattern. | Mirrors the HDMI input controller pattern |
 | **HAL.CompositeInput.7**    | Property keys shall be `PortProperty` enum values declared in the HFP YAML. | Discoverable via `PortCapabilities.supportedProperties` |
-| **HAL.CompositeInput.8**    | Telemetry metrics shall be first-class `PortProperty` keys (METRIC_* prefix). | No separate metrics parcelable; read via `getProperty()` |
+| **HAL.CompositeInput.8**    | Telemetry metrics shall be served as `Metric` values through `getMetrics()`. | See [metrics](#metrics); the `METRIC_*` keys are deprecated. |
+| **HAL.CompositeInput.9** | Shall serve every metric listed under `metrics.supported` in the HAL Feature Profile through `getMetrics()` and `getMetric()`, in any state, counting from service initialisation. The list includes every metric marked mandatory. | See [metrics](#metrics). |
+| **HAL.CompositeInput.10** | Shall raise `onMetricEpisodeStarted()` when an episode of a supported metric starts and `onMetricEpisodeResolved()` when it ends, for every episode listed under `metrics.supportedEpisodes`, which includes every episode marked mandatory. | See [metrics](#metrics). |
 
 ---
 
@@ -61,7 +63,7 @@ The `ICompositeInputManager` provides discovery of port IDs and exposes global `
 | -------------------------------------- | -------------------------------------------------------------------- |
 | `ICompositeInputManager.aidl`          | Manager interface for port discovery and platform capabilities       |
 | `ICompositeInputPort.aidl`             | Per-port interface for lifecycle, status, properties, and listener registration |
-| `ICompositeInputController.aidl`       | Exclusive write controller: start/stop, setProperty, resetMetrics    |
+| `ICompositeInputController.aidl`       | Exclusive write controller: start/stop, setProperty                  |
 | `ICompositeInputControllerListener.aidl` | Controller callbacks: connection, signal status, video mode changes |
 | `ICompositeInputEventListener.aidl`    | Multi-client observer: state transitions and property changes        |
 | `PlatformCapabilities.aidl`            | Platform-wide capabilities and feature flags                         |
@@ -74,6 +76,12 @@ The `ICompositeInputManager` provides discovery of port IDs and exposes global `
 | `VideoResolution.aidl`                 | Video resolution and format information                              |
 | `PropertyKVPair.aidl`                  | Key-value pair for batch property operations                         |
 | `PropertyMetadata.aidl`               | Property type metadata for runtime discovery                         |
+| `metrics/Metric.aidl` | Enum list of the metrics the composite input port serves. |
+| `metrics/MetricValue.aidl` | Parcelable pairing a `Metric` with its value. |
+| `metrics/MetricSnapshot.aidl` | Parcelable holding metric values latched at one instant. |
+| `metrics/Episode.aidl` | Enum list of the episodes the composite input port reports. |
+| `metrics/EpisodeStarted.aidl` | Parcelable carried by `onMetricEpisodeStarted()`. |
+| `metrics/EpisodeResolved.aidl` | Parcelable carried by `onMetricEpisodeResolved()`. |
 
 ---
 
@@ -273,7 +281,9 @@ Runtime status and telemetry metrics are unified as `PortProperty` enum keys, re
 | `SIGNAL_STRENGTH`  | Long    | Read-only | Signal strength in dBm                           |
 | `SIGNAL_QUALITY`   | Integer | Read-only | Aggregated signal quality percentage (0–100)     |
 
-### Telemetry Metric Keys (1000+)
+### Telemetry Metric Keys (1000+), deprecated
+
+These keys are deprecated and remain readable; the [metrics](#metrics) replace them.
 
 | Key                            | Type | Access    | Description                                           |
 | ------------------------------ | ---- | --------- | ----------------------------------------------------- |
@@ -284,9 +294,29 @@ Runtime status and telemetry metrics are unified as `PortProperty` enum keys, re
 | `METRIC_LAST_SIGNAL_LOCK_TIME` | Long | Read-only | Most recent lock acquisition time in ms               |
 | `METRIC_LAST_RESET_TIMESTAMP`  | Long | Read-only | Wall-clock timestamp (ms since epoch) of last reset   |
 
-All `METRIC_*` keys are reset atomically by `ICompositeInputController.resetMetrics()`.
+All `METRIC_*` keys are reset atomically by `ICompositeInputController.resetMetrics()`, which is deprecated with them.
 
 ---
+
+## Metrics
+
+`ICompositeInputPort.getMetrics()` returns the metrics asked for, latched at one instant with a `CLOCK_MONOTONIC_RAW` timestamp; `getMetric()` returns one. Both are callable in any state. Counters count from service initialisation and are never reset, so a session or interval figure is the difference of two snapshots. The rules common to every component are in the [HAL Metrics Pattern](../standards/hal_metrics_pattern.md); what each metric measures, excludes and is used for is in the Doxygen of `Metric.aidl`. The product lists what it supports under `metrics.supported` and `metrics.supportedEpisodes` in the HAL Feature Profile, and `getCapabilities()` reports the same lists at run time in `PortCapabilities`.
+
+| Metric | Unit | Kind | Support | Meaning |
+|---|---|---|---|---|
+| `SIGNAL_LOCKS` | locks | counter | optional | Signal locks acquired. |
+| `SIGNAL_DROPS` | drops | counter | optional | Signal locks lost. |
+| `LOCK_ACQUISITION_TIME_NS` | nanoseconds | counter | optional | Total time spent acquiring signal lock. |
+| `LAST_LOCK_ACQUISITION_TIME_NS` | nanoseconds | gauge | optional | Time the most recent signal lock took to acquire. |
+| `STARTED_DURATION_NS` | nanoseconds | counter | optional | Total time the port has been STARTED. |
+
+Events are episodes only: nothing is raised per occurrence. `ICompositeInputEventListener.onMetricEpisodeStarted()` is raised once when an episode starts and `onMetricEpisodeResolved()` once when it ends, each naming the `Episode`. The resolved event carries the episode's `durationNs` and `count`. Both events carry `metrics`, a `MetricSnapshot` of every supported metric latched at the event, so no second read is needed.
+
+| Episode | Support | Starts and ends |
+|---|---|---|
+| `SIGNAL_LOSS` | optional | Starts when an acquired lock is lost while the port is STARTED, and ends when lock is gained again. Each episode adds one to SIGNAL_DROPS. |
+
+The `METRIC_*` properties that these metrics replace are deprecated and remain readable.
 
 ## Platform Capabilities (HFP)
 

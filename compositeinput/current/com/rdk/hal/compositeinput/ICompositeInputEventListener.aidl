@@ -22,6 +22,8 @@ package com.rdk.hal.compositeinput;
 import com.rdk.hal.PropertyValue;
 import com.rdk.hal.compositeinput.PortProperty;
 import com.rdk.hal.compositeinput.State;
+import com.rdk.hal.compositeinput.metrics.EpisodeResolved;
+import com.rdk.hal.compositeinput.metrics.EpisodeStarted;
 
 /**
  * @brief Event listener interface for composite input port observation.
@@ -71,4 +73,27 @@ oneway interface ICompositeInputEventListener {
      * @see PortProperty, ICompositeInputPort.getProperty()
      */
     void onPropertyChanged(in PortProperty property, in PropertyValue value);
+
+    /**
+     * Raised once when an episode starts. onMetricEpisodeResolved() follows,
+     * with the same Episode, when it ends.
+     *
+     * Episodes are the only metric events: nothing is raised per occurrence,
+     * and per-occurrence figures are read with ICompositeInputPort.getMetrics().
+     *
+     * @param[in] event    Which episode started, and when.
+     *
+     * @see Episode, EpisodeStarted
+     */
+    void onMetricEpisodeStarted(in EpisodeStarted event);
+
+    /**
+     * Raised once when the episode reported by onMetricEpisodeStarted() ends.
+     *
+     * @param[in] event    Which episode ended, when, how long it lasted and
+     * what it counted.
+     *
+     * @see Episode, EpisodeResolved
+     */
+    void onMetricEpisodeResolved(in EpisodeResolved event);
 }

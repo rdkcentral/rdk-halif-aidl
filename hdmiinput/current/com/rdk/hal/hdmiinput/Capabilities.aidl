@@ -20,6 +20,8 @@ package com.rdk.hal.hdmiinput;
 import com.rdk.hal.hdmiinput.HDCPProtocolVersion;
 import com.rdk.hal.hdmiinput.HDMIVersion;
 import com.rdk.hal.hdmiinput.VIC;
+import com.rdk.hal.hdmiinput.metrics.Episode;
+import com.rdk.hal.hdmiinput.metrics.Metric;
 
 /**
  *  @brief     HDMI input port device capabilities definition.
@@ -94,4 +96,18 @@ parcelable Capabilities {
      * Indicates support for enhanced audio return channel (eARC).
      */
     boolean supportsEARC;
+
+    /**
+     * The metrics this resource instance serves through getMetrics(), as
+     * listed under metrics.supported in the HAL Feature Profile. getMetric()
+     * throws EX_UNSUPPORTED_OPERATION for any other member.
+     */
+    Metric[] supportedMetrics;
+
+    /**
+     * The episodes this resource instance raises through
+     * onMetricEpisodeStarted() and onMetricEpisodeResolved(), as listed under
+     * metrics.supportedEpisodes in the HAL Feature Profile. No other member is raised.
+     */
+    Episode[] supportedEpisodes;
 }

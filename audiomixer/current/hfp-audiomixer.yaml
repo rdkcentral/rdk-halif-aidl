@@ -24,8 +24,18 @@
 audiomixer:
   interfaceVersion: current
 
-  # List of mixer resources available on this platform.
-  # Each resources entry describes a single logical audio mixer instance and its input capabilities
+  # Metrics this product serves through IAudioOutputPort.getMetrics(), for every
+  # resource instance, and the episodes it raises; getCapabilities() reports
+  # the same lists in OutputPortCapabilities. Entries marked mandatory are listed by every
+  # product; optional ones only where the product serves them.
+  metrics:
+    supported:
+      - UNDERFLOW_EPISODES     # mandatory
+      - UNDERFLOW_DURATION_NS  # mandatory
+      - OVERFLOWS              # optional
+    supportedEpisodes:
+      - UNDERFLOW  # mandatory
+      - OVERFLOW   # optional
   resources:
     - id: 0  # Mixer instance 0 (secure)
       supportsSecure: true

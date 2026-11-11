@@ -22,6 +22,8 @@ import com.rdk.hal.audiomixer.AQProcessor;
 import com.rdk.hal.audiomixer.OutputFormat;
 import com.rdk.hal.audiomixer.OutputPortProperty;
 import com.rdk.hal.audiomixer.OutputPortType;
+import com.rdk.hal.audiomixer.metrics.Episode;
+import com.rdk.hal.audiomixer.metrics.Metric;
 
 /**
  * @brief    Capabilities for an audio output port.
@@ -96,4 +98,18 @@ parcelable OutputPortCapabilities {
      * @see     IAudioOutputPortController.getAudioCapture()
      */
     boolean supportsAudioCapture;
+
+    /**
+     * The metrics this resource instance serves through getMetrics(), as
+     * listed under metrics.supported in the HAL Feature Profile. getMetric()
+     * throws EX_UNSUPPORTED_OPERATION for any other member.
+     */
+    Metric[] supportedMetrics;
+
+    /**
+     * The episodes this resource instance raises through
+     * onMetricEpisodeStarted() and onMetricEpisodeResolved(), as listed under
+     * metrics.supportedEpisodes in the HAL Feature Profile. No other member is raised.
+     */
+    Episode[] supportedEpisodes;
 }

@@ -25,6 +25,18 @@
 
 hdmicec:                        # Component object begins
     interfaceVersion: current
+
+    # Metrics this product serves through IHdmiCec.getMetrics(), for every
+    # resource instance, and the episodes it raises; getCapabilities() reports
+    # the same lists in Capabilities. Entries marked mandatory are listed by every
+    # product; optional ones only where the product serves them.
+    metrics:
+      supported:
+        - DIRECTED_MESSAGES_SENT    # optional
+        - BROADCAST_MESSAGES_SENT   # optional
+        - DIRECTED_MESSAGES_ACKED   # optional
+        - BROADCAST_MESSAGES_ACKED  # optional
+        - ARBITRATION_FAILURES      # optional
     HAL_CEC_VERSION: x06    # x04 = Version 1.3a
                             # x05 = Version 1.4, Version 1.4a or Version 1.4b
                             # x06 = Version 2.0

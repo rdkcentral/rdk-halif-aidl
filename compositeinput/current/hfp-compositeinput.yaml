@@ -36,7 +36,19 @@
 compositeinput:
   interfaceVersion: current
 
-  # Per-port configuration
+  # Metrics this product serves through ICompositeInputPort.getMetrics(), for every
+  # resource instance, and the episodes it raises; getCapabilities() reports
+  # the same lists in PortCapabilities. Entries marked mandatory are listed by every
+  # product; optional ones only where the product serves them.
+  metrics:
+    supported:
+      - SIGNAL_LOCKS                   # optional
+      - SIGNAL_DROPS                   # optional
+      - LOCK_ACQUISITION_TIME_NS       # optional
+      - LAST_LOCK_ACQUISITION_TIME_NS  # optional
+      - STARTED_DURATION_NS            # optional
+    supportedEpisodes:
+      - SIGNAL_LOSS  # optional
   ports:
     - id: 0
       name: "Front Panel Composite"

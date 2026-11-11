@@ -130,6 +130,13 @@ enum OutputPortProperty {
      * was enabled. A single underflow event is considered to be when the consumer, unexpectedly, has no data to consume
      * until normal data flow resumes. When the port is disabled, the last count should be held until the port is
      * re-enabled, and the count reset.
+     *
+     * @deprecated Deprecated since 2026-11-11. Use
+     * Metric::UNDERFLOW_EPISODES through
+     * IAudioOutputPort.getMetrics().
+     * Reason: the metric is typed, latched with a timestamp and counts
+     * from service initialisation, where this property resets when the
+     * port is enabled.
      */
     METRIC_UNDERFLOWS = 11,
 
@@ -142,6 +149,12 @@ enum OutputPortProperty {
      * A single overflow event is considered to be when the producer, unexpectedly, has no buffer space available to
      * write the data. When the port is disabled, the last count should be held until the port is re-enabled, and the
      * count reset.
+     *
+     * @deprecated Deprecated since 2026-11-11. Use Metric::OVERFLOWS
+     * through IAudioOutputPort.getMetrics().
+     * Reason: the metric is typed, latched with a timestamp and counts
+     * from service initialisation, where this property resets when the
+     * port is enabled.
      */
     METRIC_OVERFLOWS = 12,
 

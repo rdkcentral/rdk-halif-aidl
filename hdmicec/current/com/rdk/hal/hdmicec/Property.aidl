@@ -66,6 +66,11 @@ enum Property {
      * Type: Int - 32-bit signed integer value.
      * Access: Read-only.
      *
+     * @deprecated Deprecated since 2026-11-11. Use
+     * Metric::DIRECTED_MESSAGES_SENT through IHdmiCec.getMetrics().
+     * Reason: the metric is typed, latched with a timestamp and counts
+     * from service initialisation, where this property resets on
+     * open().
      */
     METRIC_DIRECTED_MESSAGES_SENT = 1000,
 
@@ -78,6 +83,11 @@ enum Property {
      * Type: Int - 32-bit signed integer value.
      * Access: Read-only.
      *
+     * @deprecated Deprecated since 2026-11-11. Use
+     * Metric::BROADCAST_MESSAGES_SENT through IHdmiCec.getMetrics().
+     * Reason: the metric is typed, latched with a timestamp and counts
+     * from service initialisation, where this property resets on
+     * open().
      */
     METRIC_BROADCAST_MESSAGES_SENT = 1001,
 
@@ -90,6 +100,11 @@ enum Property {
      * Type: Int - 32-bit signed integer value.
      * Access: Read-only.
      *
+     * @deprecated Deprecated since 2026-11-11. Use
+     * Metric::DIRECTED_MESSAGES_ACKED through IHdmiCec.getMetrics().
+     * Reason: the metric is typed, latched with a timestamp and counts
+     * from service initialisation, where this property resets on
+     * open().
      */
     METRIC_DIRECTED_MESSAGES_SENT_AND_ACKED = 1002,
 
@@ -103,6 +118,11 @@ enum Property {
      * Type: Int - 32-bit signed integer value.
      * Access: Read-only.
      *
+     * @deprecated Deprecated since 2026-11-11. Use
+     * Metric::BROADCAST_MESSAGES_ACKED through IHdmiCec.getMetrics().
+     * Reason: the metric is typed, latched with a timestamp and counts
+     * from service initialisation, where this property resets on
+     * open().
      */
     METRIC_BROADCAST_MESSAGE_SENT_AND_ACKED = 1003,
 
@@ -115,6 +135,11 @@ enum Property {
      * Type: Int - 32-bit signed integer value.
      * Access: Read-only.
      *
+     * @deprecated Deprecated since 2026-11-11. Use
+     * Metric::ARBITRATION_FAILURES through IHdmiCec.getMetrics().
+     * Reason: the metric is typed, latched with a timestamp and counts
+     * from service initialisation, where this property resets on
+     * open().
      */
     METRIC_ARBITRATION_FAILURES = 1004
 }

@@ -21,6 +21,8 @@ package com.rdk.hal.compositeinput;
 
 import com.rdk.hal.compositeinput.PortProperty;
 import com.rdk.hal.compositeinput.PropertyMetadata;
+import com.rdk.hal.compositeinput.metrics.Episode;
+import com.rdk.hal.compositeinput.metrics.Metric;
 
 /**
  * @brief Port-specific capabilities.
@@ -38,7 +40,8 @@ parcelable PortCapabilities {
      * when ports differ. Values correspond to entries declared in the platform
      * HFP under ports[].supportedProperties.
      *
-     * A port supports metrics if this array contains any METRIC_* key.
+     * The METRIC_* keys are deprecated; the metrics a product serves are
+     * listed under metrics.supported in the HAL Feature Profile.
      */
     PortProperty[] supportedProperties;
 
@@ -49,4 +52,18 @@ parcelable PortCapabilities {
      * May be null if metadata is not available.
      */
     @nullable PropertyMetadata[] propertyMetadata;
+
+    /**
+     * The metrics this resource instance serves through getMetrics(), as
+     * listed under metrics.supported in the HAL Feature Profile. getMetric()
+     * throws EX_UNSUPPORTED_OPERATION for any other member.
+     */
+    Metric[] supportedMetrics;
+
+    /**
+     * The episodes this resource instance raises through
+     * onMetricEpisodeStarted() and onMetricEpisodeResolved(), as listed under
+     * metrics.supportedEpisodes in the HAL Feature Profile. No other member is raised.
+     */
+    Episode[] supportedEpisodes;
 }

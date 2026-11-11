@@ -31,7 +31,8 @@ package com.rdk.hal.compositeinput;
  *
  * Numeric slots are sparse so additions never renumber existing values:
  * - 0..999    runtime status keys
- * - 1000+     telemetry metric counters (reset by ICompositeInputController.resetMetrics())
+ * - 1000+     telemetry metric counters, deprecated: use Metric through
+ *             ICompositeInputPort.getMetrics()
  *
  * Metrics are first-class property keys. There is no separate metrics
  * parcelable — metrics are read with the same get/getMulti methods
@@ -75,6 +76,13 @@ enum PortProperty {
      * Type: Long
      * Access: Read-only.
      * Reset by ICompositeInputController.resetMetrics().
+     *
+     * @deprecated Deprecated since 2026-11-11. Use
+     * Metric::LOCK_ACQUISITION_TIME_NS through
+     * ICompositeInputPort.getMetrics().
+     * Reason: the metric is typed, latched with a timestamp and counts
+     * from service initialisation, where this property resets with
+     * resetMetrics().
      */
     METRIC_SIGNAL_LOCK_TIME = 1000,
 
@@ -85,6 +93,12 @@ enum PortProperty {
      * Type: Long
      * Access: Read-only.
      * Reset by ICompositeInputController.resetMetrics().
+     *
+     * @deprecated Deprecated since 2026-11-11. Use
+     * Metric::SIGNAL_DROPS through ICompositeInputPort.getMetrics().
+     * Reason: the metric is typed, latched with a timestamp and counts
+     * from service initialisation, where this property resets with
+     * resetMetrics().
      */
     METRIC_SIGNAL_DROPS = 1001,
 
@@ -95,6 +109,13 @@ enum PortProperty {
      * Type: Long
      * Access: Read-only.
      * Reset by ICompositeInputController.resetMetrics().
+     *
+     * @deprecated Deprecated since 2026-11-11. Use
+     * Metric::STARTED_DURATION_NS through
+     * ICompositeInputPort.getMetrics().
+     * Reason: the metric is typed, latched with a timestamp and counts
+     * from service initialisation, where this property resets with
+     * resetMetrics().
      */
     METRIC_UPTIME = 1002,
 
@@ -105,6 +126,12 @@ enum PortProperty {
      * Type: Long
      * Access: Read-only.
      * Reset by ICompositeInputController.resetMetrics().
+     *
+     * @deprecated Deprecated since 2026-11-11. Use
+     * Metric::SIGNAL_LOCKS through ICompositeInputPort.getMetrics().
+     * Reason: the metric is typed, latched with a timestamp and counts
+     * from service initialisation, where this property resets with
+     * resetMetrics().
      */
     METRIC_SIGNAL_LOCK_COUNT = 1003,
 
@@ -116,6 +143,13 @@ enum PortProperty {
      * Type: Long
      * Access: Read-only.
      * Reset by ICompositeInputController.resetMetrics().
+     *
+     * @deprecated Deprecated since 2026-11-11. Use
+     * Metric::LAST_LOCK_ACQUISITION_TIME_NS through
+     * ICompositeInputPort.getMetrics().
+     * Reason: the metric is typed, latched with a timestamp and counts
+     * from service initialisation, where this property resets with
+     * resetMetrics().
      */
     METRIC_LAST_SIGNAL_LOCK_TIME = 1004,
 
@@ -126,6 +160,10 @@ enum PortProperty {
      *
      * Type: Long
      * Access: Read-only.
+     *
+     * @deprecated Deprecated since 2026-11-11, with no replacement.
+     * Reason: metrics are never reset; every MetricSnapshot carries
+     * its own timestampNs.
      */
     METRIC_LAST_RESET_TIMESTAMP = 1005,
 
