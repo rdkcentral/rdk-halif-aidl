@@ -435,6 +435,33 @@ def our_item(ticket):
     return None
 
 
+def pr_wins(winner, reason, prefer):
+    """A linked issue's board edit gives way to its PR's class: the PR is the change."""
+    if prefer and winner != prefer and reason == "board edit":
+        return prefer, "PR wins over a board edit"
+    return winner, reason
+
+
+def same_repo_links(ticket):
+    """The closing references in this repository: a cross-repo one is that repo's to sync."""
+    nodes = (ticket.get("closingIssuesReferences") or {}).get("nodes") or []
+    here = f"{REPO_OWNER}/{REPO_NAME}"
+    return [n for n in nodes if (n.get("repository") or {}).get("nameWithOwner", here) == here]
+
+
+def pr_classes(prs):
+    """{issue node id: strongest class among the PRs that close it}."""
+    out = {}
+    for pr in prs:
+        cls = class_of([n["name"] for n in pr["labels"]["nodes"]])
+        if not cls:
+            continue
+        for issue in same_repo_links(pr):
+            have = out.get(issue["id"])
+            out[issue["id"]] = cls if have is None else min(have, cls, key=PRECEDENCE.index)
+    return out
+
+
 def resolve(labels_class, field_class, synced):
     """Which class wins, and why, given the three surfaces and the stored state.
 
@@ -497,7 +524,7 @@ def moved_since_read(project, item, field_class, synced, ticket=None, labels=Non
     return ticket is not None and labels_moved(ticket["id"], labels or [])
 
 
-def sync_ticket(project, ticket, dry_run, report):
+def sync_ticket(project, ticket, dry_run, report, prefer=None):
     """Bring one ticket's labels, project item and stored state into agreement.
 
     Returns "changed", "would-add", None for nothing to do, or "skipped" when
@@ -525,7 +552,7 @@ def sync_ticket(project, ticket, dry_run, report):
         report.append(f"#{number}: board value {field_class!r} is not in the mapping")
         return None
 
-    winner, reason = resolve(labels_class, field_class, synced)
+    winner, reason = pr_wins(*resolve(labels_class, field_class, synced), prefer)
 
     if winner is None:
         # Nothing is classified in this snapshot. Check the board has not been
@@ -672,7 +699,7 @@ def propagate_pr_to_issues(pr, dry_run, report):
     A PR with no class inherits from its linked issue instead, so a classified
     ticket still reaches the board through its PR.
     """
-    linked = pr.get("closingIssuesReferences", {}).get("nodes", [])
+    linked = same_repo_links(pr)
     if not linked:
         return []
     mirror_milestone(pr, linked, dry_run, report)
@@ -728,7 +755,7 @@ def propagate_pr_to_issues(pr, dry_run, report):
             report.append(
                 f"#{issue['number']}: {pr_class} from PR #{pr['number']} (PR wins)"
             )
-            touched.append(issue["number"])
+            touched.append(issue["id"])
     return touched
 
 
@@ -751,7 +778,7 @@ query($owner:String!,$name:String!,$cursor:String){
 
 LINKS = """
         closingIssuesReferences(first:10){
-          nodes{ id number milestone{ id title state } labels(first:50){ nodes{ name } } }
+          nodes{ id number repository{ nameWithOwner } milestone{ id title state } labels(first:50){ nodes{ name } } }
         }
 """
 
@@ -820,8 +847,9 @@ def cmd_reconcile(args):
         for issue in fetch("issues", "OPEN,CLOSED", links=False)
         if in_scope(issue, args.all)
     ]
+    prefer = pr_classes(prs)
     for ticket in issues:
-        sync_ticket(project, ticket, args.dry_run, report)
+        sync_ticket(project, ticket, args.dry_run, report, prefer=prefer.get(ticket["id"]))
 
     for line in report:
         print(f"  {line}")
@@ -874,22 +902,22 @@ def cmd_sync_item(args):
     # Every linked issue gets its own item synced, not only one whose labels
     # just changed: an issue already carrying the PR's class can still have no
     # project item or an unset field, and there is no sweep to repair it.
-    linked = [n["number"] for n in ticket.get("closingIssuesReferences", {}).get("nodes", [])]
-    for number in dict.fromkeys(touched + linked):
+    # Fetched by node id, not number: a number is only unique within one repository.
+    linked = [n["id"] for n in same_repo_links(ticket)]
+    prefer = class_of([n["name"] for n in ticket["labels"]["nodes"]]) if "closingIssuesReferences" in ticket else None
+    for node_id in dict.fromkeys(touched + linked):
         follow = gql(
             """
-            query($owner:String!,$name:String!,$number:Int!){
-              repository(owner:$owner,name:$name){
-                issue(number:$number){ id number labels(first:50){nodes{name}}
-                  projectItems(first:20,includeArchived:false){nodes{ %s }} }
-              }
+            query($id:ID!){
+              node(id:$id){ ... on Issue{ id number labels(first:50){nodes{name}}
+                projectItems(first:20,includeArchived:false){nodes{ %s }} } }
             }
             """
             % _item_fields(),
-            {"owner": REPO_OWNER, "name": REPO_NAME, "number": number},
-        )["repository"]["issue"]
+            {"id": node_id},
+        )["node"]
         if follow:
-            sync_ticket(project, follow, args.dry_run, report)
+            sync_ticket(project, follow, args.dry_run, report, prefer=prefer)
 
     for line in report or [f"#{args.number}: already in sync"]:
         print(f"  {line}")

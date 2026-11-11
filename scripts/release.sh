@@ -4494,7 +4494,7 @@ The AIDL compiler classifies each component at the cut (\`release.sh\`); a confi
     fi
     if [[ -n "${sync_failed}" ]]; then
         warn "Interface Effect sync failed for:${sync_failed// / #}"
-        warn "Retry each with: GITHUB_REPOSITORY=${GH_REPO} python3 scripts/project_interface_effect.py sync-item --number <PR>"
+        warn "Retry each with: GH_TOKEN=\"\${GH_TOKEN:-\$(gh auth token)}\" GITHUB_REPOSITORY=${GH_REPO} python3 scripts/project_interface_effect.py sync-item --number <PR>"
         return 1
     fi
     return 0

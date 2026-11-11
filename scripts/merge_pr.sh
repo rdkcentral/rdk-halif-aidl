@@ -92,7 +92,7 @@ gh pr merge "$PR" --repo "$REPO" "${MERGE_ARGS[@]}"
 state=$(gh pr view "$PR" --repo "$REPO" --json state --jq .state)
 if [ "$state" != "MERGED" ]; then
     echo "#${PR} is ${state}, not merged yet (auto-merge or merge queue)." >&2
-    echo "Once it merges, run: GITHUB_REPOSITORY=${REPO} python3 scripts/project_interface_effect.py sync-item --number ${PR}" >&2
+    echo "Once it merges, run: GH_TOKEN=\"\${GH_TOKEN:-\$(gh auth token)}\" GITHUB_REPOSITORY=${REPO} python3 scripts/project_interface_effect.py sync-item --number ${PR}" >&2
     exit 3
 fi
 
