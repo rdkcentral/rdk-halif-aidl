@@ -64,8 +64,13 @@ interface ICryptoEngineController {
      *
      * <h4>IV handling</h4>
      * If config.iv is null, the engine auto-generates a random IV and prepends
-     * it to the ciphertext output from finish(). On decrypt with iv=null, the
-     * engine reads the IV from the first bytes of the input.
+     * it to the first non-empty output of the operation, which is the return
+     * value of the first update() call that yields output, or of finish() if
+     * no update() call did. The caller concatenates update() and finish()
+     * outputs in order, so the IV is always the leading bytes of the stream.
+     * On decrypt with iv=null, the engine reads the IV from the first bytes
+     * of the concatenated input; update() returns empty until the whole IV
+     * has been supplied.
      * If config.iv is provided, it is used as-is and NOT prepended to the output.
      *
      * @param purpose The operation type.

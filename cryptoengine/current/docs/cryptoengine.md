@@ -59,7 +59,7 @@ The engine supports:
 | HAL.CE.1 | The service shall register with Binder Service Manager using the service name `CryptoEngine`. | Defined as `ICryptoEngine.serviceName`. |
 | HAL.CE.2 | The service shall support at least 32 concurrent streaming operations. | Per HFP `maxConcurrentOperations`. |
 | HAL.CE.3 | `begin()` shall return `EX_ILLEGAL_STATE` when the concurrent operation limit is reached. | Callers must `finish()` or `abort()` existing operations. |
-| HAL.CE.4 | One-shot methods (`encrypt`, `decrypt`, `computeDigest`, `computeHmac`) shall be stateless and thread-safe. | No session required for one-shot use. |
+| HAL.CE.4 | One-shot methods (`encrypt`, `decrypt`, `computeDigest`, `computeHmac`) shall be stateless and thread-safe. | No streaming operation handle (`ICryptoOperation`) is needed. The methods are on `ICryptoEngineController`, so a controller obtained from `open()` is still required. |
 | HAL.CE.5 | `generateRandom()` shall use the platform hardware RNG when available. | Fallback to software CSPRNG is acceptable. |
 | HAL.CE.6 | GCM authentication tag verification failure shall return `EX_SERVICE_SPECIFIC`. | Must not return partial plaintext on tag failure. |
 | HAL.CE.7 | After `finish()` or `abort()`, the `ICryptoOperation` handle shall be invalidated. | Further calls to `update()`/`finish()` return `EX_ILLEGAL_STATE`. |
@@ -100,7 +100,7 @@ The CryptoEngine operates standalone with no dependencies on other HAL services.
 
 ## Product Customization
 
-Platform vendors customize the engine via the HAL Feature Profile ([hfp-cryptoengine.yaml](./hfp-cryptoengine.yaml)):
+Platform vendors customize the engine via the HAL Feature Profile ([hfp-cryptoengine.yaml](../hfp-cryptoengine.yaml)):
 
 - **Security level** — `TEE` or `SOFTWARE`
 - **Supported algorithms, block modes, padding modes, digests, EC curves, KDFs**

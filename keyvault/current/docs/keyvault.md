@@ -412,7 +412,7 @@ The KeyVault HAL has three layers:
 
 ## Product Customization
 
-Platform vendors customize vaults via the HAL Feature Profile ([hfp-keyvault.yaml](./hfp-keyvault.yaml)):
+Platform vendors customize vaults via the HAL Feature Profile ([hfp-keyvault.yaml](../hfp-keyvault.yaml)):
 
 - **Application vault policy** — whether apps can create runtime vaults, and how many
 - **Platform-provisioned vaults** — each with:

@@ -36,7 +36,9 @@ import com.rdk.hal.cryptoengine.SecurityLevel;
  *
  * Key material is encrypted at rest by OTP-derived root keys. To perform
  * crypto operations on vault-managed keys, callers attach an
- * ICryptoEngineController to the vault session.
+ * ICryptoEngineController to the opened vault session with
+ * IKeyVaultController.attachCryptoEngine(). The vault exposes no key
+ * blobs to the caller.
  *
  * <h3>Exception Handling</h3>
  * Unless otherwise specified, this interface follows standard Android Binder semantics:
