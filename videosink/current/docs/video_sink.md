@@ -41,7 +41,7 @@ The RDK middleware’s GStreamer pipeline includes a dedicated RDK Video Sink el
 | **HAL.VIDEOSINK.8** | Video frames decoupled from video planes (destination plane -1) shall continue to be delivered and remain in sync with audio.  When coupled to a video plane they shall immediately become visible and be in lip sync. |To ensure if/when a video sink source is assigned to a video plane it appears in sync with audio. |
 | **HAL.VIDEOSINK.9** | If a client process exits, the Video Sink server shall automatically stop and close any `IVideoSink` instance controlled by that client. ||
 | **HAL.VIDEOSINK.10** | Shall serve every metric listed under `supportedMetrics` in the HAL Feature Profile through `getMetrics()` and `getMetric()`, in any state, counting from service initialisation. | See [metrics](#metrics). |
-| **HAL.VIDEOSINK.11** | Shall raise `onEpisodeStarted()` when an episode of a supported metric starts and `onEpisodeResolved()` when it ends. | See [metrics](#metrics). |
+| **HAL.VIDEOSINK.11** | Shall raise `onMetricEpisodeStarted()` when an episode of a supported metric starts and `onMetricEpisodeResolved()` when it ends. | See [metrics](#metrics). |
 
 ## Interface Definition
 
@@ -58,8 +58,8 @@ The RDK middleware’s GStreamer pipeline includes a dedicated RDK Video Sink el
 | `metrics/MetricValue.aidl` | Parcelable pairing a `Metric` with its value. |
 | `metrics/MetricSnapshot.aidl` | Parcelable holding metric values latched at one instant. |
 | `metrics/Episode.aidl` | Enum list of the episodes the component reports. |
-| `metrics/EpisodeStarted.aidl` | Parcelable carried by `onEpisodeStarted()`. |
-| `metrics/EpisodeResolved.aidl` | Parcelable carried by `onEpisodeResolved()`. |
+| `metrics/EpisodeStarted.aidl` | Parcelable carried by `onMetricEpisodeStarted()`. |
+| `metrics/EpisodeResolved.aidl` | Parcelable carried by `onMetricEpisodeResolved()`. |
 
 ## Initialization
 
@@ -300,7 +300,7 @@ This is what makes dual-decode session switching seamless. Two decoder → sink 
 | `UNDERFLOW_EPISODES` | episodes | counter | Underflows started. |
 | `UNDERFLOW_DURATION_NS` | nanoseconds | counter | Total time spent in underflow. |
 
-Events are episodes only: nothing is raised per frame. `IVideoSinkEventListener.onEpisodeStarted()` is raised once when an episode starts and `onEpisodeResolved()` once when it ends, each naming the `Episode`. The resolved event carries the episode's `durationNs` and `count`. Both events carry `metrics`, a `MetricSnapshot` of every supported metric latched at the event, so no second read is needed. A product raises an episode where it supports the metric shown.
+Events are episodes only: nothing is raised per frame. `IVideoSinkEventListener.onMetricEpisodeStarted()` is raised once when an episode starts and `onMetricEpisodeResolved()` once when it ends, each naming the `Episode`. The resolved event carries the episode's `durationNs` and `count`. Both events carry `metrics`, a `MetricSnapshot` of every supported metric latched at the event, so no second read is needed. A product raises an episode where it supports the metric shown.
 
 | Episode | Starts and ends | Metric |
 |---|---|---|

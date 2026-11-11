@@ -51,7 +51,7 @@ oneway interface IAudioDecoderEventListener {
     void onStateChanged(in State oldState, in State newState);
 
     /**
-     * Raised once when an episode starts. onEpisodeResolved() follows, with the
+     * Raised once when an episode starts. onMetricEpisodeResolved() follows, with the
      * same Episode, when it ends.
      *
      * Episodes are the only metric events: nothing is raised per frame, and
@@ -61,15 +61,15 @@ oneway interface IAudioDecoderEventListener {
      *
      * @see Episode, EpisodeStarted
      */
-    void onEpisodeStarted(in EpisodeStarted event);
+    void onMetricEpisodeStarted(in EpisodeStarted event);
 
     /**
-     * Raised once when the episode reported by onEpisodeStarted() ends.
+     * Raised once when the episode reported by onMetricEpisodeStarted() ends.
      *
      * @param[in] event    Which episode ended, when, how long it lasted and
      * what it counted.
      *
      * @see Episode, EpisodeResolved
      */
-    void onEpisodeResolved(in EpisodeResolved event);
+    void onMetricEpisodeResolved(in EpisodeResolved event);
 }

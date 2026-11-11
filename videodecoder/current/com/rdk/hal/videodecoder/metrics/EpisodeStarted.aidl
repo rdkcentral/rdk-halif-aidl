@@ -22,7 +22,7 @@ import com.rdk.hal.videodecoder.metrics.Episode;
 import com.rdk.hal.videodecoder.metrics.MetricSnapshot;
 
 /**
- * @brief An episode has started. Carried by onEpisodeStarted().
+ * @brief An episode has started. Carried by onMetricEpisodeStarted().
  */
 @VintfStability
 parcelable EpisodeStarted {

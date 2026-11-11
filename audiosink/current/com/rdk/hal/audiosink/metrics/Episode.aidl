@@ -22,8 +22,8 @@ package com.rdk.hal.audiosink.metrics;
  * @brief Episodes the audio sink reports.
  *
  * An episode is something with a start and an end. Each is reported once when
- * it starts, by IAudioSinkEventListener.onEpisodeStarted(), and once when it
- * ends, by onEpisodeResolved(); nothing is raised per frame. Per-frame figures
+ * it starts, by IAudioSinkEventListener.onMetricEpisodeStarted(), and once when it
+ * ends, by onMetricEpisodeResolved(); nothing is raised per frame. Per-frame figures
  * are read with IAudioSink.getMetrics().
  *
  * An episode still open at flush() or stop() ends there. A product raises an

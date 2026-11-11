@@ -22,8 +22,8 @@ package com.rdk.hal.audiodecoder.metrics;
  * @brief Episodes the audio decoder reports.
  *
  * An episode is something with a start and an end. Each is reported once when
- * it starts, by IAudioDecoderEventListener.onEpisodeStarted(), and once when it
- * ends, by onEpisodeResolved(); nothing is raised per frame. Per-frame figures
+ * it starts, by IAudioDecoderEventListener.onMetricEpisodeStarted(), and once when it
+ * ends, by onMetricEpisodeResolved(); nothing is raised per frame. Per-frame figures
  * are read with IAudioDecoder.getMetrics().
  *
  * An episode still open at flush() or stop() ends there. A product raises an

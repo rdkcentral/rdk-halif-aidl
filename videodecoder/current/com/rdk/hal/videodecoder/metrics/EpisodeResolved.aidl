@@ -23,7 +23,7 @@ import com.rdk.hal.videodecoder.metrics.MetricSnapshot;
 
 /**
  * @brief The episode reported by the matching EpisodeStarted has ended.
- * Carried by onEpisodeResolved().
+ * Carried by onMetricEpisodeResolved().
  */
 @VintfStability
 parcelable EpisodeResolved {

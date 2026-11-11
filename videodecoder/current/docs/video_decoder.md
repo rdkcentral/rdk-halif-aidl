@@ -51,7 +51,7 @@ The **RDK middleware GStreamer pipeline** includes a dedicated **RDK Video Decod
 | **HAL.VIDEODECODER.12** | The video decoder shall discard any frames until the first reference frame has been received. |
 | **HAL.VIDEODECODER.13** | If a client process exits, the Video Decoder server shall automatically stop and close any Video Decoder instance controlled by that client. |
 | **HAL.VIDEODECODER.14** | Shall serve every metric listed under `supportedMetrics` in the HAL Feature Profile through `getMetrics()` and `getMetric()`, in any state, counting from service initialisation. | See [metrics](#metrics). |
-| **HAL.VIDEODECODER.15** | Shall raise `onEpisodeStarted()` when an episode of a supported metric starts and `onEpisodeResolved()` when it ends. | See [metrics](#metrics). |
+| **HAL.VIDEODECODER.15** | Shall raise `onMetricEpisodeStarted()` when an episode of a supported metric starts and `onMetricEpisodeResolved()` when it ends. | See [metrics](#metrics). |
 
 ## Interface Definition
 
@@ -78,8 +78,8 @@ The **RDK middleware GStreamer pipeline** includes a dedicated **RDK Video Decod
 | `metrics/MetricValue.aidl` | Parcelable pairing a `Metric` with its value. |
 | `metrics/MetricSnapshot.aidl` | Parcelable holding metric values latched at one instant. |
 | `metrics/Episode.aidl` | Enum list of the episodes the component reports. |
-| `metrics/EpisodeStarted.aidl` | Parcelable carried by `onEpisodeStarted()`. |
-| `metrics/EpisodeResolved.aidl` | Parcelable carried by `onEpisodeResolved()`. |
+| `metrics/EpisodeStarted.aidl` | Parcelable carried by `onMetricEpisodeStarted()`. |
+| `metrics/EpisodeResolved.aidl` | Parcelable carried by `onMetricEpisodeResolved()`. |
 
 ## Initialization
 
@@ -426,7 +426,7 @@ The RDK media pipeline is responsible for parsing the SEI user data from the byt
 | `FRAMES_CORRUPTED` | frames | counter | Frames output with visible damage or concealment. |
 | `DECODE_ERRORS` | errors | counter | Errors the decoder has raised. |
 
-Events are episodes only: nothing is raised per frame. `IVideoDecoderEventListener.onEpisodeStarted()` is raised once when an episode starts and `onEpisodeResolved()` once when it ends, each naming the `Episode`. The resolved event carries the episode's `durationNs` and `count`. Both events carry `metrics`, a `MetricSnapshot` of every supported metric latched at the event, so no second read is needed. A product raises an episode where it supports the metric shown.
+Events are episodes only: nothing is raised per frame. `IVideoDecoderEventListener.onMetricEpisodeStarted()` is raised once when an episode starts and `onMetricEpisodeResolved()` once when it ends, each naming the `Episode`. The resolved event carries the episode's `durationNs` and `count`. Both events carry `metrics`, a `MetricSnapshot` of every supported metric latched at the event, so no second read is needed. A product raises an episode where it supports the metric shown.
 
 | Episode | Starts and ends | Metric |
 |---|---|---|

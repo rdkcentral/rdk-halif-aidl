@@ -47,7 +47,7 @@ The interaction between the RDK GStreamer Audio Sink element and the Audio Sink 
 | **HAL.AUDIOSINK.5** | If a client process exits, the Audio Sink server shall automatically stop and close any Audio Sink instance controlled by that client. ||
 | **HAL.AUDIOSINK.6** | Shall run a session with no mixer input routed, consuming queued frames and freeing their buffers against the attached AV Clock while producing no audio. | The routing is owned by the Audio Mixer and may be set or cleared at any point in the session, including while the sink is `STARTED`. |
 | **HAL.AUDIOSINK.7** | Shall serve every metric listed under `supportedMetrics` in the HAL Feature Profile through `getMetrics()` and `getMetric()`, in any state, counting from service initialisation. | See [metrics](#metrics). |
-| **HAL.AUDIOSINK.8** | Shall raise `onEpisodeStarted()` when an episode of a supported metric starts and `onEpisodeResolved()` when it ends. | See [metrics](#metrics). |
+| **HAL.AUDIOSINK.8** | Shall raise `onMetricEpisodeStarted()` when an episode of a supported metric starts and `onMetricEpisodeResolved()` when it ends. | See [metrics](#metrics). |
 
 ## Interface Definition
 
@@ -68,8 +68,8 @@ The interaction between the RDK GStreamer Audio Sink element and the Audio Sink 
 | `metrics/MetricValue.aidl` | Parcelable pairing a `Metric` with its value. |
 | `metrics/MetricSnapshot.aidl` | Parcelable holding metric values latched at one instant. |
 | `metrics/Episode.aidl` | Enum list of the episodes the component reports. |
-| `metrics/EpisodeStarted.aidl` | Parcelable carried by `onEpisodeStarted()`. |
-| `metrics/EpisodeResolved.aidl` | Parcelable carried by `onEpisodeResolved()`. |
+| `metrics/EpisodeStarted.aidl` | Parcelable carried by `onMetricEpisodeStarted()`. |
+| `metrics/EpisodeResolved.aidl` | Parcelable carried by `onMetricEpisodeResolved()`. |
 
 ## Initialization
 
@@ -265,7 +265,7 @@ For audio decoded by the Audio Decoder, the middleware forwards each decoded fra
 | `UNDERFLOW_EPISODES` | episodes | counter | Underflows started. |
 | `UNDERFLOW_DURATION_NS` | nanoseconds | counter | Total time spent in underflow. |
 
-Events are episodes only: nothing is raised per frame. `IAudioSinkEventListener.onEpisodeStarted()` is raised once when an episode starts and `onEpisodeResolved()` once when it ends, each naming the `Episode`. The resolved event carries the episode's `durationNs` and `count`. Both events carry `metrics`, a `MetricSnapshot` of every supported metric latched at the event, so no second read is needed. A product raises an episode where it supports the metric shown.
+Events are episodes only: nothing is raised per frame. `IAudioSinkEventListener.onMetricEpisodeStarted()` is raised once when an episode starts and `onMetricEpisodeResolved()` once when it ends, each naming the `Episode`. The resolved event carries the episode's `durationNs` and `count`. Both events carry `metrics`, a `MetricSnapshot` of every supported metric latched at the event, so no second read is needed. A product raises an episode where it supports the metric shown.
 
 | Episode | Starts and ends | Metric |
 |---|---|---|

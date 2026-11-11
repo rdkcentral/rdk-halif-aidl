@@ -58,7 +58,7 @@ Uncompressed PCM audio streams do not require decoding. Therefore, they bypass t
 | **HAL.AUDIODECODER.11** | The audio frame output buffer from an audio decoder shall match the platform PCM audio format required for mixing. | See com.rdk.hal.audiosink.PlatformCapabilities |
 | **HAL.AUDIODECODER.12** | If a client process exits, the Audio Decoder server shall automatically stop and close any Audio Decoder instance controlled by that client. |
 | **HAL.AUDIODECODER.13** | Shall serve every metric listed under `supportedMetrics` in the HAL Feature Profile through `getMetrics()` and `getMetric()`, in any state, counting from service initialisation. | See [metrics](#metrics). |
-| **HAL.AUDIODECODER.14** | Shall raise `onEpisodeStarted()` when an episode of a supported metric starts and `onEpisodeResolved()` when it ends. | See [metrics](#metrics). |
+| **HAL.AUDIODECODER.14** | Shall raise `onMetricEpisodeStarted()` when an episode of a supported metric starts and `onMetricEpisodeResolved()` when it ends. | See [metrics](#metrics). |
 
 ## Interface Definition
 
@@ -84,8 +84,8 @@ The interface can be found by following this link [audiodecoder](https://github.
 | `metrics/MetricValue.aidl` | Parcelable pairing a `Metric` with its value. |
 | `metrics/MetricSnapshot.aidl` | Parcelable holding metric values latched at one instant. |
 | `metrics/Episode.aidl` | Enum list of the episodes the component reports. |
-| `metrics/EpisodeStarted.aidl` | Parcelable carried by `onEpisodeStarted()`. |
-| `metrics/EpisodeResolved.aidl` | Parcelable carried by `onEpisodeResolved()`. |
+| `metrics/EpisodeStarted.aidl` | Parcelable carried by `onMetricEpisodeStarted()`. |
+| `metrics/EpisodeResolved.aidl` | Parcelable carried by `onMetricEpisodeResolved()`. |
 
 ## Initialization
 
@@ -582,7 +582,7 @@ The Audio Decoder also provides properties which allow for an override of the pl
 | `FRAMES_DROPPED` | frames | counter | Input frames for which the decoder output nothing. |
 | `DECODE_ERRORS` | errors | counter | Errors the decoder has raised. |
 
-Events are episodes only: nothing is raised per frame. `IAudioDecoderEventListener.onEpisodeStarted()` is raised once when an episode starts and `onEpisodeResolved()` once when it ends, each naming the `Episode`. The resolved event carries the episode's `durationNs` and `count`. Both events carry `metrics`, a `MetricSnapshot` of every supported metric latched at the event, so no second read is needed. A product raises an episode where it supports the metric shown.
+Events are episodes only: nothing is raised per frame. `IAudioDecoderEventListener.onMetricEpisodeStarted()` is raised once when an episode starts and `onMetricEpisodeResolved()` once when it ends, each naming the `Episode`. The resolved event carries the episode's `durationNs` and `count`. Both events carry `metrics`, a `MetricSnapshot` of every supported metric latched at the event, so no second read is needed. A product raises an episode where it supports the metric shown.
 
 | Episode | Starts and ends | Metric |
 |---|---|---|

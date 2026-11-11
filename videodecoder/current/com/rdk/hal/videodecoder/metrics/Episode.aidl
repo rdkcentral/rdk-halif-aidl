@@ -22,8 +22,8 @@ package com.rdk.hal.videodecoder.metrics;
  * @brief Episodes the video decoder reports.
  *
  * An episode is something with a start and an end. Each is reported once when
- * it starts, by IVideoDecoderEventListener.onEpisodeStarted(), and once when it
- * ends, by onEpisodeResolved(); nothing is raised per frame. Per-frame figures
+ * it starts, by IVideoDecoderEventListener.onMetricEpisodeStarted(), and once when it
+ * ends, by onMetricEpisodeResolved(); nothing is raised per frame. Per-frame figures
  * are read with IVideoDecoder.getMetrics().
  *
  * An episode still open at flush() or stop() ends there. A product raises an
