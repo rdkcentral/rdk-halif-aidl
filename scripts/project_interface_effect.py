@@ -896,14 +896,18 @@ def cmd_sync_item(args):
     # --labels-win: the caller's labels are the decision (release.sh after a cut),
     # so a board value that differs is repaired, never adopted.
     own = class_of([n["name"] for n in ticket["labels"]["nodes"]]) if args.labels_win else None
+    # A skipped sync exits non-zero: with no scheduled sweep to retry it, the
+    # caller (merge_pr.sh, release.sh) has to know the work is incomplete.
     if sync_ticket(project, ticket, args.dry_run, report, prefer=own) == "skipped":
         for line in report:
             print(f"  {line}")
-        return
+        sys.exit(f"#{args.number}: skipped, it moved while syncing; run sync-item again")
+    skipped = []
     before = class_of([n["name"] for n in ticket["labels"]["nodes"]])
     touched = propagate_pr_to_issues(ticket, args.dry_run, report)
     if class_of([n["name"] for n in ticket["labels"]["nodes"]]) != before:
-        sync_ticket(project, ticket, args.dry_run, report)
+        if sync_ticket(project, ticket, args.dry_run, report, prefer=own) == "skipped":
+            skipped.append(args.number)
 
     # Every linked issue gets its own item synced, not only one whose labels
     # just changed: an issue already carrying the PR's class can still have no
@@ -922,11 +926,14 @@ def cmd_sync_item(args):
             % _item_fields(),
             {"id": node_id},
         )["node"]
-        if follow:
-            sync_ticket(project, follow, args.dry_run, report, prefer=prefer)
+        if follow and sync_ticket(project, follow, args.dry_run, report, prefer=prefer) == "skipped":
+            skipped.append(follow["number"])
 
     for line in report or [f"#{args.number}: already in sync"]:
         print(f"  {line}")
+    if skipped:
+        sys.exit("skipped, moved while syncing: " + ", ".join(f"#{n}" for n in skipped)
+                 + f"; run sync-item --number {args.number} again")
 
 
 def cmd_check(args):

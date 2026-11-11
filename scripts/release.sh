@@ -4375,8 +4375,9 @@ _sync_verb() {   # want have all-owned labels -> raise | lower | keep
     local want="$1" have="$2" all="$3" labels="$4"
     if [[ "${want}" -gt "${have}" ]]; then echo raise
     # New Interface is the new-component marker as well as a Minor floor, and
-    # the label cleanup never removes it: lowering would retry on every run.
-    elif [[ "${want}" -lt "${have}" && "${all}" -eq 1 ]] && ! grep -qx 'New Interface' <<<"${labels}"; then echo lower
+    # CR always reads as Major; the label cleanup removes neither, so lowering
+    # either would be undone by the next sync and retried on every run.
+    elif [[ "${want}" -lt "${have}" && "${all}" -eq 1 ]] && ! grep -qxE 'New Interface|CR' <<<"${labels}"; then echo lower
     else echo keep
     fi
 }
@@ -4494,7 +4495,7 @@ The AIDL compiler classifies each component at the cut (\`release.sh\`); a confi
     fi
     if [[ -n "${sync_failed}" ]]; then
         warn "Interface Effect sync failed for:${sync_failed// / #}"
-        warn "Retry each with: GH_TOKEN=\"\${GH_TOKEN:-\$(gh auth token)}\" GITHUB_REPOSITORY=${GH_REPO} python3 scripts/project_interface_effect.py sync-item --number <PR>"
+        warn "Retry each with: GH_TOKEN=\"\${GH_TOKEN:-\$(gh auth token)}\" GITHUB_REPOSITORY=${GH_REPO} python3 scripts/project_interface_effect.py sync-item --number <PR> --labels-win"
         return 1
     fi
     return 0
