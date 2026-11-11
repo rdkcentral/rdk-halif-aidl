@@ -60,7 +60,14 @@ create_label() {
 # count cannot be read, the label is kept too.
 delete_label() {
     local name="$1" used
-    used=$(gh api -X GET search/issues -f q="repo:${REPO} label:\"${name}\"" --jq .total_count 2>/dev/null) || used=""
+    # Counted from the label's own issue and PR lists (every state), not from
+    # search, whose index lags and can return incomplete results.
+    used=$(gh api graphql -f owner="${REPO%%/*}" -f repo="${REPO##*/}" -f name="${name}" -f query='
+        query($owner:String!,$repo:String!,$name:String!){ repository(owner:$owner,name:$repo){
+          label(name:$name){ issues(states:[OPEN,CLOSED]){ totalCount }
+                             pullRequests(states:[OPEN,CLOSED,MERGED]){ totalCount } } } }' \
+        --jq '.data.repository.label | if . == null then 0 else .issues.totalCount + .pullRequests.totalCount end' \
+        2>/dev/null) || used=""
     if [[ ! "${used}" =~ ^[0-9]+$ ]]; then
         echo "  Kept:    ${name} (could not count its tickets)" >&2
         KEPT=$((KEPT + 1))
