@@ -42,7 +42,9 @@ linuxinput:                         # Component object begins
     # 'source' says how the device reaches evdev: a kernel driver, or an
     # injector writing to /dev/uinput. See "Injection Methods".
     # 'path' is stated only where a fixed path is mandated; every other device
-    # is located by identity, never by event node number.
+    # is located by identity, never by event node number: 'evdevName' is the
+    # exact EVIOCGNAME string the device exports, required where there is no
+    # 'path', and the binding between 'id' and the enumerated node.
     devices:
       - id: ir
         transport: ir
@@ -51,10 +53,12 @@ linuxinput:                         # Component object begins
 
       - id: frontPanel
         transport: frontPanel
+        evdevName: "gpio-keys"      # Example: the platform's exported EVIOCGNAME
         source: kernel
 
       - id: btRcu
         transport: bluetooth
+        evdevName: "RDK BT RCU"     # Example: the platform's exported EVIOCGNAME
         source: uinput
         transient: true             # Node exists only while connected
 
