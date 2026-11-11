@@ -178,8 +178,9 @@ enum Metric {
      * its sound leaving the output in use (HDMI, ARC, Bluetooth or the
      * internal speakers), as the sink currently estimates it for that output.
      *
-     * Excludes: time the frame spends queued in the sink (QUEUE_DEPTH_NS) and
-     * any latency added by an external device after the output.
+     * Excludes: time the frame spends queued in the sink (QUEUE_DEPTH_NS), the
+     * per-port delay set by com.rdk.hal.audiomixer.OutputPortProperty::DELAY_MS,
+     * and any latency added by an external device after the output.
      *
      * Used for: aligning audio with video or with other outputs, and checking
      * the latency a product declares for each output.
