@@ -190,25 +190,27 @@ Repeated `enableCalibrationMode(true)` or `enableCalibrationMode(false)` calls a
 
 ### Error Handling
 
-The Panel HAL uses Binder exceptions for invalid arguments, null output parameters, and invalid lifecycle state. Boolean returns are used only after the request itself has been accepted as well-formed; there is no `ErrorCode` return contract in the current panel API.
+The Panel HAL uses Binder exceptions for invalid arguments, null output parameters, and invalid lifecycle state. Boolean returns are used only after the request itself has been accepted as well-formed and represent the outcome of an accepted operation rather than a separate error contract.
 
-* `setPQParameters()` is a void method. It throws `EX_ILLEGAL_ARGUMENT` for malformed or empty configuration lists and `EX_ILLEGAL_STATE` when the controller is not in `STARTED`. Runtime or hardware failure is communicated through the service-specific failure semantics and state transitions; it is not returned as an enum value.
+* `setPQParameters()` is a void method. It throws `EX_ILLEGAL_ARGUMENT` for malformed or empty configuration lists and `EX_ILLEGAL_STATE` when the controller is not in `STARTED`.
 * `getPQParameters()` and `getDefaultPQParameters()` throw `EX_ILLEGAL_ARGUMENT` for malformed selectors or empty input, throw `EX_ILLEGAL_STATE` if the controller is not `STARTED`, and return `false` only when the selectors are valid but one or more values cannot be resolved. For `COLOUR_MANAGEMENT_SETTINGS`, `TWO_POINT_WB`, `MULTI_POINT_WB`, and `DV_CALIBRATION`, the returned `PQParameterValue` contains the complete aggregate payload for the resolved selector context rather than a single sub-entry.
 * `getPictureModes()` and `getDefaultPictureModes()` follow the same pattern: exceptions for malformed input or invalid state, `false` only when valid criteria cannot be resolved.
-* `start()` and `stop()` use `EX_ILLEGAL_STATE` for invalid transitions. A `false` return indicates a runtime or hardware failure after a valid transition request. If the panel remains in `ERROR` after `close()` and a fresh `open()`/`start()` attempt, the platform may need a full device reboot or power cycle to clear latched display hardware; treat that as a last-resort recovery action.
+* `start()` and `stop()` use `EX_ILLEGAL_STATE` for invalid transitions. A `false` return indicates a runtime or hardware failure after a valid transition request.
 
 ### Lifecycle Summary
 
 1. Middleware binds `IPanelOutput` from the service manager.
 2. Middleware reads `getCapabilities()` and optionally registers `IPanelOutputEventListener`.
 3. Middleware calls `open()` to obtain the exclusive `IPanelOutputController`.
-4. When `open()` returns, the panel may already be in any retained lifecycle state: `CLOSED`, `OPENING`, `STOPPED`, `STARTING`, `STARTED`, `STOPPING`, `CLOSING`, or `ERROR`.
-5. Middleware calls `getState()` and chooses the appropriate next action from the returned state rather than assuming a fresh `STOPPED` controller.
-6. If the controller is `STOPPED`, middleware may call `start()`, then use `setEnabled()`, `setPictureModes()`, and `setPQParameters()` while `STARTED`.
-7. If the controller is already `STARTED`, middleware may continue with `STARTED`-state operations directly.
-8. `stop()` is only valid from `STARTED` and transitions `STARTED -> STOPPING -> STOPPED`.
-9. `close()` is the normal release path from `STOPPED` and the recovery path from `ERROR`. `CLOSING` and `OPENING` represent in-flight ownership transitions while the resource is being acquired or released.
-10. If the controller-owning client dies, the HAL releases ownership but retains the last panel state and stored configuration. A replacement client reopens the controller, calls `getState()`, and continues from there.
+4. A successful `open()` must return a controller in a valid operating state such as `STOPPED`, `STARTING`, `STARTED`, or `STOPPING`. `CLOSED` is the pre-open or post-close state and is not a valid successful `open()` result.
+5. The controller acquisition path is `CLOSED -> OPENING -> STOPPED`. `OPENING` and `CLOSING` are in-flight ownership transitions while the resource is being acquired or released.
+6. Middleware calls `getState()` and chooses the appropriate next action from the returned state rather than assuming a fresh `STOPPED` controller.
+7. If the controller is `STOPPED`, middleware may call `start()`, then use `setEnabled()`, `setPictureModes()`, and `setPQParameters()` while `STARTED`.
+8. If the controller is already `STARTED`, middleware may continue with `STARTED`-state operations directly.
+9. `stop()` is only valid from `STARTED` and transitions `STARTED -> STOPPING -> STOPPED`.
+10. `close()` is the normal release path from `STOPPED` and causes the controller to transition to `CLOSED` after the resource is released.
+11. If the controller-owning client dies, the HAL releases ownership but retains the last panel state and stored configuration. A replacement client reopens the controller, calls `getState()`, and continues from there.
+12. Initial panel configuration, picture-mode settings, splash-screen content shown to the user, and any other product-specific behaviour before the panel AIDL module becomes active during cold boot or resume from deep standby are not within the scope of this module. Those values are platform-specific and are expected to be established by the product implementation before or outside the lifetime of the `IPanelOutput` contract.
 
 ### PQ Parameter Capability Mapping
 
@@ -277,56 +279,49 @@ For capability consumers, the nested picture-mode scoping is always carried by `
 
 ## State Machine / Lifecycle
 
-The diagram below focuses on controller lifecycle state. `IPanelOutput.open()` may return a controller while the panel is already in any retained state, so middleware must call `getState()` first and then choose the appropriate next action. `IPanelOutput.close()` is the release and recovery path from `STOPPED` or `ERROR`.
+The diagram below focuses on controller lifecycle state. `IPanelOutput.open()` succeeds only when the controller is in a valid state for exclusive use; the acquisition path is `CLOSED -> OPENING -> STOPPED`. Middleware must call `getState()` first and then choose the appropriate next action. `stop()` is the explicit runtime shutdown path and transitions `STARTED -> STOPPING -> STOPPED`; `IPanelOutput.close()` is the separate controller-release path and transitions `STOPPED -> CLOSING -> CLOSED` after the resource is released.
 
 ```mermaid
 flowchart LR
-  OpenCall((open)) --> Returned[Controller returned]
-  Returned -->|retained state| STOPPED[STOPPED]
-  Returned -->|retained state| STARTING[STARTING]
-  Returned -->|retained state| STARTED[STARTED]
-  Returned -->|retained state| STOPPING[STOPPING]
-  Returned -->|retained state| ERROR[ERROR]
-  STOPPED -->|start| STARTING[STARTING]
-  STARTING -->|startup succeeds| STARTED[STARTED]
-  STARTING -->|startup fails| ERROR[ERROR]
-  STARTED -->|stop| STOPPING[STOPPING]
-  STOPPING -->|stop succeeds| STOPPED
-  STOPPING -->|stop fails| ERROR
-  ERROR -->|close, reopen, start again| STOPPED
+  Closed[CLOSED] -->|open| Opening[OPENING]
+  Opening -->|acquire complete| Stopped[STOPPED]
+  Stopped -->|start| Starting[STARTING]
+  Starting -->|startup succeeds| Started[STARTED]
+  Started -->|stop| Stopping[STOPPING]
+  Stopping -->|stop succeeds| Stopped
+  Stopped -->|close| Closing[CLOSING]
+  Closing -->|release complete| Closed
 
   STOPPED_METHODS("Allowed in STOPPED<br/>getState()<br/>start()<br/>close() via IPanelOutput")
   STARTING_METHODS("Allowed in STARTING<br/>getState()")
   STARTED_METHODS("Allowed in STARTED<br/>getState()<br/>stop()<br/>setEnabled()<br/>getEnabled()<br/>setPictureModes()<br/>getPictureModes()<br/>getDefaultPictureModes()<br/>setPQParameters()<br/>getPQParameters()<br/>getDefaultPQParameters()<br/>getPQParameterCapabilities()<br/>setRefreshRate()<br/>getRefreshRate()<br/>setFrameRateMatching()<br/>getFrameRateMatching()<br/>setVideoSourceOverride()<br/>getVideoSourceOverride()<br/>getVideoSource()<br/>getDynamicRange()<br/>getVideoFrameRate()<br/>getVideoResolution()<br/>enableCalibrationMode()<br/>getCalibrationMode()")
   STOPPING_METHODS("Allowed in STOPPING<br/>getState()")
-  ERROR_METHODS("Allowed in ERROR<br/>getState()<br/>close() via IPanelOutput")
+  CLOSING_METHODS("Allowed in CLOSING<br/>getState()")
 
-  STOPPED_METHODS -.-> STOPPED
-  STARTING_METHODS -.-> STARTING
-  STARTED_METHODS -.-> STARTED
-  STOPPING_METHODS -.-> STOPPING
-  ERROR_METHODS -.-> ERROR
+  STOPPED_METHODS -.-> Stopped
+  STARTING_METHODS -.-> Starting
+  STARTED_METHODS -.-> Started
+  STOPPING_METHODS -.-> Stopping
+  CLOSING_METHODS -.-> Closing
 
   classDef state fill:#FFB74D,stroke:#424242,stroke-width:2px,color:#000000;
   classDef methods fill:#FFF8E1,stroke:#8D6E63,stroke-width:2px,color:#000000;
   classDef entry fill:#1565C0,stroke:#E0E0E0,stroke-width:2px,color:#E0E0E0;
   classDef returned fill:#BBDEFB,stroke:#1565C0,stroke-width:2px,color:#000000;
 
-  class STOPPED,STARTING,STARTED,STOPPING,ERROR state;
-  class STOPPED_METHODS,STARTING_METHODS,STARTED_METHODS,STOPPING_METHODS,ERROR_METHODS methods;
-  class OpenCall entry;
-  class Returned returned;
+  class Closed,Opening,Stopped,Starting,Started,Stopping,Closing state;
+  class STOPPED_METHODS,STARTING_METHODS,STARTED_METHODS,STOPPING_METHODS,CLOSING_METHODS methods;
 ```
 
-* Typical states: `STOPPED`, `STARTING`, `STARTED`, `STOPPING`, `ERROR`.
-* `open()` does not imply `STOPPED`; it may return a controller while the panel is in any retained lifecycle state, so middleware must call `getState()` first.
+* Typical states: `CLOSED`, `OPENING`, `STOPPED`, `STARTING`, `STARTED`, `STOPPING`, `CLOSING`.
+* `open()` does not return `CLOSED`; it succeeds only after the controller is in a valid operating state for exclusive use.
 * `start()` is only valid from `STOPPED`; on success the controller transitions `STOPPED -> STARTING -> STARTED`.
 * `stop()` is only valid from `STARTED`; on success the controller transitions `STARTED -> STOPPING -> STOPPED`.
+* `IPanelOutput.close()` is a separate release call and transitions `STOPPED -> CLOSING -> CLOSED` after the resource is released.
 * `setEnabled()` controls visible output while the controller remains `STARTED`; it does not replace `stop()` and may be used to represent light sleep or standby.
 * Picture-mode control, PQ control, refresh-rate control, and calibration-mode control are valid only while `STARTED`.
 * `getState()` returns the current lifecycle state and passive observers receive the same transitions through `IPanelOutputEventListener.onStateChanged()`.
-* `IPanelOutput.close()` releases the controller from `STOPPED` or `ERROR`.
-* If the owning client dies, ownership is released without forcing an automatic stop; the replacement client must reopen and inspect `getState()` before deciding whether to call `start()`, wait for an in-progress transition, continue with the existing runtime state, or recover from `ERROR`.
+* If the owning client dies, ownership is released without forcing an automatic stop; the replacement client must reopen and inspect `getState()` before deciding whether to call `start()`, wait for an in-progress transition, or continue with the existing runtime state.
 
 ---
 

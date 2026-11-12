@@ -56,10 +56,11 @@ interface IPanelOutput {
      * @brief Open this panel output for exclusive control.
      *
      * On success this returns the exclusive IPanelOutputController for the
-     * panel output. The controller may already be in any retained lifecycle
-     * state, so the client must call `getState()` before deciding whether to
-     * start, wait for an in-progress transition, continue with STARTED-state
-     * operations, or recover from ERROR.
+     * panel output. A successfully opened controller must be in a valid
+     * operating state such as STOPPED or an in-flight acquisition state before
+     * STOPPED; `CLOSED` is not a valid successful open result. The client must
+     * call `getState()` before deciding whether to start, wait for an
+     * in-progress transition, or continue with STARTED-state operations.
      *
      * Only one controller may exist at a time. If the owning client crashes,
      * the HAL releases exclusive ownership of the controller but retains the
@@ -70,7 +71,8 @@ interface IPanelOutput {
      *
      * A client that reopens the panel after the previous controller owner died
      * must call `getState()` on the returned controller and continue from that
-     * state rather than assuming the panel has been stopped or reset.
+     * state rather than assuming the panel has been stopped or reset. The
+     * normal acquisition path is `CLOSED -> OPENING -> STOPPED`.
      *
      * @returns IPanelOutputController, or null if the panel output cannot be opened.
      *
@@ -87,25 +89,19 @@ interface IPanelOutput {
     /**
      * @brief Close this panel output and release the controller.
      *
-     * Accepted from STOPPED or ERROR. From STOPPED this is the normal close
-     * path. From ERROR this is the recovery path: after a start() failure
-     * (which transitions the panel output to ERROR), the client calls close()
-     * to release the controller and the panel output returns to a state where
-     * it can be opened again. On success the controller is invalidated and
-     * another client may `open()` the panel output.
-     *
-     * If the panel remains in ERROR after a close()/open()/start() recovery
-     * attempt, the platform may require a full device reboot or power cycle to
-     * clear latched display hardware. Treat that as a last resort and a
-     * platform-specific recovery action rather than a normal API flow.
+     * Accepted from STOPPED and while the controller is releasing resources
+     * during `CLOSING`. This is the distinct release path after an explicit
+     * `stop()` has reached `STOPPED` or when the client decides to relinquish
+     * exclusive control without restarting the panel. On success the
+     * controller transitions `STOPPED -> CLOSING -> CLOSED`, the controller is
+     * invalidated, and another client may `open()` the panel output.
      *
      * Client death is handled separately from `close()`: the HAL releases the
      * controller ownership automatically, but it does not force the panel back
      * to STOPPED or discard the last stored configuration.
      *
      * If the panel output is in STARTED, STARTING, or STOPPING the call fails
-     * with EX_ILLEGAL_STATE - the client must call stop() first (or, from
-     * ERROR, close() directly).
+     * with EX_ILLEGAL_STATE - the client must call stop() first, then close().
      *
      * @param controller The IPanelOutputController instance returned by open().
      *
@@ -113,7 +109,7 @@ interface IPanelOutput {
      * @retval true  Successfully closed.
      * @retval false The supplied controller is not the instance returned by open().
      *
-     * @exception binder::Status EX_ILLEGAL_STATE if panel output is not in STOPPED or ERROR state.
+     * @exception binder::Status EX_ILLEGAL_STATE if panel output is not in STOPPED or CLOSING state.
      * @exception binder::Status EX_NULL_POINTER if controller is null.
      *
      * @see open(), IPanelOutputController.start()

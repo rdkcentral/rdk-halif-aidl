@@ -29,8 +29,8 @@
  * controller ownership but retains the current panel state and the latest
  * stored configuration. A later client can reopen the panel and use
  * getState() to discover whether the panel is still CLOSED, OPENING,
- * STOPPED, STARTING, STARTED, STOPPING, CLOSING, or in ERROR. The
- * enabled/disabled state is retained separately from lifecycle state.
+ * STOPPED, STARTING, STARTED, STOPPING, or CLOSING. The enabled/disabled
+ * state is retained separately from lifecycle state.
  */
 package com.rdk.hal.panel;
 
@@ -58,10 +58,9 @@ interface IPanelOutputController {
      * and the PQ pipeline becomes ready for configuration and video flow. A
      * panel may still be disabled while the controller is STARTED.
      * IPanelOutputEventListener.onStateChanged() fires for each transition.
-     * If hardware initialization fails, the state transitions to ERROR
-     * (observable via onStateChanged()) and this call returns false. Use
-     * IPanelOutput.close() to release the panel output from ERROR; close()
-     * accepts STOPPED or ERROR.
+     * If hardware initialization fails, this call returns false and the
+     * controller remains in a valid lifecycle state for the client to inspect
+     * before retrying or releasing ownership.
      *
      * @returns boolean
      * @retval true The panel output was started successfully.
@@ -87,12 +86,15 @@ interface IPanelOutputController {
      *
      * This method can only be called in State.STARTED. On success, it
      * transitions STARTED -> STOPPING -> STOPPED. A runtime or hardware
-     * failure returns false and transitions the controller to ERROR.
+     * failure returns false and the controller remains in a valid lifecycle
+     * state that the client may inspect before retrying or closing.
      * IPanelOutputEventListener.onStateChanged() fires for each transition.
      *
-     * This is the explicit lifecycle shutdown path. It is distinct from
-     * setEnabled(false), which only suppresses panel output and may keep the
-     * controller STARTED for light-sleep or standby operation.
+     * This is the explicit runtime shutdown path for the panel stream. It is
+     * distinct from `close()`, which is the separate controller-release path
+     * that transitions `STOPPED -> CLOSING -> CLOSED` and invalidates the
+     * exclusive controller handle. `setEnabled(false)` only suppresses panel
+     * output and may keep the controller STARTED for light-sleep or standby.
      *
      * @returns boolean
      * @retval true The panel output was stopped successfully.
@@ -155,16 +157,10 @@ interface IPanelOutputController {
      *
      * Exact duplicate entries are ignored. The same picture mode may be associated with
      * multiple dynamic-range and/or AV-source combinations; the array is interpreted as a
-     * set of per-context mappings, not a single global override. This allows a single
-     * picture mode preset to be reused across different runtime contexts such as:
-     * - `Movie-HDMI1-HDR10` for HDR10 content on HDMI1,
-     * - `Movie-HDMI1-DV` for Dolby Vision content on HDMI1,
-     * - `Movie-IP-HDR10` for HDR10 content on IP/OTT,
-     * - `Movie-IP-DV` for Dolby Vision content on IP/OTT.
-     *
-     * A duplicate with the same picture mode, dynamic range and source is treated as a
-     * no-op. Duplicate entries with the same picture mode but different source or
-     * dynamic-range values are allowed and resolved by their full selector key.
+     * set of per-context mappings, not a single global override. A duplicate with the same
+     * picture mode, dynamic range and source is treated as a no-op. Duplicate entries with
+     * the same picture mode but different source or dynamic-range values are allowed and
+     * resolved by their full selector key.
      *
      * @param[in] configurations    Array of PictureModeConfiguration values.
      *
