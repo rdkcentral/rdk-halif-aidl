@@ -266,11 +266,16 @@ interface IPanelOutputController {
      *
      * This method uses Binder exceptions for all failure reporting. Invalid configuration
      * payloads, unsupported selectors, and invalid controller state are reported via
-     * `EX_ILLEGAL_ARGUMENT` or `EX_ILLEGAL_STATE`.
+     * `EX_ILLEGAL_ARGUMENT` or `EX_ILLEGAL_STATE`. A valid configuration that is accepted by
+     * the API but cannot be applied by the hardware or runtime is reported as a service-specific
+     * failure via `EX_SERVICE_SPECIFIC` with a defined error code so clients can distinguish
+     * it from validation errors.
      *
      * @exception binder::Status::Exception::EX_ILLEGAL_STATE The panel output is not in STARTED state.
      * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT The configuration list is empty or contains invalid
      * selectors or value variants.
+     * @exception binder::Status::Exception::EX_SERVICE_SPECIFIC The configuration was valid but the panel runtime
+     * could not apply it to hardware or a platform-specific runtime path.
      *
      * @see getPQParameters(), getDefaultPQParameters(), getPQParameterCapabilities(), enableCalibrationMode(),
      *     PQParameterConfiguration
