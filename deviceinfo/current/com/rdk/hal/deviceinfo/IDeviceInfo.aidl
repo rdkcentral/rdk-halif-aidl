@@ -55,13 +55,14 @@ interface IDeviceInfo {
     /**
      * Gets a persisted device property by key.
      *
-     * On success, returns a `Property` parcelable (see Property.aidl).
+     * On success, returns a `Property` parcelable carrying the property's value
+     * and its metadata (see Property.aidl).
      * @see `PropertyType.aidl` for supported formats and validation rules.
      *
      * Property key strings must be one of the keys listed in `getCapabilities().supportedProperties[]`.
      *
      * @param[in] propertyKey  The key of a property to retrieve.
-     * @returns Property parcelable with metadata, or null if unsupported.
+     * @returns Property parcelable with the value and its metadata, or null if unsupported.
      *
      *
      * @see getCapabilities(), Property.aidl, PropertyType.aidl
