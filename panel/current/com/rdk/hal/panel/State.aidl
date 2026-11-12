@@ -26,14 +26,20 @@ package com.rdk.hal.panel;
 @VintfStability
 @Backing(type = "int")
 enum State {
+    /** The controller is not currently open for exclusive use. */
+    CLOSED = 0,
+    /** The controller is opening and acquiring the panel resource. */
+    OPENING = 1,
     /** The controller is stopped; start() may be called. */
-    STOPPED = 0,
+    STOPPED = 2,
     /** A start() is in progress. */
-    STARTING = 1,
+    STARTING = 3,
     /** The panel output is running; control operations are valid. */
-    STARTED = 2,
+    STARTED = 4,
     /** A stop() is in progress. */
-    STOPPING = 3,
+    STOPPING = 5,
+    /** The controller is closing and relinquishing the panel resource. */
+    CLOSING = 6,
     /** A state transition failed; release the controller with close(). */
-    ERROR = 4,
+    ERROR = 7,
 }

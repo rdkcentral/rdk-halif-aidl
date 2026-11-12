@@ -28,13 +28,12 @@
  * If the client that opened this controller crashes, the HAL releases the
  * controller ownership but retains the current panel state and the latest
  * stored configuration. A later client can reopen the panel and use
- * getState() to discover whether the panel is still STOPPED, STARTING,
- * STARTED, STOPPING, or in ERROR. The enabled/disabled state is retained
- * separately from lifecycle state.
+ * getState() to discover whether the panel is still CLOSED, OPENING,
+ * STOPPED, STARTING, STARTED, STOPPING, or CLOSING. The enabled/disabled
+ * state is retained separately from lifecycle state.
  */
 package com.rdk.hal.panel;
 
-import com.rdk.hal.panel.ErrorCode;
 import com.rdk.hal.panel.PQParameter;
 import com.rdk.hal.panel.PQParameterCapabilities;
 import com.rdk.hal.panel.PQParameterConfiguration;
@@ -59,10 +58,9 @@ interface IPanelOutputController {
      * and the PQ pipeline becomes ready for configuration and video flow. A
      * panel may still be disabled while the controller is STARTED.
      * IPanelOutputEventListener.onStateChanged() fires for each transition.
-     * If hardware initialization fails, the state transitions to ERROR
-     * (observable via onStateChanged()) and this call returns false. Use
-     * IPanelOutput.close() to release the panel output from ERROR; close()
-     * accepts STOPPED or ERROR.
+     * If hardware initialization fails, this call returns false and the
+     * controller remains in a valid lifecycle state for the client to inspect
+     * before retrying or releasing ownership.
      *
      * @returns boolean
      * @retval true The panel output was started successfully.
@@ -88,12 +86,15 @@ interface IPanelOutputController {
      *
      * This method can only be called in State.STARTED. On success, it
      * transitions STARTED -> STOPPING -> STOPPED. A runtime or hardware
-     * failure returns false and transitions the controller to ERROR.
+     * failure returns false and the controller remains in a valid lifecycle
+     * state that the client may inspect before retrying or closing.
      * IPanelOutputEventListener.onStateChanged() fires for each transition.
      *
-     * This is the explicit lifecycle shutdown path. It is distinct from
-     * setEnabled(false), which only suppresses panel output and may keep the
-     * controller STARTED for light-sleep or standby operation.
+     * This is the explicit runtime shutdown path for the panel stream. It is
+     * distinct from `close()`, which is the separate controller-release path
+     * that transitions `STOPPED -> CLOSING -> CLOSED` and invalidates the
+     * exclusive controller handle. `setEnabled(false)` only suppresses panel
+     * output and may keep the controller STARTED for light-sleep or standby.
      *
      * @returns boolean
      * @retval true The panel output was stopped successfully.
@@ -153,6 +154,13 @@ interface IPanelOutputController {
      *
      * Each `PictureModeConfiguration` element in the `configurations` array links together
      * a picture mode, dynamic range and AV source.
+     *
+     * Exact duplicate entries are ignored. The same picture mode may be associated with
+     * multiple dynamic-range and/or AV-source combinations; the array is interpreted as a
+     * set of per-context mappings, not a single global override. A duplicate with the same
+     * picture mode, dynamic range and source is treated as a no-op. Duplicate entries with
+     * the same picture mode but different source or dynamic-range values are allowed and
+     * resolved by their full selector key.
      *
      * @param[in] configurations    Array of PictureModeConfiguration values.
      *
@@ -256,20 +264,23 @@ interface IPanelOutputController {
      *
      * @param[in] configurations    Array of PQParameterConfiguration values.
      *
-     * @returns ErrorCode
-     * @retval ErrorCode.SUCCESS           The PQ parameters were set.
-     * @retval ErrorCode.INVALID_ARGUMENT  One or more parameter configurations were invalid.
-     * @retval ErrorCode.NOT_SUPPORTED     One or more PQ parameters are unsupported.
-     * @retval ErrorCode.HARDWARE_FAILURE  The HAL could not apply the request.
+     * This method uses Binder exceptions for all failure reporting. Invalid configuration
+     * payloads, unsupported selectors, and invalid controller state are reported via
+     * `EX_ILLEGAL_ARGUMENT` or `EX_ILLEGAL_STATE`. A valid configuration that is accepted by
+     * the API but cannot be applied by the hardware or runtime is reported as a service-specific
+     * failure via `EX_SERVICE_SPECIFIC` with a defined error code so clients can distinguish
+     * it from validation errors.
      *
      * @exception binder::Status::Exception::EX_ILLEGAL_STATE The panel output is not in STARTED state.
      * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT The configuration list is empty or contains invalid
      * selectors or value variants.
+     * @exception binder::Status::Exception::EX_SERVICE_SPECIFIC The configuration was valid but the panel runtime
+     * could not apply it to hardware or a platform-specific runtime path.
      *
      * @see getPQParameters(), getDefaultPQParameters(), getPQParameterCapabilities(), enableCalibrationMode(),
      *     PQParameterConfiguration
      */
-    ErrorCode setPQParameters(in PQParameterConfiguration[] configurations);
+    void setPQParameters(in PQParameterConfiguration[] configurations);
 
     /**
      * Gets the current picture quality (PQ) parameter values.
@@ -444,9 +455,16 @@ interface IPanelOutputController {
      *
      * @param[in] source A PanelSource value.
      *
+     * @returns boolean
+     * @retval true  The source override was successfully applied.
+     * @retval false The request was accepted but could not be applied for the current hardware or runtime state.
+     *
+     * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT Invalid source value.
+     * @exception binder::Status::Exception::EX_ILLEGAL_STATE The panel output is not in STARTED state.
+     *
      * @see getVideoSourceOverride(), PanelSource
      */
-    void setVideoSourceOverride(in PanelSource source);
+    boolean setVideoSourceOverride(in PanelSource source);
 
     /**
      * Gets the AV source override used to apply PQ settings.
