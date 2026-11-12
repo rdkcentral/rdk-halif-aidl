@@ -147,6 +147,7 @@ nav:
       - Current: '!include deviceinfo/current/mkdocs.yml'
       - 0.2.0.0: '!include deviceinfo/0.2.0.0/mkdocs.yml'
       - 0.1.0.0: '!include deviceinfo/0.1.0.0/mkdocs.yml'
+    - Far Field Voice: '!include ffv/current/mkdocs.yml'
     - Firmware Update:
       - Current: '!include firmwareupdate/current/mkdocs.yml'
       - 0.2.0.1: '!include firmwareupdate/0.2.0.1/mkdocs.yml'

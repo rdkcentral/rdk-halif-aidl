@@ -1,0 +1,7 @@
+aidl_interface:
+  name: ffv
+  srcs:
+    - com/rdk/hal/farfieldvoice/*.aidl
+  imports: []
+  stability: vintf
+  layout: module-local
