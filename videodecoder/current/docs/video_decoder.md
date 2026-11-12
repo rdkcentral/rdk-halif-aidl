@@ -413,7 +413,17 @@ The RDK media pipeline is responsible for parsing the SEI user data from the byt
 
 The Video Decoder HAL follows the standard Session State Management paradigm.
 
-When an Video Decoder session enters a FLUSHING or STOPPING transitory state it shall free any AV buffers it is holding.
+When a Video Decoder session enters a FLUSHING or STOPPING transitory state it shall free any AV buffers it is holding.
+
+| Buffer | Owner when `flush()` or `stop()` is called | Outcome |
+| --- | --- | --- |
+| Input buffer accepted by `decodeBufferWithMetadata()`, not yet decoded | HAL | Freed by the HAL. |
+| Output buffer with no `onFrameOutput()` yet issued | HAL | Freed by the HAL and never delivered. |
+| Output buffer whose `onFrameOutput()` has been issued, including a callback still in flight | Client, until accepted by the sink | Not freed by the HAL: the client frees it with `IAVBuffer.free()` or passes it to the sink. |
+| Output buffer accepted by `queueVideoFrame()` | Sink | Owned by the sink; the client has no further access and does not free it. |
+| Tunnelled output (`frameAVBufferHandle == -1`) | Vendor layer | Discarded inside the vendor layer. |
+
+Once `flush()` or `stop()` returns, the HAL issues no `onFrameOutput()` for data submitted before the call. Ownership passes when the HAL issues `onFrameOutput()`. The listener is `oneway`, so a callback issued before the return can still arrive after it; the client owns that buffer and frees it if it no longer needs it.
 
 The sequence diagram below shows the behaviour of the callbacks.
 
