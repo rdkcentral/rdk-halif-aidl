@@ -1,0 +1,7 @@
+aidl_interface:
+  name: cryptoengine
+  srcs:
+    - com/rdk/hal/cryptoengine/*.aidl
+  imports: []
+  stability: vintf
+  layout: module-local
