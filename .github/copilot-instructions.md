@@ -35,7 +35,7 @@ This codebase defines **RDK Hardware Abstraction Layer interfaces using Android 
 ./freeze_interface.sh bootreason           # Freeze as versioned release (v1, v2, etc.)
 
 # Production build (Yocto/BitBake - uses pre-generated code)
-cmake -S . -B build -DINTERFACE_TARGET=all -DBINDER_SDK_DIR=${STAGING_DIR}/usr
+cmake -S . -B build -DINTERFACE_RELEASE_FILE=versions_released.yaml -DBINDER_SDK_DIR=${STAGING_DIR}/usr
 cmake --build build
 cmake --install build
 
@@ -214,8 +214,7 @@ git commit -m "Update boot interface"
 CC="${CC}" CXX="${CXX}" \
 CFLAGS="${CFLAGS}" CXXFLAGS="${CXXFLAGS}" LDFLAGS="${LDFLAGS}" \
 cmake -S . -B build \
-      -DINTERFACE_TARGET=all \
-      -DAIDL_SRC_VERSION=current \
+      -DINTERFACE_RELEASE_FILE=versions_released.yaml \
       -DBINDER_SDK_DIR=${STAGING_DIR}/usr
 
 cmake --build build
@@ -240,9 +239,9 @@ CMake automatically detects and applies these variables. Yocto provides them aut
 
 ### Required CMake Variables
 
-- `INTERFACE_TARGET` (required): Module to build (e.g., "boot", "videodecoder") - set in module's CMakeLists.txt
-- `INTERFACE_VERSION`: Version directory (default: "current") - set in module's CMakeLists.txt
-- `AIDL_SRC_VERSION`: Version directory override (command-line, optional)
+- `INTERFACE_TARGET`: Optional single module to build (e.g., "bootreason", "videodecoder"); leave unset to build the release manifest
+- `INTERFACE_VERSION`: Version of `INTERFACE_TARGET` (default: "current")
+- `INTERFACE_RELEASE_FILE`: Component version manifest (default: `versions_released.yaml`)
 - `AIDL_GEN_DIR`: Output directory (defaults to `gen/{module}/{version}`)
 - `AIDL_BIN`: Path to AIDL compiler (from linux_binder_idl tools, auto-detected if in PATH)
 
@@ -289,7 +288,7 @@ DEPENDS = "linux-binder"
 
 do_configure() {
     cmake -S ${S} -B ${B} \
-          -DINTERFACE_TARGET=all \
+          -DINTERFACE_RELEASE_FILE=${S}/versions_released.yaml \
           -DBINDER_SDK_DIR=${STAGING_DIR}${prefix}
 }
 ```
