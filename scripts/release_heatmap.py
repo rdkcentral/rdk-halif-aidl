@@ -29,6 +29,10 @@ by change class, each followed by a badge for each of its open PRs. Below it,
 the tickets resolved since the last release, with the PRs that took them into
 develop.
 
+The repositories in EXTRA_REPOS follow, each in a section of its own: one
+component row against that repository's own milestones, and what it resolved
+since its own last release. Their labels are read through LABEL_ALIASES.
+
 Usage:
     scripts/release_heatmap.py                 # print the page
     scripts/release_heatmap.py -o page.md      # write it to a file
@@ -76,6 +80,16 @@ BADGE = {"Major": ("M", "d73a4a"), "CR-Major": ("CR", "8b0000"), "New Interface"
          "Infrastructure": ("I", "bf8700"), "Query": ("Q", "bf3989"), UNCLASSIFIED: ("?", "d0d7de")}
 REPO_WIDE = [("scope:infrastructure", "(infrastructure)"), ("scope:overview", "(overview)"),
              ("documentation", "(documentation)")]
+# Other repositories whose work belongs on this page -> the component each is.
+# A repository is one row in a section of its own, because its milestones are
+# its own releases and cannot be columns of this repo's table.
+EXTRA_REPOS = {"rdkcentral/linux_binder_idl": "linux-binder"}
+# The labels those repositories use today -> the label of this repo that means
+# the same, so one mapping (project_interface_effect) still decides the class.
+# Read only for EXTRA_REPOS: here `enhancement` and `question` say nothing
+# about the interface.
+LABEL_ALIASES = {"Major": "Major Change", "Minor": "Minor Change",
+                 "enhancement": "Minor Change", "question": "Query"}
 
 
 def gh_json(args):
@@ -172,32 +186,34 @@ query($owner:String!,$name:String!,$cursor:String,$since:DateTime){
 """ % ISSUE_FIELDS
 
 
-def fetch_issues(query=ISSUES, **extra):
+def fetch_issues(query=ISSUES, repo=REPO, **extra):
+    owner, name = repo.split("/")
     out, cursor = [], None
     while True:
-        page = graphql(query, owner=OWNER, name=NAME, cursor=cursor, **extra)["repository"]["issues"]
+        page = graphql(query, owner=owner, name=name, cursor=cursor, **extra)["repository"]["issues"]
         for issue in page["nodes"]:
-            complete_prs(issue)
+            complete_prs(issue, repo)
         out += page["nodes"]
         if not page["pageInfo"]["hasNextPage"]:
             return out
         cursor = page["pageInfo"]["endCursor"]
 
 
-def complete_prs(issue):
+def complete_prs(issue, repo=REPO):
+    owner, name = repo.split("/")
     for key, query in (("closedByPullRequestsReferences", MORE_PRS), ("timelineItems", MORE_REFS)):
         conn = issue[key]
         while conn["pageInfo"]["hasNextPage"]:
-            more = gh_json(["api", "graphql", "-f", "query=" + query, "-f", "owner=" + OWNER, "-f", "name=" + NAME,
+            more = gh_json(["api", "graphql", "-f", "query=" + query, "-f", "owner=" + owner, "-f", "name=" + name,
                             "-F", "number=%d" % issue["number"], "-f", "cursor=" + conn["pageInfo"]["endCursor"]])
             page = more["data"]["repository"]["issue"][key]
             conn["nodes"] += page["nodes"]
             conn["pageInfo"] = page["pageInfo"]
 
 
-def fetch_last_release():
+def fetch_last_release(repo=REPO):
     """The latest published release, or None before the first one."""
-    r = subprocess.run(["gh", "api", "repos/%s/releases/latest" % REPO], capture_output=True, text=True)
+    r = subprocess.run(["gh", "api", "repos/%s/releases/latest" % repo], capture_output=True, text=True)
     if r.returncode:
         # Only "no release yet" is an answer; any other failure stops the run, so a
         # page without its resolved table is never published.
@@ -208,9 +224,9 @@ def fetch_last_release():
     return {"tag": rel["tag_name"], "url": rel["html_url"], "at": rel["published_at"]}
 
 
-def fetch_resolved(since):
+def fetch_resolved(since, repo=REPO):
     """Issues closed as completed after `since`."""
-    return [i for i in fetch_issues(CLOSED, since=since)
+    return [i for i in fetch_issues(CLOSED, repo, since=since)
             if i["closedAt"] > since and i["stateReason"] == "COMPLETED"]
 
 
@@ -226,15 +242,15 @@ def fetch_project():
     return ((data["data"].get("organization") or {}).get("projectV2")) or {"title": None, "public": False}
 
 
-def fetch_milestones():
+def fetch_milestones(repo=REPO):
     """Open milestones, in version order, with their due dates."""
-    pages = gh_json(["api", "--paginate", "--slurp", "repos/%s/milestones?state=open&per_page=100" % REPO])
+    pages = gh_json(["api", "--paginate", "--slurp", "repos/%s/milestones?state=open&per_page=100" % repo])
     ms = [m for page in pages for m in page]
     return sorted(({"title": m["title"], "due": m["due_on"]} for m in ms), key=lambda m: version_key(m["title"]))
 
 
-def fetch_project_fields():
-    """{issue number: {field: value}} for this repo's issues on the project."""
+def fetch_project_items():
+    """Every item on the project, with its single-select fields; item_fields() picks a repo's."""
     nodes, cursor = [], None
     while True:
         args = ["api", "graphql", "-f", "query=" + PROJECT_ITEMS, "-f", "owner=" + OWNER,
@@ -242,16 +258,17 @@ def fetch_project_fields():
         page = gh_json(args)["data"]["organization"]["projectV2"]["items"]
         nodes += page["nodes"]
         if not page["pageInfo"]["hasNextPage"]:
-            return item_fields(nodes)
+            return nodes
         cursor = page["pageInfo"]["endCursor"]
 
 
-def item_fields(nodes):
+def item_fields(nodes, repo=REPO):
+    """{issue number: {field: value}} for one repo's issues on the project."""
     out = {}
     for item in nodes:
         content = item.get("content") or {}
-        # The project spans repositories: only this repo's issues are ours.
-        if content.get("number") and (content.get("repository") or {}).get("nameWithOwner") == REPO:
+        # The project spans repositories, and issue numbers repeat across them.
+        if content.get("number") and (content.get("repository") or {}).get("nameWithOwner") == repo:
             out[content["number"]] = {v["field"]["name"]: v["name"]
                                       for v in item["fieldValues"]["nodes"] if v and v.get("field")}
     return out
@@ -261,16 +278,19 @@ def project_fields(issue):
     return issue.get("projectFields") or {}
 
 
-def classify(issue, maintainers, today, next_due):
+def classify(issue, maintainers, today, next_due, repo=REPO, component=None):
+    """One ticket's row, class and urgency. `component` is set for a repository
+    of EXTRA_REPOS: the whole repository is that one component."""
     labels = [l["name"] for l in issue["labels"]["nodes"]]
     fields = project_fields(issue)
-    label_class = pie.class_of(labels)
+    label_class = pie.class_of([LABEL_ALIASES.get(l, l) for l in labels] if component else labels)
     # Labels win, as in the project sync; the field fills in where none is set.
     effect = label_class or fields.get("Interface Effect")
     priority = (fields.get("Priority") or "").split(" ")[0] or None
     ms = issue["milestone"]
     due = ms["dueOn"][:10] if ms and ms["dueOn"] else None
-    comps = sorted(l[len("component:"):] for l in labels if l.startswith("component:"))
+    comps = [component] if component else sorted(
+        l[len("component:"):] for l in labels if l.startswith("component:"))
     if not comps:
         # Repo-wide work has no component: its row comes from the scope or class label.
         comps = next(([row] for lbl, row in REPO_WIDE if lbl in labels), ["(no component)"])
@@ -298,7 +318,7 @@ def classify(issue, maintainers, today, next_due):
         "number": issue["number"], "title": issue["title"], "url": issue["url"],
         "milestone": ms["title"] if ms else NO_MILESTONE, "components": comps,
         "effect": effect, "label_class": label_class, "field": fields.get("Interface Effect"),
-        "priority": priority, "score": score, "why": why, "prs": pr_states(issue), "open_prs": open_prs(issue),
+        "priority": priority, "score": score, "why": why, "prs": pr_states(issue), "open_prs": open_prs(issue, repo),
     }
 
 
@@ -340,10 +360,10 @@ def pr_states(issue):
     return pr_entries((issue.get("closedByPullRequestsReferences") or {}).get("nodes") or [])
 
 
-def open_prs(issue):
-    """The ticket's open PRs: those that close it, and those in this repo that reference it."""
+def open_prs(issue, repo=REPO):
+    """The ticket's open PRs: those that close it, and those in its own repo that reference it."""
     refs = [(e.get("source") or {}) for e in (issue.get("timelineItems") or {}).get("nodes") or []]
-    refs = [p for p in refs if (p.get("repository") or {}).get("nameWithOwner") == REPO]
+    refs = [p for p in refs if (p.get("repository") or {}).get("nameWithOwner") == repo]
     closing = (issue.get("closedByPullRequestsReferences") or {}).get("nodes") or []
     return [p for p in pr_entries(closing + refs) if p["state"] in OPEN]
 
@@ -408,7 +428,8 @@ def flow(items, alone):
     return "<br>".join(lines + ([" ".join(run)] if run else []))
 
 
-def render(tickets, milestones, generated, project_title="halif_aidl", resolved=(), release=None):
+def table(tickets, milestones):
+    """Components against milestones: the heatmap itself."""
     used = {t["milestone"] for t in tickets}
     cols = [m["title"] for m in milestones if m["title"] in used]
     # An open ticket on a closed milestone is a fault: the work is done and the
@@ -420,6 +441,20 @@ def render(tickets, milestones, generated, project_title="halif_aidl", resolved=
     comps = sorted({c for t in tickets for c in t["components"]},
                    key=lambda c: (c.startswith("("), c))
     lines = [
+        "| Component | " + " | ".join(short[c] for c in cols) + " | Total |",
+        "| --- |" + " --- |" * (len(cols) + 1),
+    ]
+    for comp in comps:
+        row = [t for t in tickets if comp in t["components"]]
+        lines.append("| %s | %s | %d |" % (comp, " | ".join(
+            cell([t for t in row if t["milestone"] == c]) for c in cols), len(row)))
+    lines.append("| **Tickets** | %s | **%d** |" % (" | ".join(
+        "**%d**" % sum(1 for t in tickets if t["milestone"] == c) for c in cols), len(tickets)))
+    return lines
+
+
+def render(tickets, milestones, generated, project_title="halif_aidl", resolved=(), release=None, extras=()):
+    lines = [
         "# Release heatmap", "",
         "_Generated %s by [`scripts/release_heatmap.py`](https://github.com/%s/blob/develop/"
         "scripts/release_heatmap.py) from the open issues and the [%s](https://github.com/orgs/%s/"
@@ -430,24 +465,30 @@ def render(tickets, milestones, generated, project_title="halif_aidl", resolved=
         "first, as a badge coloured by its change class; each of its open PRs is "
         "on the line below it, marked ↳:" % len(tickets), "", legend(), "", "PR: " + pr_legend() + " (open: "
         "review needed)", "",
-        "| Component | " + " | ".join(short[c] for c in cols) + " | Total |",
-        "| --- |" + " --- |" * (len(cols) + 1),
-    ]
-    for comp in comps:
-        row = [t for t in tickets if comp in t["components"]]
-        lines.append("| %s | %s | %d |" % (comp, " | ".join(
-            cell([t for t in row if t["milestone"] == c]) for c in cols), len(row)))
-    lines.append("| **Tickets** | %s | **%d** |" % (" | ".join(
-        "**%d**" % sum(1 for t in tickets if t["milestone"] == c) for c in cols), len(tickets)))
+    ] + table(tickets, milestones)
 
     if release:
         lines += render_resolved(resolved, release)
+    for extra in extras:
+        lines += render_extra(**extra)
     return "\n".join(lines) + "\n"
 
 
-def render_resolved(tickets, release):
+def render_extra(repo, component, tickets, milestones, resolved=(), release=None):
+    """Another repository's open work: one component, against its own milestones."""
+    lines = ["", "## %s" % component, "",
+             "%d open issues of [%s](https://github.com/%s), against its own milestones. It is "
+             "regenerated with this page, so a change there shows after the next change "
+             "here." % (len(tickets), repo, repo), ""]
+    lines += table(tickets, milestones) if tickets else ["Nothing open."]
+    if release:
+        lines += render_resolved(resolved, release, "###")
+    return lines
+
+
+def render_resolved(tickets, release, heading="##"):
     """What has landed since the last release: completed tickets, and the PRs that took them into develop."""
-    lines = ["", "## Resolved since %s" % release["tag"], "",
+    lines = ["", "%s Resolved since %s" % (heading, release["tag"]), "",
              "Tickets closed as completed since the [%s release](%s) on %s, with the PRs that "
              "took them into develop." % (release["tag"], release["url"], release["at"][:10]), ""]
     if not tickets:
@@ -489,6 +530,20 @@ def publish(page):
         print("wiki: https://github.com/%s/wiki/%s" % (REPO, WIKI_PAGE))
 
 
+def collect(repo, component, items, maintainers, today):
+    """One repository's open tickets, milestones and what it resolved since its last release."""
+    milestones = fetch_milestones(repo)
+    upcoming = sorted(m["due"][:10] for m in milestones if m["due"] and m["due"][:10] >= today)
+    next_due = upcoming[0] if upcoming else None
+    fields = item_fields(items, repo)
+    classed = lambda issues: [classify(dict(i, projectFields=fields.get(i["number"], {})),
+                                       maintainers, today, next_due, repo, component) for i in issues]
+    release = fetch_last_release(repo)
+    out = {"tickets": classed(fetch_issues(repo=repo)), "milestones": milestones, "release": release,
+           "resolved": classed(fetch_resolved(release["at"], repo)) if release else []}
+    return out if component is None else dict(out, repo=repo, component=component)
+
+
 def parse_args(argv):
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("-o", "--output")
@@ -502,18 +557,12 @@ def main(argv):
 
     now = datetime.datetime.now(datetime.timezone.utc)
     today = now.strftime("%Y-%m-%d")
-    milestones = fetch_milestones()
-    upcoming = sorted(m["due"][:10] for m in milestones if m["due"] and m["due"][:10] >= today)
-    next_due = upcoming[0] if upcoming else None
-    fields = fetch_project_fields()
-    with_fields = lambda issues: [dict(i, projectFields=fields.get(i["number"], {})) for i in issues]
-    tickets = [classify(i, set(a.maintainer), today, next_due) for i in with_fields(fetch_issues())]
-    release = fetch_last_release()
-    resolved = ([classify(i, set(a.maintainer), today, next_due) for i in with_fields(fetch_resolved(release["at"]))]
-                if release else [])
+    items = fetch_project_items()
+    this, *extras = [collect(repo, component, items, set(a.maintainer), today)
+                     for repo, component in [(REPO, None)] + sorted(EXTRA_REPOS.items())]
     project = fetch_project()
-    page = render(tickets, milestones, now.strftime("%Y-%m-%d %H:%M UTC"),
-                  project["title"] or "project %d" % PROJECT_NUMBER, resolved, release)
+    page = render(this["tickets"], this["milestones"], now.strftime("%Y-%m-%d %H:%M UTC"),
+                  project["title"] or "project %d" % PROJECT_NUMBER, this["resolved"], this["release"], extras)
 
     if a.output:
         with open(a.output, "w") as fh:

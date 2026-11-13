@@ -236,5 +236,73 @@ class Render(unittest.TestCase):
         self.assertEqual(rh.flow(["a", "b", "c", "d"], [False, True, False, False]), "a<br>b<br>c d")
 
 
+class ExtraRepos(unittest.TestCase):
+    """Another repository's work: one component, its own labels and milestones."""
+
+    BINDER = "rdkcentral/linux_binder_idl"
+
+    def binder(self, **kw):
+        return rh.classify(issue(**kw), set(), "2026-11-03", None, self.BINDER, "linux-binder")
+
+    def test_linux_binder_is_an_extra_repo(self):
+        self.assertEqual(rh.EXTRA_REPOS[self.BINDER], "linux-binder")
+
+    def test_the_repository_is_the_component(self):
+        self.assertEqual(self.binder()["components"], ["linux-binder"])
+        self.assertEqual(self.binder(labels=["documentation", "component:panel"])["components"], ["linux-binder"])
+
+    def test_its_labels_select_a_class(self):
+        def effect(labels):
+            return self.binder(labels=labels)["effect"]
+        self.assertEqual(effect(["bug"]), "BugFix")
+        self.assertEqual(effect(["documentation"]), "Documentation")
+        self.assertEqual(effect(["enhancement"]), "Minor")
+        self.assertEqual(effect(["Minor"]), "Minor")
+        self.assertEqual(effect(["Major"]), "Major")
+        self.assertEqual(effect(["question"]), "Query")
+        self.assertEqual(effect(["documentation", "enhancement", "question"]), "Minor")
+        self.assertIsNone(effect([]))
+
+    def test_aliases_are_not_read_in_this_repo(self):
+        t = rh.classify(issue(labels=["enhancement", "question"]), set(), "2026-11-03", None)
+        self.assertIsNone(t["effect"])
+
+    def test_project_fields_are_per_repo(self):
+        def node(n, repo, prio):
+            return {"content": {"number": n, "repository": {"nameWithOwner": repo}},
+                    "fieldValues": {"nodes": [{"name": prio, "field": {"name": "Priority"}}]}}
+        nodes = [node(7, rh.REPO, "P1"), node(7, self.BINDER, "P0")]
+        self.assertEqual(rh.item_fields(nodes), {7: {"Priority": "P1"}})
+        self.assertEqual(rh.item_fields(nodes, self.BINDER), {7: {"Priority": "P0"}})
+
+    def test_open_prs_are_those_of_its_own_repo(self):
+        own = {"number": 5, "state": "OPEN", "repository": {"isPrivate": False, "nameWithOwner": self.BINDER}}
+        other = {"number": 6, "state": "OPEN"}   # the helper puts this one in rh.REPO
+        t = self.binder(ref_prs=[own, other])
+        self.assertEqual([p["number"] for p in t["open_prs"]], [5])
+
+    def test_section_has_its_own_milestones(self):
+        here = rh.classify(issue(1, labels=["component:panel"], milestone="0.24.0"), set(), "2026-11-03", None)
+        there = self.binder(number=96, labels=["bug"], milestone="2.8.0")
+        release = {"tag": "2.7.0", "url": "r", "at": "2026-10-07T00:00:00Z"}
+        page = rh.render([here], [{"title": "0.24.0", "due": None}], "now", extras=[{
+            "repo": self.BINDER, "component": "linux-binder", "tickets": [there],
+            "milestones": [{"title": "2.8.0", "due": None}], "resolved": [], "release": release}])
+        main, section = page.split("## linux-binder")
+        self.assertIn("| Component | 0.24.0 | Total |", main)
+        self.assertNotIn("2.8.0", main)
+        self.assertIn("| Component | 2.8.0 | Total |", section)
+        self.assertIn("| linux-binder | [![#96 BugFix]", section)
+        self.assertIn("### Resolved since 2.7.0", section)
+
+    def test_section_without_open_work(self):
+        page = rh.render([], [], "now", extras=[{"repo": self.BINDER, "component": "linux-binder",
+                                                 "tickets": [], "milestones": []}])
+        self.assertIn("Nothing open.", page.split("## linux-binder")[1])
+
+    def test_no_extras_no_section(self):
+        self.assertNotIn("## linux-binder", rh.render([], [], "now"))
+
+
 if __name__ == "__main__":
     unittest.main()
