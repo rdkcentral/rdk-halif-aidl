@@ -114,11 +114,17 @@ function(_generate_dependency_list CMAKE_STYLE_OUT PKG_CONFIG_STYLE_OUT LIB_NAME
 
         math(EXPR dep_ver_index "${dep} + 1")
 
-        list(APPEND PKG_CONFIG_STYLE "rdk-halif-aidl-${ARGV${dep}} = ${ARGV${dep_ver_index}}")
+        list(APPEND PKG_CONFIG_STYLE "rdk-halif-aidl-${ARGV${dep}}-${ARGV${dep_ver_index}}")
         list(APPEND LIB_NAMES "${ARGV${dep}}-v${ARGV${dep_ver_index}}-cpp")
         _capitalize_module_name("${ARGV${dep}}" _DEP_CAP)
-        list(APPEND CMAKE_STYLE "RdkHalifAidl::${_DEP_CAP}")
-        list(APPEND FIND_DEPS "find_dependency(RdkHalifAidl${_DEP_CAP})")
+        list(APPEND CMAKE_STYLE "RdkHalifAidl::${_DEP_CAP}-v${ARGV${dep_ver_index}}")
+        set(_DEP_PACKAGE_NAME "RdkHalifAidl${_DEP_CAP}")
+        set(_DEP_PACKAGE_PATH "\${CMAKE_CURRENT_LIST_DIR}/../RdkHalifAidl${_DEP_CAP}-${ARGV${dep_ver_index}}")
+        if("${ARGV${dep_ver_index}}" STREQUAL "current")
+            list(APPEND FIND_DEPS "find_dependency(${_DEP_PACKAGE_NAME} CONFIG PATHS \"${_DEP_PACKAGE_PATH}\")")
+        else()
+            list(APPEND FIND_DEPS "find_dependency(${_DEP_PACKAGE_NAME} ${ARGV${dep_ver_index}} EXACT CONFIG PATHS \"${_DEP_PACKAGE_PATH}\")")
+        endif()
     endforeach()
 
     message(DEBUG "CMake style dependencies: ${CMAKE_STYLE}")
@@ -140,35 +146,39 @@ function(_create_cmake_helpers MODULE_NAME MODULE_VERSION MODULE_DEPENDENCIES FI
 
     set(SRC_FILES)
     foreach(SFILE IN ITEMS ${SOURCE_LIST})
-        string(REPLACE "${CMAKE_CURRENT_SOURCE_DIR}/${MODULE_NAME}/${MODULE_VERSION}" "\${PACKAGE_PREFIX_DIR}" SRC_FILE "${SFILE}")
+        string(REPLACE "${CMAKE_CURRENT_SOURCE_DIR}" "\${PACKAGE_PREFIX_DIR}" SRC_FILE "${SFILE}")
         list(APPEND SRC_FILES "${SRC_FILE}")
     endforeach()
     set(HEADER_FILES)
     foreach(HFILE IN ITEMS ${HEADER_LIST})
-        string(REPLACE "${CMAKE_CURRENT_SOURCE_DIR}/${MODULE_NAME}/${MODULE_VERSION}" "\${PACKAGE_PREFIX_DIR}" H_FILE "${HFILE}")
+        string(REPLACE "${CMAKE_CURRENT_SOURCE_DIR}" "\${PACKAGE_PREFIX_DIR}" H_FILE "${HFILE}")
         list(APPEND HEADER_FILES "${H_FILE}")
    endforeach()
 
    list(JOIN FIND_DEPENDENCIES "\n" FIND_DEPENDENCIES)
+   set(MODULE_CMAKE_INSTALL_DIR "${CMAKE_INSTALL_LIBDIR}/cmake/RdkHalifAidl${MODULE_CAPITALIZED_NAME}-${MODULE_VERSION}")
+   set(MODULE_CMAKE_OUTPUT_DIR "${CMAKE_CURRENT_BINARY_DIR}/cmake/RdkHalifAidl${MODULE_CAPITALIZED_NAME}-${MODULE_VERSION}")
+   file(MAKE_DIRECTORY "${MODULE_CMAKE_OUTPUT_DIR}")
    configure_package_config_file(
         "${CMAKE_SOURCE_DIR}/contrib/Config.cmake.in"
-        "${CMAKE_CURRENT_BINARY_DIR}/RdkHalifAidl${MODULE_CAPITALIZED_NAME}Config.cmake"
-        INSTALL_DESTINATION "${CMAKE_INSTALL_DATADIR}/cmake/RdkHalifAidl${MODULE_CAPITALIZED_NAME}"
+        "${MODULE_CMAKE_OUTPUT_DIR}/RdkHalifAidl${MODULE_CAPITALIZED_NAME}Config.cmake"
+        INSTALL_DESTINATION "${MODULE_CMAKE_INSTALL_DIR}"
         PATH_VARS CMAKE_INSTALL_DATADIR CMAKE_INSTALL_INCLUDEDIR CMAKE_INSTALL_LIBDIR CMAKE_INSTALL_PREFIX
     )
     write_basic_package_version_file(
-        "${CMAKE_CURRENT_BINARY_DIR}/RdkHalifAidl${MODULE_CAPITALIZED_NAME}ConfigVersion.cmake"
+        "${MODULE_CMAKE_OUTPUT_DIR}/RdkHalifAidl${MODULE_CAPITALIZED_NAME}ConfigVersion.cmake"
         VERSION "${MODULE_VERSION}"
         COMPATIBILITY SameMinorVersion
     )
     install(FILES
-        "${CMAKE_CURRENT_BINARY_DIR}/RdkHalifAidl${MODULE_CAPITALIZED_NAME}Config.cmake"
-        "${CMAKE_CURRENT_BINARY_DIR}/RdkHalifAidl${MODULE_CAPITALIZED_NAME}ConfigVersion.cmake"
-        DESTINATION "${CMAKE_INSTALL_DATADIR}/cmake/RdkHalifAidl${MODULE_CAPITALIZED_NAME}"
+        "${MODULE_CMAKE_OUTPUT_DIR}/RdkHalifAidl${MODULE_CAPITALIZED_NAME}Config.cmake"
+        "${MODULE_CMAKE_OUTPUT_DIR}/RdkHalifAidl${MODULE_CAPITALIZED_NAME}ConfigVersion.cmake"
+        DESTINATION "${MODULE_CMAKE_INSTALL_DIR}"
     )
-    install(EXPORT "RdkHalifAidl${MODULE_CAPITALIZED_NAME}Targets"
+    install(EXPORT "RdkHalifAidl${MODULE_CAPITALIZED_NAME}-v${MODULE_VERSION}Targets"
         NAMESPACE "RdkHalifAidl::"
-        DESTINATION "${CMAKE_INSTALL_DATADIR}/cmake/RdkHalifAidl${MODULE_CAPITALIZED_NAME}"
+        DESTINATION "${MODULE_CMAKE_INSTALL_DIR}"
+        FILE "RdkHalifAidl${MODULE_CAPITALIZED_NAME}Targets.cmake"
     )
 endfunction()
 
@@ -179,10 +189,10 @@ function(_create_pkgconfig_helpers MODULE_NAME MODULE_VERSION DEPENDENCIES)
 
     configure_file(
         "${CMAKE_SOURCE_DIR}/contrib/module.pc.in"
-        "${CMAKE_CURRENT_BINARY_DIR}/rdk-halif-aidl-${MODULE_NAME}.pc"
+        "${CMAKE_CURRENT_BINARY_DIR}/rdk-halif-aidl-${MODULE_NAME}-${MODULE_VERSION}.pc"
         @ONLY
     )
-    install(FILES "${CMAKE_CURRENT_BINARY_DIR}/rdk-halif-aidl-${MODULE_NAME}.pc"
+    install(FILES "${CMAKE_CURRENT_BINARY_DIR}/rdk-halif-aidl-${MODULE_NAME}-${MODULE_VERSION}.pc"
         DESTINATION "${CMAKE_INSTALL_LIBDIR}/pkgconfig/"
     )
 endfunction()
@@ -207,9 +217,10 @@ function(add_versioned)
 
     # Set relevant compile options
     _capitalize_module_name("${MODULE_NAME}" _MODULE_CAPITALIZED_NAME)
+    set(_MODULE_VERSIONED_EXPORT_NAME "${_MODULE_CAPITALIZED_NAME}-v${MODULE_VERSION}")
 
     add_library(
-        "RdkHalifAidl::${_MODULE_CAPITALIZED_NAME}"
+        "RdkHalifAidl::${_MODULE_VERSIONED_EXPORT_NAME}"
         ALIAS "${TARGET_NAME}"
     )
 
@@ -218,7 +229,7 @@ function(add_versioned)
         CXX_STANDARD 17
         CXX_STANDARD_REQUIRED ON
         POSITION_INDEPENDENT_CODE ON
-        EXPORT_NAME "${_MODULE_CAPITALIZED_NAME}"
+        EXPORT_NAME "${_MODULE_VERSIONED_EXPORT_NAME}"
     )
     message(DEBUG "Adding module ${MODULE_NAME} version ${MODULE_VERSION} with dependencies: ${MODULE_DEPENDENCIES}")
 
@@ -257,18 +268,18 @@ function(add_versioned)
 
     # Install the library, headers and source files
     install(TARGETS "${TARGET_NAME}"
-        EXPORT "RdkHalifAidl${_MODULE_CAPITALIZED_NAME}Targets"
+        EXPORT "RdkHalifAidl${_MODULE_CAPITALIZED_NAME}-v${MODULE_VERSION}Targets"
         ARCHIVE DESTINATION "${CMAKE_INSTALL_LIBDIR}"
         LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}"
     )
     install(
         DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/${MODULE_NAME}/${MODULE_VERSION}/include/"
-        DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}"
+        DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/${MODULE_NAME}/${MODULE_VERSION}"
         FILES_MATCHING PATTERN "*.h"
     )
     install(
         DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/${MODULE_NAME}/${MODULE_VERSION}/src/"
-        DESTINATION "src/"
+        DESTINATION "src/${MODULE_NAME}/${MODULE_VERSION}"
         FILES_MATCHING PATTERN "*.cpp"
     )
 endfunction()
