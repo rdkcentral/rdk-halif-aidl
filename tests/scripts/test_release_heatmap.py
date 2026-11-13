@@ -174,8 +174,9 @@ class Render(unittest.TestCase):
         t = issue(783, ref_prs=[{"number": 1014, "state": "OPEN",
                                  "body": "Closes #1008\nas the AV components do in #792 (... (#783))."},
                                 {"number": 1015, "state": "OPEN", "body": "Refs #7830"},
-                                {"number": 1016, "state": "OPEN", "body": "Part of the work.\n\nRefs: #783"}])
-        self.assertEqual([p["number"] for p in rh.open_prs(t)], [1016])
+                                {"number": 1016, "state": "OPEN", "body": "Part of the work.\n\nRefs: #783"},
+                                {"number": 1017, "state": "OPEN", "title": "Refs #783: metrics", "body": ""}])
+        self.assertEqual([p["number"] for p in rh.open_prs(t)], [1017, 1016])
 
     def test_a_pr_both_closing_and_referencing_shows_once(self):
         t = issue(prs=[{"number": 962, "state": "OPEN"}], ref_prs=[{"number": 962, "state": "OPEN"}])

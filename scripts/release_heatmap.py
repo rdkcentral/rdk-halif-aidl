@@ -101,7 +101,7 @@ PR_FIELDS = """
 # The PRs that mention a ticket without closing it (Refs #n, or a bare #n).
 REF_FIELDS = """
           totalCount pageInfo{ hasNextPage endCursor }
-          nodes{ ... on CrossReferencedEvent{ source{ ... on PullRequest{ %s body } } } }
+          nodes{ ... on CrossReferencedEvent{ source{ ... on PullRequest{ %s title body } } } }
 """ % PR_NODE
 
 ISSUE_FIELDS = """
@@ -349,7 +349,7 @@ def open_prs(issue):
     refs = [(e.get("source") or {}) for e in (issue.get("timelineItems") or {}).get("nodes") or []]
     names_it = re.compile(r"\bRefs\b:?\s+#%d\b" % issue["number"], re.I)
     refs = [p for p in refs if (p.get("repository") or {}).get("nameWithOwner") == REPO
-            and names_it.search(p.get("body") or "")]
+            and names_it.search("%s\n%s" % (p.get("title") or "", p.get("body") or ""))]
     closing = (issue.get("closedByPullRequestsReferences") or {}).get("nodes") or []
     return [p for p in pr_entries(closing + refs) if p["state"] in OPEN]
 
