@@ -69,6 +69,7 @@ _spec.loader.exec_module(pie)
 BREAKING = {"Major", "CR-Major"}
 PRIORITY_POINTS = {"P0": 5, "P1": 3, "P2": 1, "P3": 0}
 NO_MILESTONE = "No milestone"
+SEVERAL = "(several components)"
 UNCLASSIFIED = "(no change class)"
 # Change class -> badge letter and colour; the order is the legend's.
 BADGE = {"Major": ("M", "d73a4a"), "CR-Major": ("CR", "8b0000"), "New Interface": ("NI", "8250df"),
@@ -353,6 +354,16 @@ def open_prs(issue):
     return [p for p in pr_entries(closing + refs) if p["state"] in OPEN]
 
 
+def row_of(t):
+    """The one row a ticket is shown in: its component, or the several-components row."""
+    return t["components"][0] if len(t["components"]) == 1 else SEVERAL
+
+
+def rows(tickets):
+    """Row names in display order: components first, then the bracketed catch-all rows."""
+    return sorted({row_of(t) for t in tickets}, key=lambda c: (c.startswith("("), c))
+
+
 def shield(label, message, colour):
     # shields.io static badge: "-" and "_" are doubled, everything else URL-encoded.
     q = lambda s: urllib.parse.quote(s.replace("-", "--").replace("_", "__"), safe="")
@@ -422,24 +433,24 @@ def render(tickets, milestones, generated, project_title="halif_aidl", resolved=
     cols += closed + ([NO_MILESTONE] if NO_MILESTONE in used else [])
     short = {c: (c if c == NO_MILESTONE else c.split(" ")[0]) for c in cols}
     short.update({c: "⚠️ %s closed" % short[c] for c in closed})
-    comps = sorted({c for t in tickets for c in t["components"]},
-                   key=lambda c: (c.startswith("("), c))
+    comps = rows(tickets)
     lines = [
         "# Release heatmap", "",
         "_Generated %s by [`scripts/release_heatmap.py`](https://github.com/%s/blob/develop/"
         "scripts/release_heatmap.py) from the open issues and the [%s](https://github.com/orgs/%s/"
         "projects/%d) project. It updates itself when a ticket changes; do not edit it by "
         "hand._" % (generated, REPO, project_title, OWNER, PROJECT_NUMBER), "",
-        "%d open issues. A ticket on several components counts once on each. "
+        "%d open issues, each shown once: a ticket on several components is in the "
+        "%s row, so the row totals add up to the open issues. "
         "Each cell lists its tickets, most urgent "
         "first, as a badge coloured by its change class; each of its open PRs is "
-        "on the line below it, marked ↳:" % len(tickets), "", legend(), "", "PR: " + pr_legend() + " (open: "
+        "on the line below it, marked ↳:" % (len(tickets), SEVERAL), "", legend(), "", "PR: " + pr_legend() + " (open: "
         "review needed)", "",
         "| Component | " + " | ".join(short[c] for c in cols) + " | Total |",
         "| --- |" + " --- |" * (len(cols) + 1),
     ]
     for comp in comps:
-        row = [t for t in tickets if comp in t["components"]]
+        row = [t for t in tickets if row_of(t) == comp]
         lines.append("| %s | %s | %d |" % (comp, " | ".join(
             cell([t for t in row if t["milestone"] == c]) for c in cols), len(row)))
     lines.append("| **Tickets** | %s | **%d** |" % (" | ".join(
@@ -457,10 +468,9 @@ def render_resolved(tickets, release):
              "took them into develop." % (release["tag"], release["url"], release["at"][:10]), ""]
     if not tickets:
         return lines + ["Nothing yet."]
-    comps = sorted({c for t in tickets for c in t["components"]}, key=lambda c: (c.startswith("("), c))
     lines += ["| Component | Resolved | Total |", "| --- | --- | --- |"]
-    for comp in comps:
-        row = sorted((t for t in tickets if comp in t["components"]), key=lambda t: t["number"])
+    for comp in rows(tickets):
+        row = sorted((t for t in tickets if row_of(t) == comp), key=lambda t: t["number"])
         merged = [[p for p in t["prs"] if p["state"] == "merged" and p["base"] == "develop"] for t in row]
         lines.append("| %s | %s | %d |" % (comp, flow(
             [under(badge(t), [pr_badge(p) for p in m]) for t, m in zip(row, merged)],
