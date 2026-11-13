@@ -49,7 +49,8 @@ def issue(number=1, labels=(), milestone=None, due=None, author="someone", prior
         "participants": {"totalCount": people},
         "timelineItems": {"totalCount": refs, "nodes": [{"source": dict(
             {"url": "p%d" % p["number"], "isDraft": False, "reviewDecision": None, "baseRefName": "develop",
-             "repository": {"isPrivate": False, "nameWithOwner": rh.REPO}}, **p)} for p in ref_prs]},
+             "repository": {"isPrivate": False, "nameWithOwner": rh.REPO}, "body": "Refs #%d" % number}, **p)}
+            for p in ref_prs]},
         "issueDependenciesSummary": {"blocking": blocking},
         "closedByPullRequestsReferences": {"pageInfo": {"hasNextPage": False}, "nodes": [dict(
             {"url": "p%d" % p["number"], "isDraft": False, "reviewDecision": None, "baseRefName": "develop"}, **p)
@@ -168,6 +169,13 @@ class Render(unittest.TestCase):
                             "repository": {"isPrivate": False, "nameWithOwner": "other/repo"}}])
         t["timelineItems"]["nodes"].append({"source": {}})   # a cross-reference from an issue, not a PR
         self.assertEqual([(p["number"], p["state"]) for p in rh.open_prs(t)], [(963, "draft"), (962, "open")])
+
+    def test_a_mention_is_not_a_reference(self):
+        t = issue(783, ref_prs=[{"number": 1014, "state": "OPEN",
+                                 "body": "Closes #1008\nas the AV components do in #792 (... (#783))."},
+                                {"number": 1015, "state": "OPEN", "body": "Refs #7830"},
+                                {"number": 1016, "state": "OPEN", "body": "Part of the work.\n\nRefs: #783"}])
+        self.assertEqual([p["number"] for p in rh.open_prs(t)], [1016])
 
     def test_a_pr_both_closing_and_referencing_shows_once(self):
         t = issue(prs=[{"number": 962, "state": "OPEN"}], ref_prs=[{"number": 962, "state": "OPEN"}])
