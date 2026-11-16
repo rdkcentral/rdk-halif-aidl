@@ -25,7 +25,7 @@ the Priority and Interface Effect fields of project 41, and writes one markdown
 page, the heatmap: components (component:* labels; repo-wide work by its
 scope:infrastructure, scope:overview or documentation label) against the open
 milestones. Each cell lists its tickets, most urgent first, as badges coloured
-by change class, each followed by a badge for every PR that closes it. Below it,
+by change class, each followed by a badge for each of its open PRs. Below it,
 the tickets resolved since the last release, with the PRs that took them into
 develop.
 
@@ -69,6 +69,7 @@ _spec.loader.exec_module(pie)
 BREAKING = {"Major", "CR-Major"}
 PRIORITY_POINTS = {"P0": 5, "P1": 3, "P2": 1, "P3": 0}
 NO_MILESTONE = "No milestone"
+SEVERAL = "(several components)"
 UNCLASSIFIED = "(no change class)"
 # Change class -> badge letter and colour; the order is the legend's.
 BADGE = {"Major": ("M", "d73a4a"), "CR-Major": ("CR", "8b0000"), "New Interface": ("NI", "8250df"),
@@ -90,10 +91,18 @@ def graphql(query, **variables):
     return gh_json(args)["data"]
 
 
+PR_NODE = "number url state isDraft reviewDecision baseRefName repository{ isPrivate nameWithOwner }"
+
 PR_FIELDS = """
           pageInfo{ hasNextPage endCursor }
-          nodes{ number url state isDraft reviewDecision baseRefName repository{ isPrivate } }
-"""
+          nodes{ %s }
+""" % PR_NODE
+
+# The PRs that mention a ticket without closing it (Refs #n, or a bare #n).
+REF_FIELDS = """
+          totalCount pageInfo{ hasNextPage endCursor }
+          nodes{ ... on CrossReferencedEvent{ source{ ... on PullRequest{ %s title body } } } }
+""" % PR_NODE
 
 ISSUE_FIELDS = """
         number title url closedAt stateReason
@@ -102,9 +111,9 @@ ISSUE_FIELDS = """
         milestone{ title dueOn }
         labels(first:50){ nodes{ name } }
         participants{ totalCount }
-        timelineItems(itemTypes:[CROSS_REFERENCED_EVENT]){ totalCount }
+        timelineItems(itemTypes:[CROSS_REFERENCED_EVENT],first:100){ %s }
         issueDependenciesSummary{ blocking }
-""" % PR_FIELDS
+""" % (PR_FIELDS, REF_FIELDS)
 
 # The project's fields, read from the project's own item list: a workflow's
 # GITHUB_TOKEN can read a public project's items, but not an issue's projectItems.
@@ -130,6 +139,15 @@ query($owner:String!,$name:String!,$number:Int!,$cursor:String){
   } }
 }
 """ % PR_FIELDS
+
+# The rest of one issue's cross-references, for a ticket referenced more than a page of times.
+MORE_REFS = """
+query($owner:String!,$name:String!,$number:Int!,$cursor:String){
+  repository(owner:$owner,name:$name){ issue(number:$number){
+    timelineItems(itemTypes:[CROSS_REFERENCED_EVENT],first:100,after:$cursor){ %s }
+  } }
+}
+""" % REF_FIELDS
 
 ISSUES = """
 query($owner:String!,$name:String!,$cursor:String){
@@ -168,13 +186,14 @@ def fetch_issues(query=ISSUES, **extra):
 
 
 def complete_prs(issue):
-    prs = issue["closedByPullRequestsReferences"]
-    while prs["pageInfo"]["hasNextPage"]:
-        more = gh_json(["api", "graphql", "-f", "query=" + MORE_PRS, "-f", "owner=" + OWNER, "-f", "name=" + NAME,
-                        "-F", "number=%d" % issue["number"], "-f", "cursor=" + prs["pageInfo"]["endCursor"]])
-        page = more["data"]["repository"]["issue"]["closedByPullRequestsReferences"]
-        prs["nodes"] += page["nodes"]
-        prs["pageInfo"] = page["pageInfo"]
+    for key, query in (("closedByPullRequestsReferences", MORE_PRS), ("timelineItems", MORE_REFS)):
+        conn = issue[key]
+        while conn["pageInfo"]["hasNextPage"]:
+            more = gh_json(["api", "graphql", "-f", "query=" + query, "-f", "owner=" + OWNER, "-f", "name=" + NAME,
+                            "-F", "number=%d" % issue["number"], "-f", "cursor=" + conn["pageInfo"]["endCursor"]])
+            page = more["data"]["repository"]["issue"][key]
+            conn["nodes"] += page["nodes"]
+            conn["pageInfo"] = page["pageInfo"]
 
 
 def fetch_last_release():
@@ -280,37 +299,69 @@ def classify(issue, maintainers, today, next_due):
         "number": issue["number"], "title": issue["title"], "url": issue["url"],
         "milestone": ms["title"] if ms else NO_MILESTONE, "components": comps,
         "effect": effect, "label_class": label_class, "field": fields.get("Interface Effect"),
-        "priority": priority, "score": score, "why": why, "prs": pr_states(issue),
+        "priority": priority, "score": score, "why": why, "prs": pr_states(issue), "open_prs": open_prs(issue),
     }
 
 
 # PR state -> badge text and colour; the order is the legend's.
 PR_STATE = {"draft": ("draft", "6e7781"), "open": ("open", "bf8700"), "changes": ("changes", "bc4c00"),
-            "approved": ("approved", "1a7f37"), "merged": ("merged", "8250df"), "closed": ("closed", "cf222e")}
+            "approved": ("approved", "1a7f37"), "merged": ("merged", "8250df")}
+OPEN = ("draft", "open", "changes", "approved")
+
+
+def pr_state(p):
+    """The badge state of one PR node: merged, closed, draft, approved, changes or open."""
+    if p["state"] == "MERGED":
+        return "merged"
+    if p["state"] == "CLOSED":
+        return "closed"
+    if p.get("isDraft"):
+        return "draft"
+    return {"APPROVED": "approved", "CHANGES_REQUESTED": "changes"}.get(p.get("reviewDecision"), "open")
+
+
+def pr_entries(nodes):
+    """Public PRs as badge entries, one per PR (by URL, so same-numbered PRs in other repos stay apart),
+    newest first; closed unmerged PRs are left out."""
+    out = {}
+    for p in nodes:
+        if not p or "number" not in p or (p.get("repository") or {}).get("isPrivate"):
+            continue   # not a PR, or a private repository's PR, which never goes on the public wiki
+        k = pr_state(p)
+        # The same PR can arrive in several snapshots taken moments apart. Closed
+        # and merged are final, so they win over an earlier or later open one.
+        if (out.get(p["url"]) or {}).get("state") in ("closed", "merged"):
+            continue
+        out[p["url"]] = {"number": p["number"], "url": p["url"], "state": k, "base": p.get("baseRefName")}
+    return sorted((e for e in out.values() if e["state"] != "closed"), key=lambda p: (-p["number"], p["url"]))
 
 
 def pr_states(issue):
-    """The PRs that close the ticket (Closes #n, or linked under Development), newest first.
+    """The PRs that close the ticket (Closes #n, or linked under Development): the ones that resolve it."""
+    return pr_entries((issue.get("closedByPullRequestsReferences") or {}).get("nodes") or [])
 
-    A PR that only mentions the ticket is not one of them. A closed, unmerged PR
-    shows only when it is the ticket's only PR.
+
+def open_prs(issue):
+    """The ticket's open PRs: those that close it, and those in this repo that name it with `Refs #n`.
+
+    Any other mention (a quoted title, a "see #n") is not work on the ticket.
     """
-    out = []
-    for p in (issue.get("closedByPullRequestsReferences") or {}).get("nodes") or []:
-        if (p.get("repository") or {}).get("isPrivate"):
-            continue   # a private repository's PR never goes on the public wiki
-        if p["state"] == "MERGED":
-            k = "merged"
-        elif p["state"] == "CLOSED":
-            k = "closed"
-        elif p.get("isDraft"):
-            k = "draft"
-        else:
-            k = {"APPROVED": "approved", "CHANGES_REQUESTED": "changes"}.get(p.get("reviewDecision"), "open")
-        out.append({"number": p["number"], "url": p["url"], "state": k, "base": p.get("baseRefName")})
-    out.sort(key=lambda p: -p["number"])
-    live = [p for p in out if p["state"] != "closed"]
-    return live or out[:1]
+    refs = [(e.get("source") or {}) for e in (issue.get("timelineItems") or {}).get("nodes") or []]
+    names_it = re.compile(r"\bRefs\b:?\s+#%d\b" % issue["number"], re.I)
+    refs = [p for p in refs if (p.get("repository") or {}).get("nameWithOwner") == REPO
+            and names_it.search("%s\n%s" % (p.get("title") or "", p.get("body") or ""))]
+    closing = (issue.get("closedByPullRequestsReferences") or {}).get("nodes") or []
+    return [p for p in pr_entries(closing + refs) if p["state"] in OPEN]
+
+
+def row_of(t):
+    """The one row a ticket is shown in: its component, or the several-components row."""
+    return t["components"][0] if len(t["components"]) == 1 else SEVERAL
+
+
+def rows(tickets):
+    """Row names in display order: components first, then the bracketed catch-all rows."""
+    return sorted({row_of(t) for t in tickets}, key=lambda c: (c.startswith("("), c))
 
 
 def shield(label, message, colour):
@@ -334,8 +385,8 @@ def pr_badge(p):
 
 
 def ticket(t):
-    """The ticket's class badge, then each PR that closes it on the line below, marked ↳."""
-    return under(badge(t), [pr_badge(p) for p in t["prs"]])
+    """The ticket's class badge, then each of its open PRs on the line below, marked ↳."""
+    return under(badge(t), [pr_badge(p) for p in t["open_prs"]])
 
 
 def under(ticket_badge, pr_badges):
@@ -349,7 +400,7 @@ def legend():
 
 
 def pr_legend():
-    return " ".join("![PR %s](%s)" % (text, shield("↳PR", text, colour)) for text, colour in PR_STATE.values())
+    return " ".join("![PR %s](%s)" % (PR_STATE[k][0], shield("↳PR", *PR_STATE[k])) for k in OPEN)
 
 
 def cell(tickets):
@@ -357,7 +408,7 @@ def cell(tickets):
     if not tickets:
         return "·"
     ranked = sorted(tickets, key=lambda t: (-t["score"], t["number"]))
-    return flow([ticket(t) for t in ranked], [bool(t["prs"]) for t in ranked])
+    return flow([ticket(t) for t in ranked], [bool(t["open_prs"]) for t in ranked])
 
 
 def flow(items, alone):
@@ -382,24 +433,24 @@ def render(tickets, milestones, generated, project_title="halif_aidl", resolved=
     cols += closed + ([NO_MILESTONE] if NO_MILESTONE in used else [])
     short = {c: (c if c == NO_MILESTONE else c.split(" ")[0]) for c in cols}
     short.update({c: "⚠️ %s closed" % short[c] for c in closed})
-    comps = sorted({c for t in tickets for c in t["components"]},
-                   key=lambda c: (c.startswith("("), c))
+    comps = rows(tickets)
     lines = [
         "# Release heatmap", "",
         "_Generated %s by [`scripts/release_heatmap.py`](https://github.com/%s/blob/develop/"
         "scripts/release_heatmap.py) from the open issues and the [%s](https://github.com/orgs/%s/"
         "projects/%d) project. It updates itself when a ticket changes; do not edit it by "
         "hand._" % (generated, REPO, project_title, OWNER, PROJECT_NUMBER), "",
-        "%d open issues. A ticket on several components counts once on each. "
+        "%d open issues, each shown once: a ticket on several components is in the "
+        "%s row, so the row totals add up to the open issues. "
         "Each cell lists its tickets, most urgent "
-        "first, as a badge coloured by its change class; each PR that closes a ticket is "
-        "on the line below it, marked ↳:" % len(tickets), "", legend(), "", "PR: " + pr_legend() + " (open: "
-        "review needed; closed: closed unmerged)", "",
+        "first, as a badge coloured by its change class; each of its open PRs is "
+        "on the line below it, marked ↳:" % (len(tickets), SEVERAL), "", legend(), "", "PR: " + pr_legend() + " (open: "
+        "review needed)", "",
         "| Component | " + " | ".join(short[c] for c in cols) + " | Total |",
         "| --- |" + " --- |" * (len(cols) + 1),
     ]
     for comp in comps:
-        row = [t for t in tickets if comp in t["components"]]
+        row = [t for t in tickets if row_of(t) == comp]
         lines.append("| %s | %s | %d |" % (comp, " | ".join(
             cell([t for t in row if t["milestone"] == c]) for c in cols), len(row)))
     lines.append("| **Tickets** | %s | **%d** |" % (" | ".join(
@@ -417,10 +468,9 @@ def render_resolved(tickets, release):
              "took them into develop." % (release["tag"], release["url"], release["at"][:10]), ""]
     if not tickets:
         return lines + ["Nothing yet."]
-    comps = sorted({c for t in tickets for c in t["components"]}, key=lambda c: (c.startswith("("), c))
     lines += ["| Component | Resolved | Total |", "| --- | --- | --- |"]
-    for comp in comps:
-        row = sorted((t for t in tickets if comp in t["components"]), key=lambda t: t["number"])
+    for comp in rows(tickets):
+        row = sorted((t for t in tickets if row_of(t) == comp), key=lambda t: t["number"])
         merged = [[p for p in t["prs"] if p["state"] == "merged" and p["base"] == "develop"] for t in row]
         lines.append("| %s | %s | %d |" % (comp, flow(
             [under(badge(t), [pr_badge(p) for p in m]) for t, m in zip(row, merged)],

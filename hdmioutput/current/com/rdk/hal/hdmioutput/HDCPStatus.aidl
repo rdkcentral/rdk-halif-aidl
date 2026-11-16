@@ -38,7 +38,9 @@ enum HDCPStatus {
     UNKNOWN = -1,
 
     /**
-     * HDMI sink is connected but HDCP authentication has not occurred.
+     * An HDMI sink is connected but HDCP authentication has not occurred.
+     * HDCP authentication has been terminated due to a HAL stop() operation.
+     * The previously connected HDMIsink(HDCP Authenticated) has been disconnected or unplugged.
      */
     UNAUTHENTICATED = 0,
 

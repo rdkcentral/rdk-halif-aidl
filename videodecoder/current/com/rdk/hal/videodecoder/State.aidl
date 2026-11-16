@@ -55,7 +55,7 @@ enum State {
     /** Resource is actively running. */
     STARTED = 5,
 
-    /** Resource is flushing buffered data. */
+    /** Resource is flushing buffered data; afterwards it returns to STARTED (flush(false)) or READY (flush(true)). */
     FLUSHING = 6,
 
     /** Resource is transitioning from STARTED back to READY. */
