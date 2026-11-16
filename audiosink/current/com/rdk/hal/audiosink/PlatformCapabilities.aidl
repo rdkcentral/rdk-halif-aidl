@@ -46,9 +46,13 @@ parcelable PlatformCapabilities {
     PCMFormat[] supportedPCMFormats;
 
     /**
-     * Indicated support for planar format of audio data buffers
-     * where the audio samples for each channel are delivered
-     * together in one plane, rather than interleaved with all other channels.
+     * Whether the sink accepts PCM audio data buffers in planar format, where
+     * the samples for each channel are delivered together in one plane rather
+     * than interleaved with the other channels.
+     *
+     * When true, the sink accepts both planar and interleaved PCM input. When
+     * false, it accepts interleaved PCM input only. Interleaved PCM is the
+     * default format in either case.
      */
     boolean supportsPlanarFormat;
 
