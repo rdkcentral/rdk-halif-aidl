@@ -74,8 +74,10 @@ enum OutputPortProperty {
 
     /**
      * Configured output audio format.
-     * Holds the value last written. The HAL never rewrites it; what it
-     * resolved to is IAudioOutputPort.getActiveOutputFormat().
+     * Holds the value last written. The HAL changes it only on reconnect,
+     * when the new sink cannot take the configured format: it falls back to
+     * AUTO, as in 0.3.0.0. What it resolved to is
+     * IAudioOutputPort.getActiveOutputFormat().
      * Type: int (OutputFormat enum value)
      * Access: Read-write.
      * Writeable in states: READY
@@ -102,8 +104,8 @@ enum OutputPortProperty {
      *   and UNKNOWN does not force false.
      * - ARC, EARC: true when the connected device advertises Atmos (on ARC,
      *   as Dolby Digital Plus with Atmos).
-     * - SPEAKERS: true when the HAL can render Atmos to the speakers,
-     *   including virtualised rendering.
+     * - SPEAKERS: true when the speaker setup is at least 3.1.2.
+     *   Virtualised Atmos rendered to a smaller layout does not count.
      * - HDMI: not declared. On a source device the middleware reads the
      *   sink's EDID for its audio capability.
      *
