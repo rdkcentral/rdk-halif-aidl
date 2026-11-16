@@ -49,7 +49,8 @@ def issue(number=1, labels=(), milestone=None, due=None, author="someone", prior
         "participants": {"totalCount": people},
         "timelineItems": {"totalCount": refs, "nodes": [{"source": dict(
             {"url": "p%d" % p["number"], "isDraft": False, "reviewDecision": None, "baseRefName": "develop",
-             "repository": {"isPrivate": False, "nameWithOwner": rh.REPO}}, **p)} for p in ref_prs]},
+             "repository": {"isPrivate": False, "nameWithOwner": rh.REPO}, "body": "Refs #%d" % number}, **p)}
+            for p in ref_prs]},
         "issueDependenciesSummary": {"blocking": blocking},
         "closedByPullRequestsReferences": {"pageInfo": {"hasNextPage": False}, "nodes": [dict(
             {"url": "p%d" % p["number"], "isDraft": False, "reviewDecision": None, "baseRefName": "develop"}, **p)
@@ -169,6 +170,14 @@ class Render(unittest.TestCase):
         t["timelineItems"]["nodes"].append({"source": {}})   # a cross-reference from an issue, not a PR
         self.assertEqual([(p["number"], p["state"]) for p in rh.open_prs(t)], [(963, "draft"), (962, "open")])
 
+    def test_a_mention_is_not_a_reference(self):
+        t = issue(783, ref_prs=[{"number": 1014, "state": "OPEN",
+                                 "body": "Closes #1008\nas the AV components do in #792 (... (#783))."},
+                                {"number": 1015, "state": "OPEN", "body": "Refs #7830"},
+                                {"number": 1016, "state": "OPEN", "body": "Part of the work.\n\nRefs: #783"},
+                                {"number": 1017, "state": "OPEN", "title": "Refs #783: metrics", "body": ""}])
+        self.assertEqual([p["number"] for p in rh.open_prs(t)], [1017, 1016])
+
     def test_a_pr_both_closing_and_referencing_shows_once(self):
         t = issue(prs=[{"number": 962, "state": "OPEN"}], ref_prs=[{"number": 962, "state": "OPEN"}])
         self.assertEqual([p["number"] for p in rh.open_prs(t)], [962])
@@ -226,6 +235,18 @@ class Render(unittest.TestCase):
         self.assertIn("%E2%86%B311-merged", section)
         self.assertNotIn("%E2%86%B312", section)
         self.assertIn("| **Tickets** | | **1** |", section)
+
+    def test_a_ticket_on_several_components_is_shown_once(self):
+        one = rh.classify(issue(1, labels=["component:panel"], milestone="0.24.0"), set(), "2026-11-03", None)
+        two = rh.classify(issue(2, labels=["component:audiosink", "component:videosink"], milestone="0.24.0"),
+                          set(), "2026-11-03", None)
+        page = rh.render([one, two], [{"title": "0.24.0", "due": None}], "now")
+        self.assertEqual(page.count("](u2)"), 1)
+        self.assertIn("| (several components) |", page)
+        self.assertNotIn("| audiosink |", page)
+        totals = [int(l.rsplit("|", 2)[1]) for l in page.splitlines()
+                  if l.startswith("| ") and not l.startswith(("| Component", "| ---", "| **"))]
+        self.assertEqual(sum(totals), 2)
 
     def test_resolved_section_needs_a_release(self):
         self.assertNotIn("## Resolved", rh.render([], [], "now"))
