@@ -182,6 +182,7 @@ interface IAudioOutputPort {
      *           Does not require ownership and is available in any state.
      *           Changes are delivered whole by
      *           IAudioOutputPortListener.onActiveOutputFormatChanged().
+     *
      * @returns  The active format, or null when the port is emitting
      *           nothing: CONNECTION_STATE is not CONNECTED on a port with
      *           connection detection, the port is disabled, or the mixer is

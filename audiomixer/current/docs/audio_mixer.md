@@ -425,12 +425,12 @@ sequenceDiagram
 
 * `CONNECTION_STATE` transitions through `PENDING` (during EDID / CEC / HDCP / pairing handshake) before `CONNECTED`.
 * `SUPPORTED_AUDIO_FORMATS` and `DOLBY_ATMOS_SUPPORT` may change on reconnect — the new sink could have a different capability set than the previous one. The HAL fires `onPropertyChanged` for any capability that actually changes.
-* The configured `OUTPUT_FORMAT` is kept and re-applied. If the new sink does not support it (e.g. previous sink was MAT-capable, new one is not), the HAL resolves to the best format the sink supports, as for `AUTO`, and fires `onActiveOutputFormatChanged()` with the result. `OUTPUT_FORMAT` is not rewritten.
+* The previously configured `OUTPUT_FORMAT` is re-applied. If the new sink does not support it (e.g. previous sink was MAT-capable, new one is not), `OUTPUT_FORMAT` falls back to `AUTO`, as in 0.3.0.0: the HAL fires `onPropertyChanged(OUTPUT_FORMAT, ...)` with the resolved format, and `onActiveOutputFormatChanged()` with the new active format.
 * Immersive content given to a port that can no longer carry it is not an error: the HAL emits the channel bed or a downmix and reports `ActiveOutputFormat.immersive = NONE`.
 
 ### Active output format
 
-`OUTPUT_FORMAT` is what the client configured; `ActiveOutputFormat` is what the port is emitting now. Read it with `IAudioOutputPort.getActiveOutputFormat()`; every change arrives whole in one `IAudioOutputPortListener.onActiveOutputFormatChanged()`, so format, channel layout and Atmos are never seen out of step. It is null while the port emits nothing: the port is disabled, the mixer is not `STARTED`, or `CONNECTION_STATE` is not `CONNECTED` on a port with connection detection (a non-hotplug port that declares `CONNECTION_STATE` and stays `UNKNOWN` is always connected). A `BLUETOOTH` port reports the PCM format handed to the A2DP encoder; the A2DP codec is not an `OutputFormat`.
+`OUTPUT_FORMAT` is what the client configured (the HAL changes it only in the reconnect fallback to `AUTO` above); `ActiveOutputFormat` is what the port is emitting now. Read it with `IAudioOutputPort.getActiveOutputFormat()`; every change arrives whole in one `IAudioOutputPortListener.onActiveOutputFormatChanged()`, so format, channel layout and Atmos are never seen out of step. It is null while the port emits nothing: the port is disabled, the mixer is not `STARTED`, or `CONNECTION_STATE` is not `CONNECTED` on a port with connection detection (a non-hotplug port that declares `CONNECTION_STATE` and stays `UNKNOWN` is always connected). A `BLUETOOTH` port reports the PCM format handed to the A2DP encoder; the A2DP codec is not an `OutputFormat`.
 
 | Field | Meaning |
 |---|---|

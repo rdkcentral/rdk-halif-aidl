@@ -21,7 +21,6 @@ package com.rdk.hal.audiomixer;
 import com.rdk.hal.audiomixer.ActiveOutputFormat;
 import com.rdk.hal.audiomixer.OutputPortProperty;
 import com.rdk.hal.PropertyValue;
-import com.rdk.hal.audiomixer.OutputPortProperty;
 
 /**
  * @brief     Listener interface for audio output port events.
@@ -48,9 +47,12 @@ oneway interface IAudioOutputPortListener {
      *                  Clients should not poll CONNECTION_STATE — register a
      *                  listener instead.</li>
      *              <li><b>OUTPUT_FORMAT</b> — when the configured value is
-     *                  written. What it resolves to (e.g. AUTO after
-     *                  EDID/CEC re-negotiation) is delivered by
-     *                  onActiveOutputFormatChanged().</li>
+     *                  written, and, as in 0.3.0.0, when what it resolves to
+     *                  changes (e.g. AUTO after EDID/CEC re-negotiation), with
+     *                  the resolved format as newValue. The resolved case is
+     *                  kept for clients built against 0.3.0.0 and is
+     *                  deprecated: read onActiveOutputFormatChanged(), which
+     *                  carries format, channel layout and Atmos together.</li>
      *              <li><b>VOLUME / MUTE</b> — when changed by another component
      *                  (e.g. system audio service adjusting per-port master).</li>
      *              <li><b>SUPPORTED_AUDIO_FORMATS / DOLBY_ATMOS_SUPPORT</b> —
