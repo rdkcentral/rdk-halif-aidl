@@ -37,7 +37,9 @@
 set -euo pipefail
 
 REPO="${REPO:-rdkcentral/rdk-halif-aidl}"
-FOOTER='Generated with \[?Claude'
+# The footer as the tool writes it: a line of its own, optionally after an
+# emoji. The words quoted inside other prose are not the footer.
+FOOTER='^[^[:alnum:]]*Generated with \[?Claude Code\]?(\([^)]*\))?[[:space:]]*$'
 # The tool's identities only: its anthropic.com address, or its product and
 # model names. A person called Claude is a co-author like any other.
 TRAILER='^[[:space:]]*Co-authored-by:(.*@anthropic\.com|[[:space:]]*Claude[[:space:]]+(Code|Opus|Sonnet|Haiku|Fable)([[:space:]]|<|$))'

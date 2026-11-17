@@ -97,6 +97,14 @@ class CheckAiAttribution(unittest.TestCase):
         self.commit("Fix #1: Something\n\nCo-authored-by: Claude Martin <123+cm@users.noreply.github.com>")
         self.assertEqual(self.run_check().returncode, 0)
 
+    def test_plain_footer_line_fails(self):
+        self.assertEqual(self.run_check("Body\n\nGenerated with Claude Code\n").returncode, 1)
+
+    def test_footer_quoted_in_prose_passes(self):
+        body = "The check rejects a `Generated with [Claude Code](https://claude.com/claude-code)` line."
+        self.commit("Fix #1: Something\n\nRejects a 'Generated with Claude Code' footer.")
+        self.assertEqual(self.run_check(body).returncode, 0)
+
     def test_mention_in_prose_passes(self):
         self.commit("Fix #1: Explain the Claude Code footer check")
         self.assertEqual(self.run_check("Mentions Claude in prose only.").returncode, 0)
