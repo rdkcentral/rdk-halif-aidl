@@ -88,6 +88,31 @@ class CheckAiAttribution(unittest.TestCase):
         self.commit("Fix #1: Explain the Claude Code footer check")
         self.assertEqual(self.run_check("Mentions Claude in prose only.").returncode, 0)
 
+    def test_unreadable_range_fails(self):
+        result = subprocess.run(["bash", os.path.abspath(SCRIPT), "nosuch..HEAD"], cwd=self.repo,
+                                capture_output=True, text=True)
+        self.assertEqual(result.returncode, 2)
+        self.assertIn("cannot read range", result.stderr)
+
+    def test_missing_body_file_fails(self):
+        result = subprocess.run(["bash", os.path.abspath(SCRIPT), "base..HEAD", "--body-file",
+                                 os.path.join(self.repo, "missing.md")], cwd=self.repo,
+                                capture_output=True, text=True)
+        self.assertEqual(result.returncode, 2)
+
+    def test_failed_github_read_fails(self):
+        # A gh that always fails stands in for an API outage in --pr mode.
+        bindir = os.path.join(self.repo, "bin")
+        os.mkdir(bindir)
+        with open(os.path.join(bindir, "gh"), "w") as f:
+            f.write("#!/bin/sh\necho 'HTTP 502' >&2\nexit 1\n")
+        os.chmod(os.path.join(bindir, "gh"), 0o755)
+        env = dict(os.environ, PATH=bindir + os.pathsep + os.environ["PATH"])
+        result = subprocess.run(["bash", os.path.abspath(SCRIPT), "--pr", "1"], cwd=self.repo,
+                                capture_output=True, text=True, env=env)
+        self.assertEqual(result.returncode, 2)
+        self.assertNotIn("No AI tool attribution found", result.stdout)
+
 
 if __name__ == "__main__":
     unittest.main()

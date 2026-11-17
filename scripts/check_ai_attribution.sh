@@ -31,6 +31,8 @@
 #       and, if given, the PR description saved in <file>.
 #   scripts/check_ai_attribution.sh --pr <number>
 #       Reads the PR's description and commit messages from GitHub (gh).
+#
+# Exit: 0 clean, 1 attribution found, 2 an input could not be read.
 
 set -euo pipefail
 
@@ -73,16 +75,33 @@ check() {
     done <<< "$2"
 }
 
+# Every read is a checked assignment: input that cannot be read is a failure,
+# never clean content.
+cannot_read() {
+    report "cannot read $1"
+    exit 2
+}
+
 if [[ -n "${pr}" ]]; then
-    check "PR #${pr} description" "$(gh pr view "${pr}" --repo "${REPO}" --json body --jq .body)"
-    while IFS=$'\t' read -r oid; do
-        [[ -n "${oid}" ]] || continue
-        check "commit ${oid:0:8}" "$(gh api "repos/${REPO}/commits/${oid}" --jq .commit.message)"
-    done < <(gh pr view "${pr}" --repo "${REPO}" --json commits --jq '.commits[].oid')
+    body="$(gh pr view "${pr}" --repo "${REPO}" --json body --jq .body)" \
+        || cannot_read "PR #${pr} description"
+    check "PR #${pr} description" "${body}"
+    oids="$(gh pr view "${pr}" --repo "${REPO}" --json commits --jq '.commits[].oid')" \
+        || cannot_read "PR #${pr} commit list"
+    for oid in ${oids}; do
+        message="$(gh api "repos/${REPO}/commits/${oid}" --jq .commit.message)" \
+            || cannot_read "commit ${oid:0:8}"
+        check "commit ${oid:0:8}" "${message}"
+    done
 else
-    [[ -z "${body_file}" ]] || check "PR description" "$(cat "${body_file}")"
-    for sha in $(git rev-list "${range}"); do
-        check "commit ${sha:0:8}" "$(git log -1 --format=%B "${sha}")"
+    if [[ -n "${body_file}" ]]; then
+        body="$(cat "${body_file}")" || cannot_read "${body_file}"
+        check "PR description" "${body}"
+    fi
+    revs="$(git rev-list "${range}")" || cannot_read "range ${range}"
+    for sha in ${revs}; do
+        message="$(git log -1 --format=%B "${sha}")" || cannot_read "commit ${sha:0:8}"
+        check "commit ${sha:0:8}" "${message}"
     done
 fi
 

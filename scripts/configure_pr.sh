@@ -79,6 +79,8 @@ $DRY_RUN && echo "=== DRY RUN — no changes will be made ===" && echo
 # a collaborator is rejected by the API, and without the count the run would
 # report success having added no reviewer at all.
 WARN_COUNT=0
+# Set by configure_one_pr when a PR is refused, so its project sync is skipped.
+BLOCKED=false
 
 # --- Team mapping -----------------------------------------------------------
 declare -A TEAM_MAP
@@ -103,8 +105,9 @@ configure_one_pr() {
 
     # -- An AI tool's attribution blocks review until it is removed (#1031) --
     if ! "${REPO_ROOT}/scripts/check_ai_attribution.sh" --pr "$pr"; then
-        echo "  WARN: AI tool attribution found — remove it, then run again; PR not configured" >&2
+        echo "  WARN: AI tool attribution found, or the PR could not be read — PR not configured or synced" >&2
         WARN_COUNT=$((WARN_COUNT + 1))
+        BLOCKED=true  # the caller skips sync_interface_effect too
         return
     fi
 
@@ -370,10 +373,13 @@ sync_interface_effect() {
 if [ "$PR_ARG" = "--all" ]; then
     PRS=$(gh pr list --repo "$REPO" --state open --limit 200 --json number --jq '.[].number')
     echo "Configuring $(echo "$PRS" | wc -w) open PR(s)"
-    for pr in $PRS; do configure_one_pr "$pr"; sync_interface_effect "$pr"; done
+    for pr in $PRS; do
+        BLOCKED=false; configure_one_pr "$pr"
+        $BLOCKED || sync_interface_effect "$pr"
+    done
 else
-    configure_one_pr "$PR_ARG"
-    sync_interface_effect "$PR_ARG"
+    BLOCKED=false; configure_one_pr "$PR_ARG"
+    $BLOCKED || sync_interface_effect "$PR_ARG"
 fi
 echo "──────────────────────────────────────────────────────────────"
 $DRY_RUN && echo "Dry run complete — re-run without --dry-run to apply." || echo "Done."
