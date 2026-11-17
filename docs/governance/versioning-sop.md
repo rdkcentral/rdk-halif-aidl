@@ -138,6 +138,12 @@ every component and flags every place they disagree; the operator corrects
 the label and the field to match, or (if the code was wrong) the change
 itself. Disabling the audit is not a resolution.
 
+A maintainer records that decision on the PR with the **`Change Class
+Override`** label. The `pr-change-class` check then passes a change-class
+label below the compiler's class, and still shows what the compiler found.
+Without the override, a label below the compiler fails the check. The
+override is not a change class and does not move the version on its own.
+
 ### How PRs Drive the Version Bump
 
 Pre-baseline component versions advance one PR at a time. The bump that each

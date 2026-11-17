@@ -175,6 +175,7 @@ echo ""
 echo "Process / governance labels:"
 create_label "CR"                    "5319e7" "Change Request — ABI change needing wider review sign-off + separate release scheduling"
 create_label "New Interface"         "d93f0b" "New component: its own change class, below Major, above Minor; releases at 0.1.0.0"
+create_label "Change Class Override" "fbca04" "A maintainer has decided the change class; the label stands against the compiler"
 
 echo ""
 
