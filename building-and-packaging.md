@@ -34,6 +34,12 @@ For example, `rdk-halif-aidl-<interface>-v<version>` contains the runtime artefa
 Consumers should remove `rdk-halif-aidl` itself from `RDEPENDS` with `RDEPENDS_${PN} = " "`, then add back only the
 interfaces they need with `RDEPENDS_${PN} += "rdk-halif-aidl-<interface>-v<version>"`.
 
+For consumption we have a set of baseline release files, that describes the available interfaces and their versions.
+For the vendor layer the baseline file will describe exactly one version of each interface and it is expected that a vendor should deliver a corresponding implementation for each listed interface.
+In the middleware, the release files may describe multiple versions of each interface, allowing the middleware to select the appropriate implementation based on its requirements.
+
+Futhermore, to enable development and easy adoption of new interfaces, we allow to append additional version of interfaces to a custom build. This is done by setting a Yocto variable `HALIF_AIDL_INTERFACE_VERSION_APPENDS` in local.conf.
+
 ## Consumption
 
 Consumers have three ways to link against a packaged interface, in order of preference.
@@ -120,8 +126,27 @@ Tools that call `build_modules.sh` directly, such as
 We encourage them, though, to switch to a CMake-based (or at least `pkg-config`-based) build instead of relying on
 hard-coded paths.
 
+## Developer Workflows and Usecases
+
+### Adoption of a New HAL Interface or a New Version of an Existing Interface
+
+- **New interfaces**: Simply add the interface entry to the release baseline YAML. Since this is a pure addition, existing code builds without problems.
+- **New versions of existing interfaces (middleware)**: Append the new version to the release baseline YAML while keeping the old one. This allows consumers to adopt the new version while still supporting the existing one.
+- **New versions of existing interfaces (vendor layer)**: The vendor can adopt the new version by updating the Yocto variable `HALIF_AIDL_INTERFACE_VERSION_APPENDS` in `local.conf`, while keeping the old version for compatibility. Use this approach for vendor layers because they move from one baseline to another atomically.
+
+### Trying Interface Changes Before Commiting
+
+- To test interface changes before committing, modify the interface definition locally or on a branch and include `current` in `HALIF_AIDL_INTERFACE_VERSION_APPENDS` for your interface.
+- When consuming the interface, make sure to use `current` as the version in CMake or pkg-config.
+- This approach lets you test changes in your local environment without affecting mainline development or other consumers.
+
+
 ## Notes
 
 In CMake, `SameMinorVersion` can be used instead of `EXACT` to allow for patch version updates. Note, however, that in
 our current context `SameMinorVersion` behaves like `SameMajorVersion`, because we prepend a leading `0` to the version
 numbers.
+
+## References
+
+- [`meta-binder PR`](https://github.com/rdkcentral/meta-binder/pull/24)
