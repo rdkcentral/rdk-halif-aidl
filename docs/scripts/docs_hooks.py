@@ -37,6 +37,7 @@
 import glob
 import os
 import re
+import subprocess
 
 from mkdocs.structure.nav import Section
 from mkdocs.structure.pages import Page
@@ -59,6 +60,10 @@ _newest = {}
 _doc_sets = set()
 _repo_root = None
 _docs_dir = "docs"   # docs_dir as mkdocs.yml writes it; the monorepo plugin moves the live one to /tmp
+_commit = "develop"  # the commit being built; repository-file links point at it
+
+# Fenced code blocks and inline code: link syntax inside them is an example, not a link.
+CODE = re.compile(r"^(?P<fence>`{3,}|~{3,}).*?^(?P=fence)[ \t]*$|`+[^`\n]*`+", re.M | re.S)
 
 
 def _version_key(version):
@@ -76,9 +81,14 @@ def _site_name(mkdocs_yml):
 def on_config(config):
     """Record the site_name of every component doc set and, for a release
     build, the newest snapshot of every component."""
-    global _repo_root, _docs_dir
+    global _repo_root, _docs_dir, _commit
     repo_root = os.path.dirname(os.path.abspath(config.config_file_path))
     _repo_root = repo_root
+    try:
+        _commit = subprocess.run(["git", "-C", repo_root, "rev-parse", "HEAD"], capture_output=True,
+                                 text=True, check=True).stdout.strip() or "develop"
+    except (OSError, subprocess.CalledProcessError):
+        _commit = "develop"
     with open(config.config_file_path, encoding="utf-8") as f:
         for line in f:
             if line.startswith("docs_dir:"):
@@ -170,19 +180,33 @@ def _source_link(markdown, page, config, files):
         if repo_rel in by_path:
             return "](%s%s)" % (os.path.relpath(by_path[repo_rel], here or "."), anchor)
         if _repo_root and on_disk.startswith(_repo_root + os.sep) and os.path.exists(on_disk) and repo_url:
-            return "](%s/blob/develop/%s%s)" % (repo_url, os.path.relpath(on_disk, _repo_root), anchor)
+            return "](%s/blob/%s/%s%s)" % (repo_url, _commit, os.path.relpath(on_disk, _repo_root), anchor)
         return match.group(0)
 
+    def prose(text):
+        out, pos = [], 0
+        for m in RELATIVE_LINK.finditer(text):
+            new = fix(m)
+            if new is None:   # NO_TARGET: keep the link text, drop the link
+                start = text.rfind("[", pos, m.start())
+                out.append(text[pos:start] + text[start + 1:m.start()])
+            else:
+                out.append(text[pos:m.start()] + new)
+            pos = m.end()
+        out.append(text[pos:])
+        return "".join(out)
+
+    return _outside_code(markdown, prose)
+
+
+def _outside_code(markdown, change):
+    """Apply change() to the markdown outside code blocks and inline code."""
     out, pos = [], 0
-    for m in RELATIVE_LINK.finditer(markdown):
-        new = fix(m)
-        if new is None:   # NO_TARGET: keep the link text, drop the link
-            start = markdown.rfind("[", pos, m.start())
-            out.append(markdown[pos:start] + markdown[start + 1:m.start()])
-        else:
-            out.append(markdown[pos:m.start()] + new)
+    for m in CODE.finditer(markdown):
+        out.append(change(markdown[pos:m.start()]))
+        out.append(m.group(0))
         pos = m.end()
-    out.append(markdown[pos:])
+    out.append(change(markdown[pos:]))
     return "".join(out)
 
 
