@@ -105,6 +105,20 @@ class CheckAiAttribution(unittest.TestCase):
         self.commit("Fix #1: Something\n\nRejects a 'Generated with Claude Code' footer.")
         self.assertEqual(self.run_check(body).returncode, 0)
 
+    def message_file(self, text):
+        path = os.path.join(self.repo, "COMMIT_EDITMSG")
+        with open(path, "w") as f:
+            f.write(text)
+        return subprocess.run(["bash", os.path.abspath(SCRIPT), "--message-file", path],
+                              cwd=self.repo, capture_output=True, text=True, env=local_env())
+
+    def test_message_file_with_trailer_fails(self):
+        self.assertEqual(self.message_file("Fix #1: Something\n\n" + TRAILER + "\n").returncode, 1)
+
+    def test_message_file_ignores_git_comments(self):
+        text = "Fix #1: Something\n\n# Generated with Claude Code\n# " + TRAILER + "\n"
+        self.assertEqual(self.message_file(text).returncode, 0)
+
     def test_mention_in_prose_passes(self):
         self.commit("Fix #1: Explain the Claude Code footer check")
         self.assertEqual(self.run_check("Mentions Claude in prose only.").returncode, 0)

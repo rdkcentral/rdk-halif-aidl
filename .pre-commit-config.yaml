@@ -1,0 +1,16 @@
+# Local git hooks, run by pre-commit (https://pre-commit.com). Turn them on
+# in a clone with:
+#   pip install pre-commit
+#   pre-commit install
+# CI runs the same checks on every PR, so the hooks only catch problems
+# earlier, before a commit exists.
+default_install_hook_types: [pre-commit, commit-msg]
+repos:
+  - repo: local
+    hooks:
+      # An AI tool's footer or co-author trailer in a commit message (#1031).
+      - id: no-ai-attribution
+        name: No AI tool attribution in the commit message
+        entry: scripts/check_ai_attribution.sh --message-file
+        language: script
+        stages: [commit-msg]

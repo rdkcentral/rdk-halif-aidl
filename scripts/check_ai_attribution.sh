@@ -31,6 +31,10 @@
 #       and, if given, the PR description saved in <file>.
 #   scripts/check_ai_attribution.sh --pr <number>
 #       Reads the PR's description and commit messages from GitHub (gh).
+#   scripts/check_ai_attribution.sh --message-file <file>
+#       Checks one commit message before the commit is made: the pre-commit
+#       commit-msg hook in .pre-commit-config.yaml. Git's "#" comment lines
+#       are ignored.
 #
 # Exit: 0 clean, 1 attribution found, 2 an input could not be read.
 
@@ -46,11 +50,13 @@ TRAILER='^[[:space:]]*Co-authored-by:(.*@anthropic\.com|[[:space:]]*Claude[[:spa
 
 range="origin/develop..HEAD"
 body_file=""
+message_file=""
 pr=""
 while [[ $# -gt 0 ]]; do
     case "$1" in
         --body-file) body_file="$2"; shift 2 ;;
         --pr) pr="$2"; shift 2 ;;
+        --message-file) message_file="$2"; shift 2 ;;
         *) range="$1"; shift ;;
     esac
 done
@@ -86,7 +92,11 @@ cannot_read() {
     exit 2
 }
 
-if [[ -n "${pr}" ]]; then
+if [[ -n "${message_file}" ]]; then
+    message="$(grep -v '^#' "${message_file}")" || [[ -r "${message_file}" ]] \
+        || cannot_read "${message_file}"
+    check "commit message" "${message}"
+elif [[ -n "${pr}" ]]; then
     body="$(gh pr view "${pr}" --repo "${REPO}" --json body --jq .body)" \
         || cannot_read "PR #${pr} description"
     check "PR #${pr} description" "${body}"

@@ -12,6 +12,8 @@ You can submit your changes for review via that site, by raising an issue in git
 
 - Commit with your public GitHub identity. Set `git config user.email` to your GitHub noreply address (`<id>+<login>@users.noreply.github.com`, shown under GitHub > Settings > Emails). Commits from any other address fail the PR check.
 
+- Leave AI tool attribution out of commits, PR descriptions and issues: no "Generated with" footer and no co-author trailer for the tool. A tool is not an author, and the PR check fails on either. To catch it before you commit, install the repo's hooks once per clone: `pip install pre-commit && pre-commit install`.
+
 - In order to contribute code, first-time users are requested to agree to the [license](https://wiki.rdkcentral.com/signup.action).
 
 - Note: This contributing.md is draft, and is expected to change based on Tier1/Tier2 requirements TBC.
