@@ -33,6 +33,13 @@ FOOTER = "\U0001F916 Generated with [Claude Code](https://claude.com/claude-code
 TRAILER = "Co-Authored-By: Claude <noreply@anthropic.com>"
 
 
+def local_env(**extra):
+    """The environment outside GitHub Actions, so errors go to stderr."""
+    env = dict(os.environ, **extra)
+    env.pop("GITHUB_ACTIONS", None)
+    return env
+
+
 class CheckAiAttribution(unittest.TestCase):
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory()
@@ -59,9 +66,7 @@ class CheckAiAttribution(unittest.TestCase):
             with open(path, "w") as f:
                 f.write(body)
             args += ["--body-file", path]
-        env = dict(os.environ)
-        env.pop("GITHUB_ACTIONS", None)
-        return subprocess.run(args, cwd=self.repo, capture_output=True, text=True, env=env)
+        return subprocess.run(args, cwd=self.repo, capture_output=True, text=True, env=local_env())
 
     def test_clean_pr_passes(self):
         self.commit("Fix #1: Something\n\nCo-authored-by: Jo <2+jo@users.noreply.github.com>")
@@ -90,14 +95,14 @@ class CheckAiAttribution(unittest.TestCase):
 
     def test_unreadable_range_fails(self):
         result = subprocess.run(["bash", os.path.abspath(SCRIPT), "nosuch..HEAD"], cwd=self.repo,
-                                capture_output=True, text=True)
+                                capture_output=True, text=True, env=local_env())
         self.assertEqual(result.returncode, 2)
         self.assertIn("cannot read range", result.stderr)
 
     def test_missing_body_file_fails(self):
         result = subprocess.run(["bash", os.path.abspath(SCRIPT), "base..HEAD", "--body-file",
                                  os.path.join(self.repo, "missing.md")], cwd=self.repo,
-                                capture_output=True, text=True)
+                                capture_output=True, text=True, env=local_env())
         self.assertEqual(result.returncode, 2)
 
     def test_failed_github_read_fails(self):
@@ -107,7 +112,7 @@ class CheckAiAttribution(unittest.TestCase):
         with open(os.path.join(bindir, "gh"), "w") as f:
             f.write("#!/bin/sh\necho 'HTTP 502' >&2\nexit 1\n")
         os.chmod(os.path.join(bindir, "gh"), 0o755)
-        env = dict(os.environ, PATH=bindir + os.pathsep + os.environ["PATH"])
+        env = local_env(PATH=bindir + os.pathsep + os.environ["PATH"])
         result = subprocess.run(["bash", os.path.abspath(SCRIPT), "--pr", "1"], cwd=self.repo,
                                 capture_output=True, text=True, env=env)
         self.assertEqual(result.returncode, 2)
