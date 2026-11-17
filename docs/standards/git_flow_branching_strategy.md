@@ -22,7 +22,7 @@ Git-Flow is a branching model that facilitates parallel development and support 
 
 * `main`: always contains production-ready code.
 * `develop`: integration branch for features, and the base for releases.
-* `feature/*`: for new features; merged into `develop`.
+* `feature/<issue>-<synopsis>`: the work for one GitHub issue; merged into `develop`.
 * `release/*`: prepares for a production release; merged into `main` and `develop`.
 * `hotfix/*`: used for emergency fixes on production; merged into `main`, or `support` if branched from a support line.
 * `support/*`: added in AVH to support older release lines; hotfixes can be branched from and to here.
@@ -35,10 +35,10 @@ gitGraph TB:
    branch develop
    checkout develop
    commit id: "Init develop"
-   branch feature/xyz
+   branch feature/123-add-logging
    commit id: "Feature work"
    checkout develop
-   merge feature/xyz tag: "Feature merged"
+   merge feature/123-add-logging tag: "Feature merged"
    branch release/2.16.0
    commit id: "Release prep"
    checkout main
@@ -240,10 +240,10 @@ gitGraph TB:
    commit id: "Start"
    branch develop
    commit id: "Initial develop"
-   branch feature/login-page
+   branch feature/456-login-page
    commit id: "Add login page"
    checkout develop
-   merge feature/login-page tag: "Merged login"
+   merge feature/456-login-page tag: "Merged login"
    branch release/2.17.0
    commit id: "Prepare release 2.17.0"
    checkout main
