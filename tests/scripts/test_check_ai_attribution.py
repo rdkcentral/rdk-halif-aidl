@@ -89,6 +89,14 @@ class CheckAiAttribution(unittest.TestCase):
         self.commit("Fix #1: Something\n\nco-authored-by: Claude Opus <noreply@anthropic.com>")
         self.assertEqual(self.run_check().returncode, 1)
 
+    def test_tool_name_without_its_address_fails(self):
+        self.commit("Fix #1: Something\n\nCo-authored-by: Claude Code <bot@example.org>")
+        self.assertEqual(self.run_check().returncode, 1)
+
+    def test_person_called_claude_passes(self):
+        self.commit("Fix #1: Something\n\nCo-authored-by: Claude Martin <123+cm@users.noreply.github.com>")
+        self.assertEqual(self.run_check().returncode, 0)
+
     def test_mention_in_prose_passes(self):
         self.commit("Fix #1: Explain the Claude Code footer check")
         self.assertEqual(self.run_check("Mentions Claude in prose only.").returncode, 0)

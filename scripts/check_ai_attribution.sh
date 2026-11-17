@@ -22,8 +22,8 @@
 #
 # check_ai_attribution.sh — fail when a PR carries an AI tool's attribution
 # (#1031): a "Generated with Claude Code" footer, or a co-author trailer
-# naming Claude or an anthropic.com address. A tool is not an author, and a
-# merge copies commit messages onto develop.
+# with an anthropic.com address or a Claude product or model name. A tool
+# is not an author, and a merge copies commit messages onto develop.
 #
 # Usage:
 #   scripts/check_ai_attribution.sh [<range>] [--body-file <file>]
@@ -38,7 +38,9 @@ set -euo pipefail
 
 REPO="${REPO:-rdkcentral/rdk-halif-aidl}"
 FOOTER='Generated with \[?Claude'
-TRAILER='^[[:space:]]*Co-authored-by:.*(Claude|anthropic\.com)'
+# The tool's identities only: its anthropic.com address, or its product and
+# model names. A person called Claude is a co-author like any other.
+TRAILER='^[[:space:]]*Co-authored-by:(.*@anthropic\.com|[[:space:]]*Claude[[:space:]]+(Code|Opus|Sonnet|Haiku|Fable)([[:space:]]|<|$))'
 
 range="origin/develop..HEAD"
 body_file=""
