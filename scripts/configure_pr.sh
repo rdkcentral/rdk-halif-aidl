@@ -31,6 +31,8 @@
 #                    metadata.yaml, mapped to GitHub team slugs. A PR always
 #                    requests the relevant teams regardless of the metadata
 #                    baseline review status.
+#   * Refused      — a PR carrying an AI tool's attribution is not configured
+#                    (scripts/check_ai_attribution.sh, #1031).
 #   * Project      — sets the halif_aidl project Status to "Under Review",
 #                    and syncs its Interface Effect field (and the PR's linked
 #                    issues) from the labels via project_interface_effect.py,
@@ -98,6 +100,13 @@ configure_one_pr() {
     author=$(echo "$meta" | python3 -c 'import json,sys;print(json.load(sys.stdin)["author"]["login"])')
     echo "PR #${pr}: ${title}"
     echo "  author: ${author}"
+
+    # -- An AI tool's attribution blocks review until it is removed (#1031) --
+    if ! "${REPO_ROOT}/scripts/check_ai_attribution.sh" --pr "$pr"; then
+        echo "  WARN: AI tool attribution found — remove it, then run again; PR not configured" >&2
+        WARN_COUNT=$((WARN_COUNT + 1))
+        return
+    fi
 
     # -- Derive affected components from changed files --
     local components

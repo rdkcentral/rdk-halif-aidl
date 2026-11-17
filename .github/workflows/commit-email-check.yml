@@ -4,6 +4,8 @@ name: "Commit email check"
 # GitHub noreply address, or its message carries a trailer (Co-authored-by:,
 # Signed-off-by:, ...) with any other address: a squash merge copies commit
 # messages onto develop. Every Co-authored-by: trailer raises a warning (#898).
+# Also fails on an AI tool's attribution footer or co-author trailer in a
+# commit or the PR description (#1031); "edited" re-runs it on a new description.
 
 permissions:
   contents: read
@@ -29,3 +31,12 @@ jobs:
         run: |
           scripts/check_commit_emails.sh \
             "${{ github.event.pull_request.base.sha }}..${{ github.event.pull_request.head.sha }}"
+
+      - name: "Check for AI tool attribution"
+        env:
+          PR_BODY: ${{ github.event.pull_request.body }}
+        run: |
+          printf '%s\n' "${PR_BODY}" > "${RUNNER_TEMP}/pr_body.md"
+          scripts/check_ai_attribution.sh \
+            "${{ github.event.pull_request.base.sha }}..${{ github.event.pull_request.head.sha }}" \
+            --body-file "${RUNNER_TEMP}/pr_body.md"
