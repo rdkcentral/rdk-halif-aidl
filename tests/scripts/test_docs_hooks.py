@@ -75,6 +75,11 @@ class SourceLinks(unittest.TestCase):
         out = self.render("architecture/hla.md", "docs/architecture/hla.md", "[r](../../scripts/release.sh)")
         self.assertEqual(out, "[r](https://github.com/o/r/blob/abc123/scripts/release.sh)")
 
+    def test_page_read_from_the_merged_copy_resolves_from_the_repository(self):
+        page = types.SimpleNamespace(file=File("architecture/hla.md", "/elsewhere/merged/architecture/hla.md"))
+        out = hooks._source_link("[r](../../scripts/release.sh)", page, self.config, self.files)
+        self.assertEqual(out, "[r](https://github.com/o/r/blob/abc123/scripts/release.sh)")
+
     def test_source_relative_page_link_goes_to_the_site_page(self):
         out = self.render("common/common.md", "common/current/docs/common.md",
                           "[w](../../../docs/whitepapers/client.md#use)")

@@ -161,6 +161,10 @@ def _source_link(markdown, page, config, files):
         else:
             by_path.setdefault(os.path.normpath(os.path.join(_docs_dir, f.src_uri)), f.src_uri)
     src = os.path.realpath(page.file.abs_src_path or "")
+    if _repo_root and not src.startswith(_repo_root + os.sep):
+        # A docs_dir page read from the monorepo plugin's merged copy: its source
+        # in the repository is <docs_dir>/<uri>.
+        src = os.path.join(_repo_root, _docs_dir, page.file.src_uri)
     src_rel = os.path.relpath(src, _repo_root) if _repo_root else ""
     here = os.path.dirname(page.file.src_uri)
     repo_url = (config.get("repo_url") or "").rstrip("/")
