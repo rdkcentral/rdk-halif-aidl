@@ -157,7 +157,7 @@ flowchart TD
 ## Operation and Data Flow
 
 * Client queries `IPanelOutput.getCapabilities()` for supported picture modes, PQ parameters, refresh rates, runtime limits, supported colour temperature strings, and typed panel sources.
-* Picture mode configurations and PQ parameters are set via `setPictureModes()` and `setPQParameters()` once the controller is in `STARTED`. If `open()` returns a `STOPPED` controller, middleware reaches `STARTED` by calling `start()` first.
+* Picture mode configurations and PQ parameters are set via `setPictureModes()` and `setPQParameters()` once the controller is in `STARTED`. If `open()` returns a `READY` controller, middleware reaches `STARTED` by calling `start()` first.
 * `setPictureModes()` ignores exact duplicate entries. The same picture mode may be reused across different `(dynamicRange, AV source)` pairs, for example `Movie-HDMI1-HDR10`, `Movie-HDMI1-DV`, `Movie-IP-HDR10`, and `Movie-IP-DV`, while duplicate tuples are treated as no-ops.
 * The panel output enable state controls display and backlight through the controller and is orthogonal to controller lifecycle.
 * Frame rate matching adjusts panel refresh rate dynamically to match video content.
@@ -202,13 +202,13 @@ The Panel HAL uses Binder exceptions for invalid arguments, null output paramete
 1. Middleware binds `IPanelOutput` from the service manager.
 2. Middleware reads `getCapabilities()` and optionally registers `IPanelOutputEventListener`.
 3. Middleware calls `open()` to obtain the exclusive `IPanelOutputController`.
-4. A successful `open()` must return a controller in a valid operating state such as `STOPPED`, `STARTING`, `STARTED`, or `STOPPING`. `CLOSED` is the pre-open or post-close state and is not a valid successful `open()` result.
-5. The controller acquisition path is `CLOSED -> OPENING -> STOPPED`. `OPENING` and `CLOSING` are in-flight ownership transitions while the resource is being acquired or released.
-6. Middleware calls `getState()` and chooses the appropriate next action from the returned state rather than assuming a fresh `STOPPED` controller.
-7. If the controller is `STOPPED`, middleware may call `start()`, then use `setEnabled()`, `setPictureModes()`, and `setPQParameters()` while `STARTED`.
+4. A successful `open()` must return a controller in a valid operating state such as `READY`, `STARTING`, `STARTED`, or `STOPPING`. `CLOSED` is the pre-open or post-close state and is not a valid successful `open()` result.
+5. The controller acquisition path is `CLOSED -> OPENING -> READY`. `OPENING` and `CLOSING` are in-flight ownership transitions while the resource is being acquired or released.
+6. Middleware calls `getState()` and chooses the appropriate next action from the returned state rather than assuming a fresh `READY` controller.
+7. If the controller is `READY`, middleware may call `start()`, then use `setEnabled()`, `setPictureModes()`, and `setPQParameters()` while `STARTED`.
 8. If the controller is already `STARTED`, middleware may continue with `STARTED`-state operations directly.
-9. `stop()` is only valid from `STARTED` and transitions `STARTED -> STOPPING -> STOPPED`.
-10. `close()` is the normal release path from `STOPPED` and causes the controller to transition to `CLOSED` after the resource is released.
+9. `stop()` is only valid from `STARTED` and transitions `STARTED -> STOPPING -> READY`.
+10. `close()` is the normal release path from `READY` and causes the controller to transition to `CLOSED` after the resource is released.
 11. If the controller-owning client dies, the HAL releases ownership but retains the last panel state and stored configuration. A replacement client reopens the controller, calls `getState()`, and continues from there.
 12. Initial panel configuration, picture-mode settings, splash-screen content shown to the user, and any other product-specific behaviour before the panel AIDL module becomes active during cold boot or resume from deep standby are not within the scope of this module. Those values are platform-specific and are expected to be established by the product implementation before or outside the lifetime of the `IPanelOutput` contract.
 
@@ -279,26 +279,26 @@ For capability consumers, the nested picture-mode scoping is always carried by `
 
 ## State Machine / Lifecycle
 
-The diagram below focuses on controller lifecycle state. `IPanelOutput.open()` succeeds only when the controller is in a valid state for exclusive use; the acquisition path is `CLOSED -> OPENING -> STOPPED`. Middleware must call `getState()` first and then choose the appropriate next action. `stop()` is the explicit runtime shutdown path and transitions `STARTED -> STOPPING -> STOPPED`; `IPanelOutput.close()` is the separate controller-release path and transitions `STOPPED -> CLOSING -> CLOSED` after the resource is released.
+The diagram below focuses on controller lifecycle state. `IPanelOutput.open()` succeeds only when the controller is in a valid state for exclusive use; the acquisition path is `CLOSED -> OPENING -> READY`. Middleware must call `getState()` first and then choose the appropriate next action. `stop()` is the explicit runtime shutdown path and transitions `STARTED -> STOPPING -> READY`; `IPanelOutput.close()` is the separate controller-release path and transitions `READY -> CLOSING -> CLOSED` after the resource is released.
 
 ```mermaid
 flowchart LR
   Closed[CLOSED] -->|open| Opening[OPENING]
-  Opening -->|acquire complete| Stopped[STOPPED]
-  Stopped -->|start| Starting[STARTING]
+  Opening -->|acquire complete| Ready[READY]
+  Ready -->|start| Starting[STARTING]
   Starting -->|startup succeeds| Started[STARTED]
   Started -->|stop| Stopping[STOPPING]
-  Stopping -->|stop succeeds| Stopped
-  Stopped -->|close| Closing[CLOSING]
+  Stopping -->|stop succeeds| Ready
+  Ready -->|close| Closing[CLOSING]
   Closing -->|release complete| Closed
 
-  STOPPED_METHODS("Allowed in STOPPED<br/>getState()<br/>start()<br/>close() via IPanelOutput")
+  READY_METHODS("Allowed in READY<br/>getState()<br/>start()<br/>close() via IPanelOutput")
   STARTING_METHODS("Allowed in STARTING<br/>getState()")
   STARTED_METHODS("Allowed in STARTED<br/>getState()<br/>stop()<br/>setEnabled()<br/>getEnabled()<br/>setPictureModes()<br/>getPictureModes()<br/>getDefaultPictureModes()<br/>setPQParameters()<br/>getPQParameters()<br/>getDefaultPQParameters()<br/>getPQParameterCapabilities()<br/>setRefreshRate()<br/>getRefreshRate()<br/>setFrameRateMatching()<br/>getFrameRateMatching()<br/>setVideoSourceOverride()<br/>getVideoSourceOverride()<br/>getVideoSource()<br/>getDynamicRange()<br/>getVideoFrameRate()<br/>getVideoResolution()<br/>enableCalibrationMode()<br/>getCalibrationMode()")
   STOPPING_METHODS("Allowed in STOPPING<br/>getState()")
   CLOSING_METHODS("Allowed in CLOSING<br/>getState()")
 
-  STOPPED_METHODS -.-> Stopped
+  READY_METHODS -.-> Ready
   STARTING_METHODS -.-> Starting
   STARTED_METHODS -.-> Started
   STOPPING_METHODS -.-> Stopping
@@ -309,15 +309,15 @@ flowchart LR
   classDef entry fill:#1565C0,stroke:#E0E0E0,stroke-width:2px,color:#E0E0E0;
   classDef returned fill:#BBDEFB,stroke:#1565C0,stroke-width:2px,color:#000000;
 
-  class Closed,Opening,Stopped,Starting,Started,Stopping,Closing state;
-  class STOPPED_METHODS,STARTING_METHODS,STARTED_METHODS,STOPPING_METHODS,CLOSING_METHODS methods;
+  class Closed,Opening,Ready,Starting,Started,Stopping,Closing state;
+  class READY_METHODS,STARTING_METHODS,STARTED_METHODS,STOPPING_METHODS,CLOSING_METHODS methods;
 ```
 
-* Typical states: `CLOSED`, `OPENING`, `STOPPED`, `STARTING`, `STARTED`, `STOPPING`, `CLOSING`.
+* Typical states: `CLOSED`, `OPENING`, `READY`, `STARTING`, `STARTED`, `STOPPING`, `CLOSING`.
 * `open()` does not return `CLOSED`; it succeeds only after the controller is in a valid operating state for exclusive use.
-* `start()` is only valid from `STOPPED`; on success the controller transitions `STOPPED -> STARTING -> STARTED`.
-* `stop()` is only valid from `STARTED`; on success the controller transitions `STARTED -> STOPPING -> STOPPED`.
-* `IPanelOutput.close()` is a separate release call and transitions `STOPPED -> CLOSING -> CLOSED` after the resource is released.
+* `start()` is only valid from `READY`; on success the controller transitions `READY -> STARTING -> STARTED`.
+* `stop()` is only valid from `STARTED`; on success the controller transitions `STARTED -> STOPPING -> READY`.
+* `IPanelOutput.close()` is a separate release call and transitions `READY -> CLOSING -> CLOSED` after the resource is released.
 * `setEnabled()` controls visible output while the controller remains `STARTED`; it does not replace `stop()` and may be used to represent light sleep or standby.
 * Picture-mode control, PQ control, refresh-rate control, and calibration-mode control are valid only while `STARTED`.
 * `getState()` returns the current lifecycle state and passive observers receive the same transitions through `IPanelOutputEventListener.onStateChanged()`.

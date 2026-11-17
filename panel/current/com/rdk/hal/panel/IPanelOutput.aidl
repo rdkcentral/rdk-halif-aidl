@@ -57,8 +57,8 @@ interface IPanelOutput {
      *
      * On success this returns the exclusive IPanelOutputController for the
      * panel output. A successfully opened controller must be in a valid
-     * operating state such as STOPPED or an in-flight acquisition state before
-     * STOPPED; `CLOSED` is not a valid successful open result. The client must
+     * operating state such as READY or an in-flight acquisition state before
+     * READY; `CLOSED` is not a valid successful open result. The client must
      * call `getState()` before deciding whether to start, wait for an
      * in-progress transition, or continue with STARTED-state operations.
      *
@@ -71,8 +71,8 @@ interface IPanelOutput {
      *
      * A client that reopens the panel after the previous controller owner died
      * must call `getState()` on the returned controller and continue from that
-     * state rather than assuming the panel has been stopped or reset. The
-     * normal acquisition path is `CLOSED -> OPENING -> STOPPED`.
+     * state rather than assuming the panel has been released or reset. The
+     * normal acquisition path is `CLOSED -> OPENING -> READY`.
      *
      * @returns IPanelOutputController, or null if the panel output cannot be opened.
      *
@@ -89,16 +89,16 @@ interface IPanelOutput {
     /**
      * @brief Close this panel output and release the controller.
      *
-     * Accepted from STOPPED and while the controller is releasing resources
+     * Accepted from READY and while the controller is releasing resources
      * during `CLOSING`. This is the distinct release path after an explicit
-     * `stop()` has reached `STOPPED` or when the client decides to relinquish
+     * `stop()` has reached `READY` or when the client decides to relinquish
      * exclusive control without restarting the panel. On success the
-     * controller transitions `STOPPED -> CLOSING -> CLOSED`, the controller is
+     * controller transitions `READY -> CLOSING -> CLOSED`, the controller is
      * invalidated, and another client may `open()` the panel output.
      *
      * Client death is handled separately from `close()`: the HAL releases the
      * controller ownership automatically, but it does not force the panel back
-     * to STOPPED or discard the last stored configuration.
+     * to READY or discard the last stored configuration.
      *
      * If the panel output is in STARTED, STARTING, or STOPPING the call fails
      * with EX_ILLEGAL_STATE - the client must call stop() first, then close().
@@ -109,7 +109,7 @@ interface IPanelOutput {
      * @retval true  Successfully closed.
      * @retval false The supplied controller is not the instance returned by open().
      *
-     * @exception binder::Status EX_ILLEGAL_STATE if panel output is not in STOPPED or CLOSING state.
+     * @exception binder::Status EX_ILLEGAL_STATE if panel output is not in READY or CLOSING state.
      * @exception binder::Status EX_NULL_POINTER if controller is null.
      *
      * @see open(), IPanelOutputController.start()

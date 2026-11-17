@@ -30,8 +30,8 @@ enum State {
     CLOSED = 0,
     /** The controller is opening and acquiring the panel resource. */
     OPENING = 1,
-    /** The controller is stopped; start() may be called. */
-    STOPPED = 2,
+    /** The controller is acquired and ready to start. */
+    READY = 2,
     /** A start() is in progress. */
     STARTING = 3,
     /** The panel output is running; control operations are valid. */
@@ -40,6 +40,4 @@ enum State {
     STOPPING = 5,
     /** The controller is closing and relinquishing the panel resource. */
     CLOSING = 6,
-    /** A state transition failed; release the controller with close(). */
-    ERROR = 7,
 }

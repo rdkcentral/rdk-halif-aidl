@@ -29,7 +29,7 @@
  * controller ownership but retains the current panel state and the latest
  * stored configuration. A later client can reopen the panel and use
  * getState() to discover whether the panel is still CLOSED, OPENING,
- * STOPPED, STARTING, STARTED, STOPPING, or CLOSING. The enabled/disabled
+ * READY, STARTING, STARTED, STOPPING, or CLOSING. The enabled/disabled
  * state is retained separately from lifecycle state.
  */
 package com.rdk.hal.panel;
@@ -48,13 +48,13 @@ interface IPanelOutputController {
     /**
      * @brief Start the panel output controller.
      *
-     * This method can only be called in State.STOPPED.
+     * This method can only be called in State.READY.
      *
      * This method returns true on success and false on failure.
-     * Calling start() when the controller is not in STOPPED is invalid and is
+     * Calling start() when the controller is not in READY is invalid and is
      * rejected with EX_ILLEGAL_STATE.
      *
-     * On success, the controller transitions STOPPED -> STARTING -> STARTED
+     * On success, the controller transitions READY -> STARTING -> STARTED
      * and the PQ pipeline becomes ready for configuration and video flow. A
      * panel may still be disabled while the controller is STARTED.
      * IPanelOutputEventListener.onStateChanged() fires for each transition.
@@ -66,7 +66,7 @@ interface IPanelOutputController {
      * @retval true The panel output was started successfully.
      * @retval false Hardware initialization failed after a valid start request.
      *
-     * @exception binder::Status::Exception::EX_ILLEGAL_STATE The panel output is not in STOPPED state.
+     * @exception binder::Status::Exception::EX_ILLEGAL_STATE The panel output is not in READY state.
      */
     boolean start();
 
@@ -85,19 +85,19 @@ interface IPanelOutputController {
      * @brief Stop the panel output controller.
      *
      * This method can only be called in State.STARTED. On success, it
-     * transitions STARTED -> STOPPING -> STOPPED. A runtime or hardware
+     * transitions STARTED -> STOPPING -> READY. A runtime or hardware
      * failure returns false and the controller remains in a valid lifecycle
      * state that the client may inspect before retrying or closing.
      * IPanelOutputEventListener.onStateChanged() fires for each transition.
      *
      * This is the explicit runtime shutdown path for the panel stream. It is
      * distinct from `close()`, which is the separate controller-release path
-     * that transitions `STOPPED -> CLOSING -> CLOSED` and invalidates the
+     * that transitions `READY -> CLOSING -> CLOSED` and invalidates the
      * exclusive controller handle. `setEnabled(false)` only suppresses panel
      * output and may keep the controller STARTED for light-sleep or standby.
      *
      * @returns boolean
-     * @retval true The panel output was stopped successfully.
+     * @retval true The panel output was shut down successfully.
      * @retval false The HAL accepted the request but could not complete the stop because of a runtime or hardware
      * failure.
      *
