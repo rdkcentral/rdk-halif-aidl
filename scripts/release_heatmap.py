@@ -51,6 +51,7 @@ import re
 import subprocess
 import sys
 import tempfile
+import time
 import urllib.parse
 
 REPO = os.environ.get("GITHUB_REPOSITORY", "rdkcentral/rdk-halif-aidl")
@@ -78,8 +79,22 @@ REPO_WIDE = [("scope:infrastructure", "(infrastructure)"), ("scope:overview", "(
              ("documentation", "(documentation)")]
 
 
-def gh_json(args):
-    return json.loads(subprocess.check_output(["gh"] + args))
+TRANSIENT = re.compile(r"HTTP 50[234]")
+
+
+def gh_json(args, retries=4, sleep=None):
+    """Run gh and parse its JSON, retrying a transient 502, 503 or 504 (#1037)."""
+    sleep = sleep or time.sleep
+    for attempt in range(retries):
+        r = subprocess.run(["gh"] + args, capture_output=True, text=True)
+        if r.returncode == 0:
+            return json.loads(r.stdout)
+        if TRANSIENT.search(r.stderr) and attempt < retries - 1:
+            sys.stderr.write("gh: %s; retrying\n" % r.stderr.strip())
+            sleep(2 ** attempt)
+            continue
+        sys.stderr.write(r.stderr)
+        raise subprocess.CalledProcessError(r.returncode, ["gh"] + args, r.stdout, r.stderr)
 
 
 def graphql(query, **variables):

@@ -219,6 +219,36 @@ class Render(unittest.TestCase):
         finally:
             subprocess.run = real
 
+    def test_gh_json_retries_a_transient_5xx(self):
+        import subprocess
+        real = subprocess.run
+        replies = [subprocess.CompletedProcess([], 1, "", "gh: HTTP 504"),
+                   subprocess.CompletedProcess([], 0, '{"data": 1}', "")]
+        waits = []
+        try:
+            subprocess.run = lambda *a, **k: replies.pop(0)
+            self.assertEqual(rh.gh_json(["api", "x"], sleep=waits.append), {"data": 1})
+            self.assertEqual(waits, [1])
+        finally:
+            subprocess.run = real
+
+    def test_gh_json_gives_up_on_a_lasting_or_other_error(self):
+        import subprocess
+        real = subprocess.run
+        waits = []
+        try:
+            subprocess.run = lambda *a, **k: subprocess.CompletedProcess(a, 1, "", "gh: HTTP 503")
+            with self.assertRaises(subprocess.CalledProcessError):
+                rh.gh_json(["api", "x"], retries=3, sleep=waits.append)
+            self.assertEqual(waits, [1, 2])
+            waits.clear()
+            subprocess.run = lambda *a, **k: subprocess.CompletedProcess(a, 1, "", "gh: Not Found (HTTP 404)")
+            with self.assertRaises(subprocess.CalledProcessError):
+                rh.gh_json(["api", "x"], sleep=waits.append)
+            self.assertEqual(waits, [])
+        finally:
+            subprocess.run = real
+
     def test_cell_has_the_pr_under_the_ticket(self):
         t = rh.classify(issue(1, labels=["Minor Change", "component:panel"], milestone="0.24.0",
                               prs=[{"number": 9, "state": "OPEN"}]), set(), "2026-11-03", None)
