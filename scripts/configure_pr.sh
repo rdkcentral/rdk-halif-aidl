@@ -95,7 +95,8 @@ configure_one_pr() {
     echo "──────────────────────────────────────────────────────────────"
     local meta
     meta=$(gh pr view "$pr" --repo "$REPO" --json number,title,author,labels,assignees,files,isDraft 2>/dev/null) || {
-        echo "PR #${pr}: could not read — skipping"; return; }
+        echo "  WARN: PR #${pr}: could not read — not configured or synced" >&2
+        WARN_COUNT=$((WARN_COUNT + 1)); BLOCKED=true; return; }
 
     local title author
     title=$(echo "$meta" | python3 -c 'import json,sys;print(json.load(sys.stdin)["title"])')
