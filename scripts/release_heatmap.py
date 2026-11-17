@@ -69,7 +69,6 @@ _spec.loader.exec_module(pie)
 BREAKING = {"Major", "CR-Major"}
 PRIORITY_POINTS = {"P0": 5, "P1": 3, "P2": 1, "P3": 0}
 NO_MILESTONE = "No milestone"
-SEVERAL = "(several components)"
 UNCLASSIFIED = "(no change class)"
 # Change class -> badge letter and colour; the order is the legend's.
 BADGE = {"Major": ("M", "d73a4a"), "CR-Major": ("CR", "8b0000"), "New Interface": ("NI", "8250df"),
@@ -355,8 +354,8 @@ def open_prs(issue):
 
 
 def row_of(t):
-    """The one row a ticket is shown in: its component, or the several-components row."""
-    return t["components"][0] if len(t["components"]) == 1 else SEVERAL
+    """The one row a ticket is shown in: its first component, alphabetically."""
+    return t["components"][0]
 
 
 def rows(tickets):
@@ -441,10 +440,10 @@ def render(tickets, milestones, generated, project_title="halif_aidl", resolved=
         "projects/%d) project. It updates itself when a ticket changes; do not edit it by "
         "hand._" % (generated, REPO, project_title, OWNER, PROJECT_NUMBER), "",
         "%d open issues, each shown once: a ticket on several components is in the "
-        "%s row, so the row totals add up to the open issues. "
+        "row of the first, alphabetically, so the row totals add up to the open issues. "
         "Each cell lists its tickets, most urgent "
         "first, as a badge coloured by its change class; each of its open PRs is "
-        "on the line below it, marked ↳:" % (len(tickets), SEVERAL), "", legend(), "", "PR: " + pr_legend() + " (open: "
+        "on the line below it, marked ↳:" % len(tickets), "", legend(), "", "PR: " + pr_legend() + " (open: "
         "review needed)", "",
         "| Component | " + " | ".join(short[c] for c in cols) + " | Total |",
         "| --- |" + " --- |" * (len(cols) + 1),

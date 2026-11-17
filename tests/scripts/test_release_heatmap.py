@@ -236,14 +236,15 @@ class Render(unittest.TestCase):
         self.assertNotIn("%E2%86%B312", section)
         self.assertIn("| **Tickets** | | **1** |", section)
 
-    def test_a_ticket_on_several_components_is_shown_once(self):
+    def test_a_ticket_on_several_components_is_in_its_first_row(self):
         one = rh.classify(issue(1, labels=["component:panel"], milestone="0.24.0"), set(), "2026-11-03", None)
-        two = rh.classify(issue(2, labels=["component:audiosink", "component:videosink"], milestone="0.24.0"),
+        two = rh.classify(issue(2, labels=["component:videosink", "component:audiosink"], milestone="0.24.0"),
                           set(), "2026-11-03", None)
         page = rh.render([one, two], [{"title": "0.24.0", "due": None}], "now")
         self.assertEqual(page.count("](u2)"), 1)
-        self.assertIn("| (several components) |", page)
-        self.assertNotIn("| audiosink |", page)
+        self.assertIn("| audiosink |", page)
+        self.assertNotIn("| videosink |", page)
+        self.assertNotIn("several components) |", page)
         totals = [int(l.rsplit("|", 2)[1]) for l in page.splitlines()
                   if l.startswith("| ") and not l.startswith(("| Component", "| ---", "| **"))]
         self.assertEqual(sum(totals), 2)
