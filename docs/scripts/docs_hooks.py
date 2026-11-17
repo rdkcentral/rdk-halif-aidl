@@ -27,10 +27,17 @@
 # publishes each component only as its frozen snapshots, <component>-<X.Y.Z.W>/,
 # so a link to a sibling component's current docs, ../<component>/page.md, has
 # no target. Point it at that component's newest snapshot instead.
+#
+# Every build: a relative link written against the page's source file (as
+# GitHub shows it) rather than its place in the site has no target in the site
+# (#1018). Resolve it against the source file instead: a page that is in the
+# site gets a link to that page, and any other repository file (a script, a
+# header, a recipe) a link to it on GitHub.
 
 import glob
 import os
 import re
+import subprocess
 
 from mkdocs.structure.nav import Section
 from mkdocs.structure.pages import Page
@@ -41,8 +48,22 @@ VERSION_DIR = re.compile(r"^\d+\.\d+\.\d+\.\d+$")
 # ](../<component>/  — a markdown link into a sibling component's current docs.
 SIBLING_LINK = re.compile(r"(\]\(\.\./)([a-z0-9_]+)/")
 
+# ](target) or ](target#anchor) — a relative link, not a URL or an anchor alone.
+RELATIVE_LINK = re.compile(r"\]\((?!https?:|mailto:|#|/)([^)\s#]+)(#[^)\s]*)?\)")
+
+# Links in released snapshots whose target exists nowhere; a snapshot is frozen,
+# so the text stays and the link goes. drm 0.1.0.0 named a CDM page that was
+# never written (drm 0.2.0.0 dropped the link).
+NO_TARGET = {("drm/0.1.0.0/docs/drm.md", "../cdm/cdm.md")}
+
 _newest = {}
 _doc_sets = set()
+_repo_root = None
+_docs_dir = "docs"   # docs_dir as mkdocs.yml writes it; the monorepo plugin moves the live one to /tmp
+_commit = "develop"  # the commit being built; repository-file links point at it
+
+# Fenced code blocks and inline code: link syntax inside them is an example, not a link.
+CODE = re.compile(r"^(?P<fence>`{3,}|~{3,}).*?^(?P=fence)[ \t]*$|`+[^`\n]*`+", re.M | re.S)
 
 
 def _version_key(version):
@@ -60,7 +81,18 @@ def _site_name(mkdocs_yml):
 def on_config(config):
     """Record the site_name of every component doc set and, for a release
     build, the newest snapshot of every component."""
+    global _repo_root, _docs_dir, _commit
     repo_root = os.path.dirname(os.path.abspath(config.config_file_path))
+    _repo_root = repo_root
+    try:
+        _commit = subprocess.run(["git", "-C", repo_root, "rev-parse", "HEAD"], capture_output=True,
+                                 text=True, check=True).stdout.strip() or "develop"
+    except (OSError, subprocess.CalledProcessError):
+        _commit = "develop"
+    with open(config.config_file_path, encoding="utf-8") as f:
+        for line in f:
+            if line.startswith("docs_dir:"):
+                _docs_dir = line.split(":", 1)[1].split("#", 1)[0].strip() or "docs"
     _doc_sets.clear()
     for pattern in ("*/*/mkdocs.yml", "*/*/*/mkdocs.yml"):
         for mkdocs_yml in glob.glob(os.path.join(repo_root, pattern)):
@@ -115,7 +147,75 @@ def _rewrite(match):
     return f"{match.group(1)}{component}-{_newest[component]}/"
 
 
+def _source_link(markdown, page, config, files):
+    """Repoint links that only resolve against the page's source file."""
+    in_site = {f.src_uri for f in files}
+    # Site pages by their path in the repository. The monorepo plugin serves
+    # docs_dir pages from a merged copy outside the repository, so such a
+    # page's repository path is <docs_dir>/<uri>.
+    by_path = {}
+    for f in files:
+        real = os.path.realpath(f.abs_src_path or "")
+        if _repo_root and real.startswith(_repo_root + os.sep):
+            by_path[os.path.relpath(real, _repo_root)] = f.src_uri
+        else:
+            by_path.setdefault(os.path.normpath(os.path.join(_docs_dir, f.src_uri)), f.src_uri)
+    src = os.path.realpath(page.file.abs_src_path or "")
+    if _repo_root and not src.startswith(_repo_root + os.sep):
+        # A docs_dir page read from the monorepo plugin's merged copy: its source
+        # in the repository is <docs_dir>/<uri>.
+        src = os.path.join(_repo_root, _docs_dir, page.file.src_uri)
+    src_rel = os.path.relpath(src, _repo_root) if _repo_root else ""
+    here = os.path.dirname(page.file.src_uri)
+    repo_url = (config.get("repo_url") or "").rstrip("/")
+
+    def fix(match):
+        target, anchor = match.group(1), match.group(2) or ""
+        if os.path.normpath(os.path.join(here, target)) in in_site:
+            return match.group(0)   # already a link mkdocs resolves
+        if (src_rel, target) in NO_TARGET:
+            return None
+        on_disk = os.path.realpath(os.path.join(os.path.dirname(src), target))
+        repo_rel = os.path.relpath(on_disk, _repo_root) if _repo_root else ""
+        parts = repo_rel.split(os.sep)
+        if repo_rel not in by_path and len(parts) > 2 and parts[1] == "current" and parts[0] in _newest:
+            # A release publishes a component only as its snapshots: use the newest.
+            repo_rel = os.sep.join([parts[0], _newest[parts[0]]] + parts[2:])
+        if repo_rel in by_path:
+            return "](%s%s)" % (os.path.relpath(by_path[repo_rel], here or "."), anchor)
+        if _repo_root and on_disk.startswith(_repo_root + os.sep) and os.path.exists(on_disk) and repo_url:
+            return "](%s/blob/%s/%s%s)" % (repo_url, _commit, os.path.relpath(on_disk, _repo_root), anchor)
+        return match.group(0)
+
+    def prose(text):
+        out, pos = [], 0
+        for m in RELATIVE_LINK.finditer(text):
+            new = fix(m)
+            if new is None:   # NO_TARGET: keep the link text, drop the link
+                start = text.rfind("[", pos, m.start())
+                out.append(text[pos:start] + text[start + 1:m.start()])
+            else:
+                out.append(text[pos:m.start()] + new)
+            pos = m.end()
+        out.append(text[pos:])
+        return "".join(out)
+
+    return _outside_code(markdown, prose)
+
+
+def _outside_code(markdown, change):
+    """Apply change() to the markdown outside code blocks and inline code."""
+    out, pos = [], 0
+    for m in CODE.finditer(markdown):
+        out.append(change(markdown[pos:m.start()]))
+        out.append(m.group(0))
+        pos = m.end()
+    out.append(change(markdown[pos:]))
+    return "".join(out)
+
+
 def on_page_markdown(markdown, page, config, files):
+    markdown = _source_link(markdown, page, config, files)
     if not _newest:
         return markdown
     return SIBLING_LINK.sub(_rewrite, markdown)
