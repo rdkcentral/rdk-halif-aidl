@@ -5,7 +5,10 @@
 # clones the toolchain. Keep it pinned so the committed module-local
 # generated C++ always matches the generator that produced it.
 #
-# Pinned to release tag 2.7.0 (linux_binder_idl), which ships:
+# Pinned to release tag 2.7.1 (linux_binder_idl), a patch on 2.7.0 that
+# adds the <cstdint> includes AOSP's hex.cpp and StrongPointer.h need, so the
+# SDK builds on gcc 13 and later (linux_binder_idl#92/#93). No change to the
+# runtime, the wire protocol or the generated code. 2.7.0 ships:
 #  - protocol 8 by default on every toolchain, with BINDER_PROTOCOL=7|8 and
 #    TARGET_BITNESS=32|64 as the switches (linux_binder_idl#68/#69/#72); the
 #    old BINDER_IPC_32BIT and TARGET_LIB32_VERSION/TARGET_LIB64_VERSION are
@@ -22,4 +25,4 @@
 # (#633/#568).
 #
 # Override for a one-off build with:  BINDER_VERSION=<ref> ./build_binder.sh
-2.7.0
+2.7.1
