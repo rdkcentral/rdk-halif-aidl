@@ -70,7 +70,7 @@ Comments column names the interface element or capability field against which it
 | **HAL.BROADCAST.18** | `tune()` shall throw `EX_UNSUPPORTED_OPERATION` when the active `TuneParameters` member names a carrier type the frontend does not support. | |
 | **HAL.BROADCAST.19** | A frontend reporting `DvbTStandard.T2` shall honour `DvbTTuneParameters.plpId`, including `FrontendConstants.AUTO_PLP_ID`. | PLP selection is mandatory for DVB-T2; no capability flag exists. |
 | **HAL.BROADCAST.20** | A tune parameter outside the range advertised by the corresponding capability field shall be rejected with `EX_ILLEGAL_ARGUMENT`, leaving the frontend state unchanged. | Frequency, symbol rate, and enumerated values. |
-| **HAL.BROADCAST.21** | An `AUTO` enumeration value shall be advertised in a capability list only where the frontend performs genuine auto-detection. | Trying one value and failing does not qualify. |
+| **HAL.BROADCAST.21** | Whenever `AUTO` is advertised or required for a capability field, the frontend shall genuinely support automatic detection of that parameter and honour tune requests using `AUTO`. If the AIDL documentation marks `AUTO` as mandatory, the frontend shall advertise it; clients may rely on it working. The frontend shall advertise `AUTO` for other fields only when it genuinely supports automatic detection. | Trying a fixed value (or a sequence of values) and failing does not qualify as auto-detection. |
 | **HAL.BROADCAST.22** | `getSignalInfo()` shall return one entry per requested property, in the requested order, each carrying a `Readiness` value. | Unsupported properties report `UNSUPPORTED` rather than throwing. |
 | **HAL.BROADCAST.23** | `getTuneStatus()` and `getSignalInfo()` shall be callable at any time without altering tuning state. | Polling is the only observation mechanism. |
 
@@ -102,6 +102,7 @@ Comments column names the interface element or capability field against which it
 | **HAL.BROADCAST.35** | `createSoftwareInput()` shall throw `EX_UNSUPPORTED_OPERATION` on a demultiplexer that reports `acceptsDataFromSoftware` as false. | |
 | **HAL.BROADCAST.36** | A software-input ID shall remain valid while no client holds the interface, and shall be invalidated only by `destroySoftwareInput()`. | Creation, acquisition and destruction are distinct stages. |
 | **HAL.BROADCAST.37** | `destroySoftwareInput()` shall throw `EX_ILLEGAL_STATE` while the input is still acquired. | |
+| **HAL.BROADCAST.37.1** | `destroySoftwareInput()` shall throw `EX_ILLEGAL_ARGUMENT` when the caller is not the client that created the input, the client whose token was passed to `createSoftwareInput()`. | Holding or guessing another client's ID does not let a client destroy its input. |
 | **HAL.BROADCAST.38** | Data written through a software input shall be processed by the demultiplexer's filters as if received from a hardware source. | |
 | **HAL.BROADCAST.39** | The ring buffer returned by `openForWriting()` shall be non-overflowing: when full, the producer's `acquire()` shall return `null` rather than overwrite unread data. | Back-pressure, not data loss; a replayed stream must not be corrupted. |
 

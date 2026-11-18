@@ -19,9 +19,12 @@ import com.rdk.hal.ringbuffer.OverflowBehaviour;
 /**
  * @brief Information about an IRingBuffer.
  *
- * The parcelable is kept as small as possible to avoid unnecessary overhead when sending it over Binder. For example,
- * the number of bytes available for writing is not included, as it can be calculated from the size and the number of
- * bytes available for reading.
+ * The parcelable is kept as small as possible to avoid unnecessary overhead when sending it over Binder, so the
+ * number of bytes available for writing is not included. In a non-overflowing buffer, free space is not simply the
+ * size less the bytes available for reading: regions held by outstanding acquires on either side are unavailable
+ * to subsequent acquires until released. An otherwise empty 1000-byte buffer with an unreleased 600-byte producer
+ * acquire has 400 bytes of unreserved space. In an overflowing buffer, the producer may overwrite a region held
+ * by the consumer; holding an acquire does not protect that region from being overwritten.
  *
  * @author Jan Pedersen
  * @author Christian George
