@@ -18,14 +18,13 @@
  */
 package com.rdk.hal.keyvault;
 
-import com.rdk.hal.cryptoengine.Algorithm;
 import com.rdk.hal.cryptoengine.CryptoConfig;
-import com.rdk.hal.cryptoengine.Digest;
 import com.rdk.hal.cryptoengine.ICryptoEngineController;
 import com.rdk.hal.cryptoengine.KeyType;
 import com.rdk.hal.keyvault.DerivedKeySpec;
 import com.rdk.hal.keyvault.IKeyVaultEventListener;
 import com.rdk.hal.keyvault.KeyDescriptor;
+import com.rdk.hal.keyvault.KeyParameters;
 import com.rdk.hal.keyvault.VaultCapabilities;
 import com.rdk.hal.keyvault.VaultState;
 
@@ -42,10 +41,21 @@ import com.rdk.hal.keyvault.VaultState;
  * this vault. The engine then uses the vault's keys for its operations
  * based on its own crypto configuration.
  *
+ * <h3>Key encoding</h3>
+ * Key material crossing this interface (importKey(), exportKey(), the
+ * peerPublicKey of deriveIntoVault()) uses one encoding per key type:
+ * - SECRET: the raw key bytes.
+ * - PUBLIC: DER-encoded SubjectPublicKeyInfo (RFC 5280), for RSA, EC
+ *   (including Ed25519 and X25519, per RFC 8410) and DH.
+ * - PRIVATE: DER-encoded PKCS#8 PrivateKeyInfo (RFC 5208).
+ * Any other encoding is rejected with EX_ILLEGAL_ARGUMENT.
+ *
  * <h3>Exception Handling</h3>
  * Unless otherwise specified, this interface follows standard Android Binder semantics:
- * - <b>Success</b>: The method returns `binder::Status::Exception::EX_NONE` and all output parameters/return values are valid.
- * - <b>Failure (Exception)</b>: The method returns a service-specific exception (e.g., `EX_SERVICE_SPECIFIC`, `EX_ILLEGAL_ARGUMENT`).
+ * - <b>Success</b>: The method returns `binder::Status::Exception::EX_NONE` and all output parameters/return values are
+ *   valid.
+ * - <b>Failure (Exception)</b>: The method returns a service-specific exception (e.g., `EX_SERVICE_SPECIFIC`,
+ *   `EX_ILLEGAL_ARGUMENT`).
  *   In this case, output parameters and return values contain undefined (garbage) memory and must not be used.
  */
 @VintfStability
@@ -111,22 +121,21 @@ interface IKeyVaultController {
      * time and enforced on all subsequent operations.
      *
      * @param alias Unique name for the key within this vault.
-     * @param algorithm Algorithm for this key (AES, HMAC).
-     * @param keySizeBits Key size in bits (e.g. 128, 256).
-     * @param usages Allowed usages as a bitmask of KeyPurpose values.
-     * @param extractable Whether the raw key material can be exported.
+     * @param params Key parameters: algorithm (AES, HMAC, CMAC, CHACHA20_POLY1305),
+     *               size, usages, extractability, and the digest for an HMAC key.
      * @returns KeyDescriptor for the newly created key.
-     * @exception binder::Status EX_ILLEGAL_ARGUMENT if alias already exists, algorithm/size is invalid, or usages are incompatible with algorithm.
+     * @exception binder::Status EX_ILLEGAL_ARGUMENT if alias already exists, algorithm/size is invalid, an HMAC key has
+     *   no digest, or usages are incompatible with algorithm.
      * @exception binder::Status EX_SERVICE_SPECIFIC if the vault has reached its key limit.
      */
-    KeyDescriptor generateKey(in @utf8InCpp String alias, in Algorithm algorithm, in int keySizeBits, in int usages, in boolean extractable);
+    KeyDescriptor generateKey(in @utf8InCpp String alias, in KeyParameters params);
 
     /**
      * @brief Generate an asymmetric keypair within this vault.
      *
      * Both the public and private key are stored in the vault under
      * separate aliases. Only key descriptors are returned from this call;
-     * callers must use exportKey(publicAlias) to obtain raw public key bytes.
+     * callers must use exportKey(publicAlias) to obtain the public key.
      *
      * <h4>Extractability semantics</h4>
      * The `extractable` flag applies only to the private key. Public keys
@@ -137,40 +146,43 @@ interface IKeyVaultController {
      *
      * @param publicAlias Alias for the public key in the vault.
      * @param privateAlias Alias for the private key in the vault.
-     * @param algorithm Algorithm for this keypair (EC, RSA, DH).
-     * @param keySizeBits Key size in bits.
-     * @param usages Allowed usages for the private key as a bitmask of KeyPurpose values.
-     * @param extractable Whether the private key material can be exported. The public key is always exportable.
+     * @param params Key parameters: algorithm (EC, RSA, DH), the curve for EC,
+     *               the size for RSA and DH, the private key's usages and
+     *               extractability, and optionally a digest for signing keys.
      * @returns KeyDescriptor[] — two descriptors: [0] = public, [1] = private.
-     * @exception binder::Status EX_ILLEGAL_ARGUMENT if aliases already exist or params are invalid.
+     * @exception binder::Status EX_ILLEGAL_ARGUMENT if aliases already exist, an EC keypair has no curve, or params are
+     *   invalid.
      * @exception binder::Status EX_SERVICE_SPECIFIC if the vault has reached its key limit.
      */
-    KeyDescriptor[] generateKeyPair(in @utf8InCpp String publicAlias, in @utf8InCpp String privateAlias, in Algorithm algorithm, in int keySizeBits, in int usages, in boolean extractable);
+    KeyDescriptor[] generateKeyPair(
+            in @utf8InCpp String publicAlias,
+            in @utf8InCpp String privateAlias,
+            in KeyParameters params);
 
     /**
-     * @brief Import raw key material into this vault.
+     * @brief Import key material into this vault.
      *
      * The key data is encrypted at rest using the vault's root-derived key
-     * and persisted. Algorithm and usages are bound at import time.
+     * and persisted. The key parameters are bound at import time.
      *
      * @param alias Unique name for the key within this vault.
-     * @param algorithm Algorithm for this key.
      * @param keyType Key type (SECRET, PUBLIC, or PRIVATE).
-     * @param keyData Raw key material to import.
-     * @param usages Allowed usages as a bitmask of KeyPurpose values.
-     * @param extractable Whether the raw key material can be exported later.
+     * @param keyData Key material, in the encoding for keyType (see Key encoding).
+     * @param params Key parameters; keySizeBits 0 takes the size from keyData.
      * @returns KeyDescriptor for the imported key.
-     * @exception binder::Status EX_ILLEGAL_ARGUMENT if alias already exists, keyData is empty, or params are invalid.
+     * @exception binder::Status EX_ILLEGAL_ARGUMENT if alias already exists, keyData is empty or not in the required
+     *   encoding, or params do not match keyData.
      */
-    KeyDescriptor importKey(in @utf8InCpp String alias, in Algorithm algorithm, in KeyType keyType, in byte[] keyData, in int usages, in boolean extractable);
+    KeyDescriptor importKey(in @utf8InCpp String alias, in KeyType keyType, in byte[] keyData, in KeyParameters params);
 
     /**
-     * @brief Export raw key material from the vault.
+     * @brief Export key material from the vault.
      *
-     * Only permitted for keys created with extractable = true.
+     * Only permitted for keys created with extractable = true, and for
+     * public keys.
      *
      * @param alias The alias of the key to export.
-     * @returns Raw key material bytes.
+     * @returns Key material, in the encoding for its key type (see Key encoding).
      * @exception binder::Status EX_ILLEGAL_ARGUMENT if alias does not exist.
      * @exception binder::Status EX_SECURITY if the key is not extractable.
      */
@@ -196,9 +208,12 @@ interface IKeyVaultController {
     /**
      * @brief Rotate a key, creating a new version under the same alias.
      *
-     * The previous version is retained for decryption of existing data.
-     * New encrypt operations use the latest version. The key version
-     * counter in the KeyDescriptor is incremented.
+     * The previous versions are retained for decryption of existing data.
+     * Operations use the latest version unless CryptoConfig.keyVersion
+     * selects an older one, so a caller that may need to decrypt across a
+     * rotation records KeyDescriptor.keyVersion with the data it encrypts
+     * and passes it back on decrypt. The key version counter in the
+     * KeyDescriptor is incremented.
      *
      * @param alias The alias of the key to rotate.
      * @returns Updated KeyDescriptor with the new version number.
@@ -243,14 +258,20 @@ interface IKeyVaultController {
      * @param config Crypto configuration for the derivation (kdf, digest, salt, info, etc.).
      *               config.keyData is ignored — the source key is taken from the vault via sourceKeyAlias.
      * @param sourceKeyAlias Alias of the source key in this vault.
-     * @param peerPublicKey Peer's public key for DH/NFLX-DH. Null for HKDF/PBKDF2.
+     * @param peerPublicKey Peer's public key for DH/NFLX-DH, as SubjectPublicKeyInfo (see Key encoding). Null for
+     *   HKDF/PBKDF2.
      * @param outputKeys Specifications for each derived key to store.
      * @returns KeyDescriptor[] for each derived key, in the same order as outputKeys.
-     * @exception binder::Status EX_ILLEGAL_ARGUMENT if sourceKeyAlias doesn't exist, config is invalid, or output specs are invalid.
+     * @exception binder::Status EX_ILLEGAL_ARGUMENT if sourceKeyAlias doesn't exist, config is invalid, or output specs
+     *   are invalid.
      * @exception binder::Status EX_SECURITY if the source key doesn't have DERIVE_KEY usage.
      * @exception binder::Status EX_ILLEGAL_STATE if no crypto engine is attached.
      */
-    KeyDescriptor[] deriveIntoVault(in CryptoConfig config, in @utf8InCpp String sourceKeyAlias, in @nullable byte[] peerPublicKey, in DerivedKeySpec[] outputKeys);
+    KeyDescriptor[] deriveIntoVault(
+            in CryptoConfig config,
+            in @utf8InCpp String sourceKeyAlias,
+            in @nullable byte[] peerPublicKey,
+            in DerivedKeySpec[] outputKeys);
 
     // -------------------------------------------------------------------------
     // Flush / persistence

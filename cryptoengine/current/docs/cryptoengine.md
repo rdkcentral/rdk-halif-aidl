@@ -63,6 +63,7 @@ The engine supports:
 | HAL.CE.5 | `generateRandom()` shall use the platform hardware RNG when available. | Fallback to software CSPRNG is acceptable. |
 | HAL.CE.6 | GCM authentication tag verification failure shall return `EX_SERVICE_SPECIFIC`. | Must not return partial plaintext on tag failure. |
 | HAL.CE.7 | After `finish()` or `abort()`, the `ICryptoOperation` handle shall be invalidated. | Further calls to `update()`/`finish()` return `EX_ILLEGAL_STATE`. |
+| HAL.CE.8 | Streaming authenticated decryption (AES-GCM, ChaCha20-Poly1305) shall release no plaintext before the tag verifies: `update()` returns empty, `finish()` returns the whole plaintext. | Messages above `maxAeadDecryptBytes` are rejected with `EX_ILLEGAL_ARGUMENT`. |
 
 ---
 

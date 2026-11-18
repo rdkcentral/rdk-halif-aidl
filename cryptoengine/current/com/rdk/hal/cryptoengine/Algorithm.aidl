@@ -41,4 +41,6 @@ enum Algorithm {
     CHACHA20_POLY1305 = 4,
     /** CMAC message authentication code (AES-128). Required by Widevine OEMCrypto for key derivation. */
     CMAC = 5,
+    /** Finite-field Diffie-Hellman key agreement (RFC 7919 groups). Used by DH and NFLX-DH derivation. */
+    DH = 6,
 }

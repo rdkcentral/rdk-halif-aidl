@@ -28,12 +28,20 @@ package com.rdk.hal.cryptoengine;
 enum Digest {
     /** Not configured. Must be explicitly set by the caller. */
     UNSET = -1,
+    /** No digest (e.g. Ed25519, or signing a pre-hashed message). */
     NONE = 0,
+    /** SHA-224 (FIPS 180-4). */
     SHA_2_224 = 2,
+    /** SHA-256 (FIPS 180-4). */
     SHA_2_256 = 3,
+    /** SHA-384 (FIPS 180-4). */
     SHA_2_384 = 4,
+    /** SHA-512 (FIPS 180-4). */
     SHA_2_512 = 5,
+    /** SHA3-256 (FIPS 202). */
     SHA_3_256 = 6,
+    /** SHA3-384 (FIPS 202). */
     SHA_3_384 = 7,
+    /** SHA3-512 (FIPS 202). */
     SHA_3_512 = 8,
 }

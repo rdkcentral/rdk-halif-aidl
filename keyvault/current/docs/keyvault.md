@@ -207,10 +207,10 @@ sequenceDiagram
     participant Ctrl as IKeyVaultController
     participant CE as ICryptoEngineController
 
-    App->>Ctrl: generateKeyPair("dh-pub", "dh-priv", DH, 2048, DERIVE, false)
+    App->>Ctrl: generateKeyPair("dh-pub", "dh-priv", {DH, 2048, usages=DERIVE_KEY})
     Ctrl-->>App: [pubDescriptor, privDescriptor]
     App->>Ctrl: exportKey("dh-pub")
-    Ctrl-->>App: publicKeyBytes
+    Ctrl-->>App: publicKey (SubjectPublicKeyInfo)
 
     Note over App: Exchange public keys with remote peer
 
@@ -238,7 +238,7 @@ sequenceDiagram
     participant Ctrl as IKeyVaultController
     participant CE as ICryptoEngineController
 
-    App->>Ctrl: generateKey("storage-key", AES, 256, ENCRYPT|DECRYPT, false)
+    App->>Ctrl: generateKey("storage-key", {AES, 256, usages=ENCRYPT|DECRYPT})
     Ctrl-->>App: KeyDescriptor
 
     App->>Ctrl: attachCryptoEngine(engine)
@@ -467,7 +467,7 @@ sequenceDiagram
     C->>KV: open("app-secure-storage", listener)
     KV-->>C: IKeyVaultController
 
-    C->>Ctrl: generateKey("session-key", AES, 256, ENCRYPT|DECRYPT, false)
+    C->>Ctrl: generateKey("session-key", {AES, 256, usages=ENCRYPT|DECRYPT})
     Ctrl-->>C: KeyDescriptor
 
     C->>Ctrl: attachCryptoEngine(engine)
@@ -487,8 +487,9 @@ sequenceDiagram
 
 ### Key import and export
 
-- `importKey(alias, algorithm, keyType, keyData, usages, extractable)` — encrypts raw key material at rest using vault root-derived key
-- `exportKey(alias)` — returns raw key material only if `extractable == true`
+- `importKey(alias, keyType, keyData, params)` — encrypts the key material at rest using the vault's root-derived key; `params` (a `KeyParameters`) binds algorithm, size, curve, digest, usages and extractability
+- `exportKey(alias)` — returns the key material only if `extractable == true`, or for a public key
+- Key material is raw bytes for secret keys, DER SubjectPublicKeyInfo for public keys and DER PKCS#8 for private keys, on import and export alike
 - `deleteKey(alias)` — securely erases key material and re-persists the keystore
 
 ---

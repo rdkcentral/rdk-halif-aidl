@@ -37,7 +37,8 @@ import com.rdk.hal.cryptoengine.KeyPurpose;
  *
  * <h3>Exception Handling</h3>
  * Unless otherwise specified, this interface follows standard Android Binder semantics:
- * - <b>Success</b>: The method returns `binder::Status::Exception::EX_NONE` and all output parameters/return values are valid.
+ * - <b>Success</b>: The method returns `binder::Status::Exception::EX_NONE` and all output parameters/return values are
+ *   valid.
  * - <b>Failure (Exception)</b>: The method returns a service-specific exception.
  *   In this case, output parameters and return values contain undefined memory and must not be used.
  */
@@ -61,6 +62,7 @@ interface ICryptoEngineController {
      * - AGREE_KEY: ECDH (P-256, P-384, X25519)
      * - WRAP_KEY / UNWRAP_KEY: AES-KW, RSA-OAEP
      * - DERIVE_KEY / DERIVE_BITS: HKDF, PBKDF2, DH, NFLX-DH
+     * - DIGEST: keyless streaming hash; config.digest selects the algorithm
      *
      * <h4>IV handling</h4>
      * If config.iv is null, the engine auto-generates a random IV and prepends
@@ -78,7 +80,8 @@ interface ICryptoEngineController {
      * @returns ICryptoOperation handle for update/finish/abort.
      * @exception binder::Status EX_ILLEGAL_ARGUMENT if config is invalid or algorithm not supported.
      * @exception binder::Status EX_ILLEGAL_STATE if max concurrent operations reached.
-     * @exception binder::Status EX_UNSUPPORTED_OPERATION if the algorithm/mode combination is not supported by this engine.
+     * @exception binder::Status EX_UNSUPPORTED_OPERATION if the algorithm/mode combination is not supported by this
+     *   engine.
      */
     ICryptoOperation begin(in KeyPurpose purpose, in CryptoConfig config);
 
@@ -89,7 +92,9 @@ interface ICryptoEngineController {
     /**
      * @brief Compute a message digest.
      *
-     * Stateless, one-shot operation. Does not require a key.
+     * Stateless, one-shot operation. Does not require a key. The whole
+     * message travels in one Binder transaction; for larger messages use
+     * begin(KeyPurpose.DIGEST, config).
      *
      * @param digest The digest algorithm to use (e.g. SHA_2_256, SHA_3_256).
      * @param data The data to hash.

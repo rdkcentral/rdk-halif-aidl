@@ -52,7 +52,11 @@ parcelable CryptoConfig {
     PaddingMode paddingMode = PaddingMode.UNSET;
     /** Key size in bits (128, 192, 256 for AES; 2048, 3072, 4096 for RSA). 0 = not set. */
     int keySizeBits = 0;
-    /** Raw key material for standalone operations. Empty when using vault-managed keys. */
+    /**
+     * Key material for standalone operations. Empty when using vault-managed keys.
+     * SECRET keys are raw bytes; PUBLIC keys are DER SubjectPublicKeyInfo
+     * (RFC 5280, RFC 8410); PRIVATE keys are DER PKCS#8 PrivateKeyInfo (RFC 5208).
+     */
     byte[] keyData = {};
     
     /** Initialization vector or nonce.
@@ -109,4 +113,14 @@ parcelable CryptoConfig {
 
     /** Wrapped key data for unwrap operations. */
     @nullable byte[] wrappedKeyData;
+
+    // -- Vault key version --
+
+    /**
+     * Version of a vault-managed key to use (KeyDescriptor.keyVersion).
+     * -1 selects the latest version. Ignored when keyData is set.
+     * Decrypting data encrypted before a rotation passes the version
+     * recorded with that data.
+     */
+    int keyVersion = -1;
 }

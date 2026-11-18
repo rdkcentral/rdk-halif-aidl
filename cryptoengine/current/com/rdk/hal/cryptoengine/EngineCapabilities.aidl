@@ -47,4 +47,10 @@ parcelable EngineCapabilities {
     int maxConcurrentOperations = 0;
     /** Whether hardware crypto acceleration is available. */
     boolean hardwareAccelerated = false;
+    /**
+     * Largest ciphertext, in bytes, one streaming authenticated decryption
+     * (AES-GCM, ChaCha20-Poly1305) accepts. The engine holds the whole
+     * message until the tag verifies; see ICryptoOperation.update().
+     */
+    int maxAeadDecryptBytes = 0;
 }

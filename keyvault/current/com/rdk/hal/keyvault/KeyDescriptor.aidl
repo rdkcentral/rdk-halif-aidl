@@ -20,6 +20,7 @@ package com.rdk.hal.keyvault;
 
 import com.rdk.hal.cryptoengine.Algorithm;
 import com.rdk.hal.cryptoengine.Digest;
+import com.rdk.hal.cryptoengine.EcCurve;
 import com.rdk.hal.cryptoengine.KeyType;
 
 /**
@@ -52,4 +53,6 @@ parcelable KeyDescriptor {
     long createdAtMs = 0;
     /** Expiry timestamp (milliseconds since epoch). 0 = no expiry. */
     long expiresAtMs = 0;
+    /** Curve of an EC key (P-256, P-384, Ed25519, X25519). UNSET for other algorithms. */
+    EcCurve ecCurve = EcCurve.UNSET;
 }

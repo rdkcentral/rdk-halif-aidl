@@ -34,6 +34,10 @@ cryptoengine:
   # Whether hardware crypto acceleration is available
   hardwareAccelerated: true
 
+  # Largest ciphertext (bytes) one streaming AES-GCM / ChaCha20-Poly1305
+  # decryption accepts; the engine holds it until the tag verifies.
+  maxAeadDecryptBytes: 1048576
+
   # Supported algorithms
   supportedAlgorithms:
     - AES
@@ -42,6 +46,7 @@ cryptoengine:
     - RSA
     - CHACHA20_POLY1305
     - CMAC
+    - DH
 
   # Supported block modes
   supportedBlockModes:
@@ -89,3 +94,4 @@ cryptoengine:
     RSA: [2048, 3072, 4096]
     EC: [256, 384, 521]        # Maps to P-256, P-384, P-521
     HMAC: [128, 256, 512]
+    DH: [2048, 3072]          # RFC 7919 ffdhe groups

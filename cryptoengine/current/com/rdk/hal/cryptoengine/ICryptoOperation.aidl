@@ -29,7 +29,8 @@ package com.rdk.hal.cryptoengine;
  *
  * <h3>Exception Handling</h3>
  * Unless otherwise specified, this interface follows standard Android Binder semantics:
- * - <b>Success</b>: The method returns `binder::Status::Exception::EX_NONE` and all output parameters/return values are valid.
+ * - <b>Success</b>: The method returns `binder::Status::Exception::EX_NONE` and all output parameters/return values are
+ *   valid.
  * - <b>Failure (Exception)</b>: The method returns a service-specific exception.
  *   In this case, output parameters and return values contain undefined memory and must not be used.
  */
@@ -39,13 +40,18 @@ interface ICryptoOperation {
     /**
      * @brief Feed data into the operation.
      *
-     * For encryption/decryption, returns processed output bytes.
-     * For signing, returns empty until finish().
+     * For encryption and unauthenticated decryption, returns processed output bytes.
+     * For authenticated decryption (AES-GCM, ChaCha20-Poly1305), returns
+     * empty: the engine holds the ciphertext and releases no plaintext
+     * until finish() has verified the tag.
+     * For signing and digests, returns empty until finish().
      * May be called multiple times for streaming.
      *
      * @param input Data to process.
-     * @returns Processed output bytes (may be empty for signing operations).
+     * @returns Processed output bytes (empty for authenticated decryption, signing and digests).
      * @exception binder::Status EX_ILLEGAL_STATE if the operation has been finalised or aborted.
+     * @exception binder::Status EX_ILLEGAL_ARGUMENT if an authenticated decryption exceeds
+     *   EngineCapabilities.maxAeadDecryptBytes.
      */
     byte[] update(in byte[] input);
 
@@ -53,16 +59,19 @@ interface ICryptoOperation {
      * @brief Complete the operation and return final output.
      *
      * For encryption: returns remaining ciphertext + GCM auth tag (if applicable).
-     * For decryption: verifies GCM tag and returns remaining plaintext.
+     * For unauthenticated decryption: returns remaining plaintext.
+     * For authenticated decryption: verifies the tag, then returns the whole
+     * plaintext; on tag failure returns no plaintext.
      * For signing: returns the signature.
      * For verification: input is the signature to verify; returns empty on success.
+     * For a digest: returns the digest.
      *
      * After finish(), this operation handle is invalidated.
      *
      * @param input Optional final data to process (may be null).
      * @returns Final output bytes.
      * @exception binder::Status EX_ILLEGAL_STATE if the operation has already been finalised.
-     * @exception binder::Status EX_SERVICE_SPECIFIC if GCM tag verification fails during decryption.
+     * @exception binder::Status EX_SERVICE_SPECIFIC if tag verification fails during authenticated decryption.
      */
     byte[] finish(in @nullable byte[] input);
 

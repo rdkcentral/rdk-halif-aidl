@@ -32,9 +32,13 @@ package com.rdk.hal.cryptoengine;
 @VintfStability
 @Backing(type="int")
 enum KeyPurpose {
+    /** Encrypt data. */
     ENCRYPT = 1 << 0,
+    /** Decrypt data. */
     DECRYPT = 1 << 1,
+    /** Create a signature or MAC. */
     SIGN = 1 << 2,
+    /** Verify a signature or MAC. */
     VERIFY = 1 << 3,
     /** Key agreement (ECDH, DH). */
     AGREE_KEY = 1 << 4,
@@ -46,4 +50,10 @@ enum KeyPurpose {
     DERIVE_KEY = 1 << 7,
     /** Derive raw secret bits from a key. */
     DERIVE_BITS = 1 << 8,
+    /**
+     * Keyless message digest. Passed to begin() only, never stored as a key
+     * usage: config.digest selects the algorithm, update() consumes the
+     * message and returns empty, and finish() returns the digest.
+     */
+    DIGEST = 1 << 9,
 }
