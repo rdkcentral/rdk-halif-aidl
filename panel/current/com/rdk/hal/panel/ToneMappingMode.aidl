@@ -23,8 +23,7 @@ package com.rdk.hal.panel;
  *
  * How the panel maps HDR content whose luminance exceeds the panel's peak.
  * Whether a mode takes a level is declared per mode in the
- * PQParameter.TONE_MAPPING_SETTINGS capability; a mode that takes none uses
- * ToneMappingLevel.TONE_MAPPING_LEVEL_NOT_APPLICABLE.
+ * PQParameter.TONE_MAPPING_SETTINGS capability.
  */
 @VintfStability
 @Backing(type = "int")

@@ -30,10 +30,7 @@ package com.rdk.hal.panel;
 enum ToneMappingLevel {
     /** Invalid or unset level. */
     TONE_MAPPING_LEVEL_INVALID = -1,
-    /**
-     * The selected mode takes no level. Used with every mode the capability
-     * declares without levels.
-     */
+    /** The selected mode takes no level. */
     TONE_MAPPING_LEVEL_NOT_APPLICABLE = 0,
     /** The weakest tone mapping. */
     TONE_MAPPING_LEVEL_LOW = 1,
