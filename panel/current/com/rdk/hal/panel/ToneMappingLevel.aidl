@@ -20,18 +20,25 @@ package com.rdk.hal.panel;
 
 /**
  * @brief HDR tone-mapping level.
+ *
+ * The strength of tone mapping, for modes that take a level. The levels
+ * each mode supports are declared per mode in the
+ * PQParameter.TONE_MAPPING_SETTINGS capability.
  */
 @VintfStability
 @Backing(type = "int")
 enum ToneMappingLevel {
     /** Invalid or unset level. */
     TONE_MAPPING_LEVEL_INVALID = -1,
-    /** The tone-mapping mode has no selectable levels. */
+    /**
+     * The selected mode takes no level. Used with every mode the capability
+     * declares without levels.
+     */
     TONE_MAPPING_LEVEL_NOT_APPLICABLE = 0,
-    /** Low tone-mapping level. */
+    /** The weakest tone mapping. */
     TONE_MAPPING_LEVEL_LOW = 1,
-    /** Medium tone-mapping level. */
+    /** Tone mapping between low and high strength. */
     TONE_MAPPING_LEVEL_MEDIUM = 2,
-    /** High tone-mapping level. */
+    /** The strongest tone mapping. */
     TONE_MAPPING_LEVEL_HIGH = 3,
 }
