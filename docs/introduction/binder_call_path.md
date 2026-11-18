@@ -2,7 +2,7 @@
 
 What one HAL call costs when it crosses binder, traced from the client's generated proxy through the kernel driver to the HAL's implementation and back.
 
-Each synchronous call passes through libbinder twice per side. The client makes one blocking `ioctl`, plus a second to release the reply buffer when its thread is not a binder pool thread; the HAL's pool thread makes two, one to send the reply and one to wait for the next call. The kernel copies once in each direction, and an ideal hand-off takes two context switches. There is no third process and no dispatcher thread.
+Each synchronous call passes through libbinder twice per side. The client makes one blocking `ioctl`, plus a second to release the reply buffer when its thread is not a binder pool thread. That single blocking `ioctl` relies on the driver holding back `BR_TRANSACTION_COMPLETE` until the reply arrives, which mainline kernels do from 4.15; on an older kernel without Android's backport the acknowledgement returns first and the client makes one more `ioctl` to wait for the reply. the HAL's pool thread makes two, one to send the reply and one to wait for the next call. The kernel copies once in each direction, and an ideal hand-off takes two context switches. There is no third process and no dispatcher thread.
 
 ## Layers a call passes through
 
@@ -36,7 +36,8 @@ sequenceDiagram
         LB->>K: ioctl: BC_REPLY, returns once the reply is queued
         K->>K: copy reply into the client's mmap buffer
     end
-    K-->>LA: wake client thread: BR_REPLY
+    K-->>LA: wake client thread: BR_TRANSACTION_COMPLETE + BR_REPLY
+    Note over LA,K: kernel 4.15+: one wake. Older without the backport: TRANSACTION_COMPLETE first, then a second ioctl waits for BR_REPLY
     LA-->>Px: unmarshal reply
     Px-->>App: State
     Note over LA,K: reply Parcel destroyed: BC_FREE_BUFFER, sent in a further ioctl on a non-pool client thread
@@ -47,7 +48,7 @@ sequenceDiagram
 | Cost per round trip | Count |
 | --- | --- |
 | Passes through libbinder | 4: client out, HAL in, HAL out, client in |
-| Syscalls | 4 on a non-pool client thread: one client `ioctl` that sends and waits for the reply, one client `ioctl` that releases the reply buffer; two on the HAL, one to send the reply and one to wait for the next call. A client that defers or batches the release makes 3. |
+| Syscalls | 4 on a non-pool client thread: one client `ioctl` that sends and waits for the reply, one client `ioctl` that releases the reply buffer; two on the HAL, one to send the reply and one to wait for the next call. A client that defers or batches the release makes 3. On a kernel before 4.15 without Android's backport, add 1: the client's first `ioctl` returns with `BR_TRANSACTION_COMPLETE` and a second waits for the reply. |
 | Kernel copies | 2: request into the HAL, reply into the client |
 | Context switches | 2 in an ideal hand-off: client to HAL, HAL to client. Scheduling can add more. |
 
@@ -82,6 +83,7 @@ sequenceDiagram
         Note over H: asleep for the next call
     end
     K->>C: wake: context switch 2
+    Note over C,K: kernel before 4.15 without the backport: the first ioctl has already returned with TRANSACTION_COMPLETE, and the client waits here in a second one
     activate C
     Note over C: unmarshal, return
     C->>K: ioctl: release the reply buffer

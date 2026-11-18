@@ -84,12 +84,14 @@ For an interface `IFoo`, the generator emits:
 
 ## HAL Development Flow
 
-1. Define or change the interface in `.aidl` under the component's `current/`.
-2. Run `./build_interfaces.sh <component>` from the repository root. It stages the binder SDK, generates
-   the C++ bindings and builds the interface library. `./scripts/validate_aidl.sh <component>` checks the
-   AIDL in seconds without a build.
-3. Implement the service in the vendor HAL by deriving from `BnFoo`, and register it with the `servicemanager`.
-4. Middleware gets the service by name and calls it through `BpFoo`.
+1. Once per checkout, run `./build_binder.sh` from the repository root. It clones and builds linux_binder_idl
+   and stages the binder SDK (the `aidl` compiler, `libbinder` and its headers) under `out/`; the commands
+   below stop with a pointer to it until it has run.
+2. Define or change the interface in `.aidl` under the component's `current/`.
+3. Run `./scripts/validate_aidl.sh <component>` to check the AIDL in seconds, then
+   `./build_interfaces.sh <component>` to generate the C++ bindings and build the interface library.
+4. Implement the service in the vendor HAL by deriving from `BnFoo`, and register it with the `servicemanager`.
+5. Middleware gets the service by name and calls it through `BpFoo`.
 
 Generated code under `current/` is build output and is never committed.
 
