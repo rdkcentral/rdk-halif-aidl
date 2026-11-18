@@ -190,22 +190,6 @@ flowchart LR
 
 The kernel delivers one oneway call at a time to a given binder object, and the next waits until the client has finished the current one. Order is preserved, but a slow listener delays every callback on that object. When the async half of the client's buffer is full, the HAL's next oneway send fails.
 
-## Reference figures
-
-Published measurements, for comparison only. Figures for RDK targets are produced by [#956](https://github.com/rdkcentral/rdk-halif-aidl/issues/956).
-
-| Source | Platform | Payload | Average round trip |
-| --- | --- | --- | --- |
-| [Treble paper](https://arxiv.org/pdf/2410.02809), Table 3 | Pixel, Android 8, hwbinder | 4 B | 66.7 µs |
-| | | 4 KB | 80.7 µs |
-| | | 64 KB | 277 µs |
-| [AOSP performance testing](https://source.android.com/docs/core/tests/vts/performance) | Android 8 sample run | 8 B | about 70 µs |
-
-- **Fixed cost:** the time is near-constant up to one 4 KB page, so it is dominated by context switches and libbinder, not by the copy.
-- **Contention:** in the same paper, 10 client–server pairs exchanging 512 B average 371 µs, with a 90th percentile of 826 µs.
-- **Deadline:** AOSP tests against a 2.5 ms deadline per call.
-- **Shared memory for comparison:** reading 64 B through Android's shared-memory queue took 217 ns. Per-frame and per-sample data belongs there, not on binder.
-
 ## Measuring a target
 
 AOSP's tests in `frameworks/native/libs/binder/tests` are the starting point:
