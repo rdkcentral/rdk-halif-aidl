@@ -153,10 +153,9 @@ esac
 #
 #   -Wno-write-strings  AOSP aidl-cpp emits
 #                       `static constexpr char* HASHVALUE = "notfrozen";`
-#                       in every generated I*.h. Should be `const char*`
-#                       — bug in build-tools/linux_binder_idl/android/aidl/
-#                       generate_cpp.cpp:904. 93 occurrences across the
-#                       cohort.
+#                       in every generated I*.h. linux_binder_idl 2.7.2
+#                       emits `const char*` (linux_binder_idl #94); the
+#                       released snapshots keep the old declaration.
 #
 #   -Wno-attributes     binder_sdk headers (Vector.h, IBinder.h, …) carry
 #                       clang-only attributes — `__attribute__((no_sanitize
