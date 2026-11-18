@@ -25,7 +25,8 @@
 # Production build script for HAL modules
 #
 # This script compiles HAL libraries from pre-generated C++ code.
-# It does NOT run AIDL generation - code must already exist in stable/generated/
+# It generates any missing C++ into <module>/<version>/{include,src} at the
+# CMake configure step, then compiles it.
 #
 # Usage:
 #   ./build_modules.sh [module|command] [options]
@@ -66,7 +67,7 @@ Options:
 
 Description:
   This script performs Stage 3 of the build process:
-  - Compiles pre-generated C++ from stable/generated/
+  - Compiles the C++ in <module>/<version>/{include,src}, generating any that is missing
   - Links against Binder SDK (must exist from Stage 1 or Yocto)
   - Outputs libraries to out/target/lib/rdk-halif-aidl/
   - Outputs headers to out/build/include/
@@ -79,9 +80,9 @@ Prerequisites:
      - Development: Run ./build_interfaces.sh <module> (stages SDK)
      - Production: Provided by Yocto's linux-binder recipe
 
-  2. Generated C++ must exist in stable/generated/
-     - Development: Run ./build_interfaces.sh <module> (generates code)
-     - Production: Pre-generated code is committed to repo
+  2. Generated C++ in <module>/<version>/{include,src}:
+     - current/: generated here, or by ./build_interfaces.sh <module>; never committed
+     - Released snapshots: committed with the snapshot
 
 Build Configuration:
   Use environment variables to control compiler and flags:
