@@ -46,25 +46,25 @@ parcelable DvbTCapabilities {
     /** Supported standards. */
     DvbTStandard[] dvbTStandards;
 
-    /** Supported constellations (AUTO is mandatory). */
+    /** Supported constellations (AUTO only where the frontend auto-detects, HAL.BROADCAST.21). */
     DvbTConstellation[] constellations;
 
-    /** Supported code rates (AUTO is mandatory). */
+    /** Supported code rates (AUTO only where the frontend auto-detects, HAL.BROADCAST.21). */
     DvbTCodeRates.Value[] codeRates;
 
-    /** Supported guard intervals (AUTO is mandatory). */
+    /** Supported guard intervals (AUTO only where the frontend auto-detects, HAL.BROADCAST.21). */
     DvbTGuardInterval[] guardIntervals;
 
-    /** Supported transmission mode (AUTO is mandatory). */
+    /** Supported transmission mode (AUTO only where the frontend auto-detects, HAL.BROADCAST.21). */
     DvbTTransmissionMode[] transmissionModes;
 
-    /** Supported spectral inversion modes (AUTO is mandatory). */
+    /** Supported spectral inversion modes (AUTO only where the frontend auto-detects, HAL.BROADCAST.21). */
     SpectralInversion[] inversions;
 
-    /** Supported hierarchical transmission modes (AUTO is mandatory). */
+    /** Supported hierarchical transmission modes (AUTO only where the frontend auto-detects, HAL.BROADCAST.21). */
     DvbTHierarchy[] hierarchies;
 
-    /** Supported MISO modes (AUTO is mandatory). */
+    /** Supported MISO modes (AUTO only where the frontend auto-detects, HAL.BROADCAST.21). */
     DvbTMiso[] misoModes;
 
     /** Reserved for future use. */

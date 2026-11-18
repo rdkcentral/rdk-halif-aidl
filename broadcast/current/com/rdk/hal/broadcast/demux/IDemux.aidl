@@ -124,9 +124,12 @@ interface IDemux {
     /**
      * @brief Destroy the given software source.
      *
-     * The ID is invalidated and must not be passed to acquireSoftwareInput() again.
+     * The ID is invalidated and must not be passed to acquireSoftwareInput() again. Only the client that created the
+     * software source may destroy it: the implementation compares the caller with the client whose token was passed to
+     * createSoftwareInput(), so a client holding or guessing another client's ID cannot destroy that client's input.
      *
-     * @exception ::android::binder::Status::EX_ILLEGAL_ARGUMENT The software source ID is not valid for this demux.
+     * @exception ::android::binder::Status::EX_ILLEGAL_ARGUMENT The software source ID is not valid for this demux, or
+     *                                                           the caller is not the client that created it.
      * @exception ::android::binder::Status::EX_ILLEGAL_STATE The DemuxSoftwareInput is still acquired by a client.
      *
      * @param[in] id Non-null ID for the software source obtained from createSoftwareInput() on the same Demux.
