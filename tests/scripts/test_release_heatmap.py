@@ -219,6 +219,36 @@ class Render(unittest.TestCase):
         finally:
             subprocess.run = real
 
+    def test_gh_json_retries_a_transient_5xx(self):
+        import subprocess
+        real = subprocess.run
+        replies = [subprocess.CompletedProcess([], 1, "", "gh: HTTP 504"),
+                   subprocess.CompletedProcess([], 0, '{"data": 1}', "")]
+        waits = []
+        try:
+            subprocess.run = lambda *a, **k: replies.pop(0)
+            self.assertEqual(rh.gh_json(["api", "x"], sleep=waits.append), {"data": 1})
+            self.assertEqual(waits, [1])
+        finally:
+            subprocess.run = real
+
+    def test_gh_json_gives_up_on_a_lasting_or_other_error(self):
+        import subprocess
+        real = subprocess.run
+        waits = []
+        try:
+            subprocess.run = lambda *a, **k: subprocess.CompletedProcess(a, 1, "", "gh: HTTP 503")
+            with self.assertRaises(subprocess.CalledProcessError):
+                rh.gh_json(["api", "x"], retries=3, sleep=waits.append)
+            self.assertEqual(waits, [1, 2])
+            waits.clear()
+            subprocess.run = lambda *a, **k: subprocess.CompletedProcess(a, 1, "", "gh: Not Found (HTTP 404)")
+            with self.assertRaises(subprocess.CalledProcessError):
+                rh.gh_json(["api", "x"], sleep=waits.append)
+            self.assertEqual(waits, [])
+        finally:
+            subprocess.run = real
+
     def test_cell_has_the_pr_under_the_ticket(self):
         t = rh.classify(issue(1, labels=["Minor Change", "component:panel"], milestone="0.24.0",
                               prs=[{"number": 9, "state": "OPEN"}]), set(), "2026-11-03", None)
@@ -236,14 +266,15 @@ class Render(unittest.TestCase):
         self.assertNotIn("%E2%86%B312", section)
         self.assertIn("| **Tickets** | | **1** |", section)
 
-    def test_a_ticket_on_several_components_is_shown_once(self):
+    def test_a_ticket_on_several_components_is_in_its_first_row(self):
         one = rh.classify(issue(1, labels=["component:panel"], milestone="0.24.0"), set(), "2026-11-03", None)
-        two = rh.classify(issue(2, labels=["component:audiosink", "component:videosink"], milestone="0.24.0"),
+        two = rh.classify(issue(2, labels=["component:videosink", "component:audiosink"], milestone="0.24.0"),
                           set(), "2026-11-03", None)
         page = rh.render([one, two], [{"title": "0.24.0", "due": None}], "now")
         self.assertEqual(page.count("](u2)"), 1)
-        self.assertIn("| (several components) |", page)
-        self.assertNotIn("| audiosink |", page)
+        self.assertIn("| audiosink |", page)
+        self.assertNotIn("| videosink |", page)
+        self.assertNotIn("several components) |", page)
         totals = [int(l.rsplit("|", 2)[1]) for l in page.splitlines()
                   if l.startswith("| ") and not l.startswith(("| Component", "| ---", "| **"))]
         self.assertEqual(sum(totals), 2)

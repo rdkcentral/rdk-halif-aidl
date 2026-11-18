@@ -74,6 +74,28 @@ class PrChangeClass(unittest.TestCase):
     def test_no_class_label(self):
         self.assertEqual(pcc.label_class("enhancement"), ("minor", False))
 
+    def test_label_below_compiler_fails(self):
+        failed, line = pcc.verdict("minor", "major", override=False)
+        self.assertTrue(failed)
+        self.assertIn("Major Change", line)
+        self.assertIn(pcc.OVERRIDE, line)
+
+    def test_override_passes_and_shows_compiler(self):
+        failed, line = pcc.verdict("minor", "major", override=True)
+        self.assertFalse(failed)
+        self.assertIn("**major**", line)
+        self.assertIn(pcc.OVERRIDE, line)
+
+    def test_label_covering_compiler_passes_either_way(self):
+        for override in (False, True):
+            failed, line = pcc.verdict("major", "minor", override)
+            self.assertFalse(failed)
+            self.assertIn("covers", line)
+
+    def test_override_is_not_a_change_class(self):
+        self.assertEqual(pcc.label_class("Change Class Override,Minor Change"), ("minor", True))
+        self.assertEqual(pcc.label_class(pcc.OVERRIDE), ("minor", False))
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -8,24 +8,26 @@ Describe the role of this HAL service. Outline its responsibilities, how it abst
 
 ## References
 
-!!! info References
-|||
-|-|-|
-|**Interface Definition**|[path-to-aidl-version](link)|
-|**API Documentation**| TBD |
-|**HAL Interface Type**       | [AIDL and Binder](../introduction/aidl_and_binder.md)                           |
-|**Initialization Unit**      | [systemd service](../vsi/systemd/current/systemd.md)                                                                                |
-|**VTS Tests**| TBD |
-|**Reference Implementation**| TBD |
+!!! info "References"
+
+    | | |
+    |-|-|
+    |**Interface Definition**|[path-to-aidl-version](link)|
+    |**API Documentation**| TBD |
+    |**HAL Interface Type**| [AIDL and Binder](../introduction/aidl_and_binder.md) |
+    |**Initialization Unit**| [systemd service](../vsi/systemd/current/systemd.md) |
+    |**VTS Tests**| TBD |
+    |**Reference Implementation**| TBD |
 
 ---
 
 ## Related Pages
 
 !!! tip "Related Pages"
-- [HAL Feature Profile](../key_concepts/hal/hal_feature_profiles.md)
-- [HAL Interface Overview](../key_concepts/hal/hal_interfaces.md)
-- [Other HALs or Framework Components](link)
+
+    - [HAL Feature Profile](../key_concepts/hal/hal_feature_profiles.md)
+    - [HAL Interface Overview](../key_concepts/hal/hal_interfaces.md)
+    - [Other HALs or Framework Components](link)
 
 ---
 
@@ -88,6 +90,28 @@ Detail the lifecycle:
 * How clients `open()` or `acquire()` resource handles
 * Restrictions (e.g., single controller vs. multiple listeners)
 * Cleanup behavior when a client exits
+
+---
+
+## Threading Model
+
+State:
+
+* Which calls block and which return before the work completes
+* The thread on which listener callbacks are delivered, and whether a client may call back into the service from a callback
+* Which calls may be made concurrently from more than one client thread, and which must be serialised
+* Binder thread pool sizing the service needs, if it differs from the default
+
+---
+
+## Memory Model
+
+State:
+
+* Who allocates and who frees each buffer that crosses the interface, and when ownership transfers
+* How large data is carried (shared memory, file descriptors or parcelled copies) and the lifetime of each handle
+* Limits on buffer count and size, with units
+* What happens to in-flight buffers when a client exits or the service restarts
 
 ---
 

@@ -74,6 +74,10 @@ enum OutputPortProperty {
 
     /**
      * Configured output audio format.
+     * Holds the value last written. The HAL changes it only on reconnect,
+     * when the new sink cannot take the configured format: it falls back to
+     * AUTO, as in 0.3.0.0. What it resolved to is
+     * IAudioOutputPort.getActiveOutputFormat().
      * Type: int (OutputFormat enum value)
      * Access: Read-write.
      * Writeable in states: READY
@@ -88,9 +92,25 @@ enum OutputPortProperty {
     SUPPORTED_AUDIO_FORMATS = 5,
 
     /**
-     * True if Dolby Atmos is supported on this output port.
+     * True if Dolby Atmos can be delivered on this output port with the
+     * device connected now.
      * Type: boolean
      * Access: Read-only.
+     *
+     * - False when OutputPortCapabilities.supportsDolbyAtmos is false.
+     * - False when CONNECTION_STATE is not CONNECTED on a port with
+     *   connection detection. A non-hotplug port (e.g. SPEAKERS) that
+     *   declares CONNECTION_STATE and reports UNKNOWN is always connected,
+     *   and UNKNOWN does not force false.
+     * - ARC, EARC: true when the connected device advertises Atmos (on ARC,
+     *   as Dolby Digital Plus with Atmos).
+     * - SPEAKERS: true when the speaker setup is at least 3.1.2.
+     *   Virtualised Atmos rendered to a smaller layout does not count.
+     * - HDMI: not declared. On a source device the middleware reads the
+     *   sink's EDID for its audio capability.
+     *
+     * Changes are delivered by IAudioOutputPortListener.onPropertyChanged().
+     * Whether Atmos is being output now is ActiveOutputFormat.immersive.
      */
     DOLBY_ATMOS_SUPPORT = 6,
 

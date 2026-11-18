@@ -29,7 +29,7 @@ Before any code can be merged, you must sign the [RDK Contributor License Agreem
 ### 1. **Clone the Repository**
 
 ```bash
-git clone https://github.com/rdkcentral/ut-core.git
+git clone https://github.com/rdkcentral/rdk-halif-aidl.git
 ```
 
 ### 2. **Set Up Git Flow**
@@ -42,10 +42,10 @@ git flow init -d
 
 ### 3. **Create a Feature Branch**
 
-Start from `develop` and name your branch as `feature/gh<issue-number>_<description>`:
+Start from `develop` and name your branch `feature/<issue>-<synopsis>`, where `<issue>` is the GitHub issue number and `<synopsis>` is a short, lowercase, hyphenated description:
 
 ```bash
-git flow feature start 123_add-logging-enhancements
+git flow feature start 123-add-logging-enhancements
 ```
 
 > **Compliance Notice:** All branches must align with naming conventions and be traceable to a GitHub issue. Non-compliant branches are subject to removal if not corrected within 30 days.
@@ -59,15 +59,17 @@ Follow coding standards and document your changes thoroughly.
 Use the [50/72 rule](../whitepapers/standardizing_git_commit_messages.md):
 
 ```bash
-Fix #123: Update error handling in authentication module
+Fix #123: Update auth module error handling
 
-This commit enhances error detection and adds comprehensive logging to address frequent issues reported by users.
+Detect token expiry before the request is sent and log each failed
+attempt with its reason, so that the frequent login failures reported
+by users can be diagnosed from the logs.
 ```
 
 ### 6. **Push Changes**
 
 ```bash
-git push origin feature/gh123_add-logging-enhancements
+git push -u origin feature/123-add-logging-enhancements
 ```
 
 ### 7. **Open a Pull Request**
@@ -79,7 +81,7 @@ Create a PR to the `develop` branch. Review will be auto-assigned via `CODEOWNER
 After approval:
 
 ```bash
-git flow feature finish gh123_add-logging-enhancements
+git flow feature finish 123-add-logging-enhancements
 ```
 
 ### 9. **Code Ownership and Releases**
@@ -87,7 +89,7 @@ git flow feature finish gh123_add-logging-enhancements
 `CODEOWNERS` ensure quality and manage release tagging:
 
 ```plaintext
-*       @rdkcentral/ut-core_codeowner
+*       @rdkcentral/rdk-halif-aidl-pr-review-team
 ```
 
 ---

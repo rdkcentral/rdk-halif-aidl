@@ -2,12 +2,12 @@
 
 - If you wish to make code contributions to this project, the source is hosted at [github.com/rdkcentral](https://github.com/rdkcentral).
 
-You can submit your changes for review via that site, by raising an issue in github, [ut-core/issues](https://github.com/rdkcentral/ut-core/issues), and following the sequence below.
+You can submit your changes for review via that site, by raising an issue in github, [rdk-halif-aidl/issues](https://github.com/rdkcentral/rdk-halif-aidl/issues), and following the sequence below.
 
-- create a branch with a name follow the guidelines gh(x)_(synopsis)
-- where x is the ticket number
-- where synopsis is a short synopsis for the reason for the branch.
-- create a pull request [https://github.com/rdkcentral/ut-core/compare](https://github.com/rdkcentral/ut-core/compare) when the code changes are ready for review.
+- create a branch from `develop` named `feature/<x>-<synopsis>`
+- where x is the issue number
+- where synopsis is a short, lowercase, hyphenated synopsis for the reason for the branch.
+- create a pull request against `develop` [https://github.com/rdkcentral/rdk-halif-aidl/compare](https://github.com/rdkcentral/rdk-halif-aidl/compare) when the code changes are ready for review.
 - The team will review, and if accepted your changes will be merged to the mainline.
 
 - Commit with your public GitHub identity. Set `git config user.email` to your GitHub noreply address (`<id>+<login>@users.noreply.github.com`, shown under GitHub > Settings > Emails). Commits from any other address fail the PR check.
