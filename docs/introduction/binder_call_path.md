@@ -189,10 +189,3 @@ flowchart LR
 ```
 
 The kernel delivers one oneway call at a time to a given binder object, and the next waits until the client has finished the current one. Order is preserved, but a slow listener delays every callback on that object. When the async half of the client's buffer is full, the HAL's next oneway send fails.
-
-## Measuring a target
-
-AOSP's tests in `frameworks/native/libs/binder/tests` are the starting point:
-
-- `binderThroughputTest`: round trips by payload size and thread count.
-- `schd-dbg`: latency against a deadline, and a check that priority inheritance and the sync flag work on the running kernel.
