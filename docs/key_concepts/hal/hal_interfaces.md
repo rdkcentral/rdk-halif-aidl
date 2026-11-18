@@ -18,6 +18,19 @@ Interfaces / Testing Suites / Component code must progress through multiple stag
 
 ---
 
+## Test Jig and Test Harness
+
+Interface validation uses two distinct things with two owners:
+
+| Aspect | Test jig: vDevice and vComponent | Test harness: testing suites |
+| --- | --- | --- |
+| What it is | A virtual device under test, standing in for the hardware | The software framework that runs the tests |
+| What it does | Is connected to and probed | Drives the tests, simulates inputs and checks outputs |
+| Where it runs | The vendor layer, on x86 Linux virtual hardware before lead-hardware bring-up | Above the HAL interface, against the jig or real hardware |
+| Owner | Defined with the HAL interface | Delivered by the Vendor Layer team (`Vendor_Layer_Team`) |
+
+The phases below track each separately: [Testing Suite Phases](#testing-suite-phases) for the harness and [vComponent Phases](#vcomponent-phases) for the jig.
+
 ## Testing Suites
 
 ### Levels of Test

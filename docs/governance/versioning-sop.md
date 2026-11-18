@@ -737,7 +737,7 @@ for post-baseline).
 | **Architecture** | Final decision authority on feedback. Drives the 5-day resolution window. |
 | **RTAB_Group** | System-level alignment and stakeholder visibility above the engineering level. |
 | **Product_Architecture** | Cross-component alignment and product-level sign-off. |
-| **VTS_Team** | Validation and test strategy review for all components. |
+| **Vendor_Layer_Team** | Validation and test strategy review for all components; delivers the test harness. |
 
 ### Domain Reviewers (assigned per component)
 
