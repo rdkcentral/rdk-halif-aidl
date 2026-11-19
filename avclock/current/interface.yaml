@@ -2,6 +2,7 @@ aidl_interface:
   name: avclock
   srcs:
     - com/rdk/hal/avclock/*.aidl
+    - com/rdk/hal/avclock/metrics/*.aidl
   imports:
     - common@current
   stability: vintf

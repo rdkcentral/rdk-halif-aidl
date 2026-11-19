@@ -19,6 +19,8 @@
 package com.rdk.hal.audiosink;
 import com.rdk.hal.audiosink.ErrorCode;
 import com.rdk.hal.audiosink.State;
+import com.rdk.hal.audiosink.metrics.EpisodeResolved;
+import com.rdk.hal.audiosink.metrics.EpisodeStarted;
 
 /**
  *  @brief     Callbacks listener interface from audio sink.
@@ -89,4 +91,38 @@ oneway interface IAudioSinkEventListener {
      * Callback when a requested flush() operation has completed.
      */
     void onFlushComplete();
+
+    /**
+     * Raised once when an episode starts. onMetricEpisodeResolved() follows, with the
+     * same Episode, when it ends.
+     *
+     * Episodes are the only metric events: nothing is raised per frame, and
+     * per-frame figures are read with IAudioSink.getMetrics().
+     *
+     * @param[in] event    Which episode started, and when.
+     *
+     * @see Episode, EpisodeStarted
+     */
+    void onMetricEpisodeStarted(in EpisodeStarted event);
+
+    /**
+     * Raised once when the episode reported by onMetricEpisodeStarted() ends.
+     *
+     * @param[in] event    Which episode ended, when, how long it lasted and
+     * what it counted.
+     *
+     * @see Episode, EpisodeResolved
+     */
+    void onMetricEpisodeResolved(in EpisodeResolved event);
+
+    /**
+     * Raised when the sink fails to render audio.
+     *
+     * A full queue is not an error: queueAudioFrame() returns false for it and
+     * nothing is raised here.
+     *
+     * @param[in] errorCode         An ErrorCode enum value.
+     * @param[in] vendorErrorCode   A vendor specific error code.
+     */
+    void onRenderError(in ErrorCode errorCode, in int vendorErrorCode);
 }

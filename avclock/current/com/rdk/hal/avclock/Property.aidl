@@ -61,6 +61,10 @@ enum Property {
      * @exception binder::Status::Exception::EX_NONE for success
      * @exception binder::Status::Exception::EX_UNSUPPORTED_OPERATION if try to modify Read-only property.
      *
+     * @deprecated Deprecated since 2026-11-10. Use Metric::SYNC_OFFSET_NS through
+     * IAVClock.getMetrics().
+     * Reason: the metric is typed, latched with a timestamp and reported in
+     * nanoseconds.
      */
     METRIC_AV_SYNC_ACCURACY_MS = 1000,
 
@@ -76,6 +80,10 @@ enum Property {
      * @exception binder::Status::Exception::EX_NONE for success
      * @exception binder::Status::Exception::EX_UNSUPPORTED_OPERATION if try to modify Read-only property.
      *
+     * @deprecated Deprecated since 2026-11-10. Use Metric::RESYNC_COUNT through
+     * IAVClock.getMetrics().
+     * Reason: the metric is typed, latched with a timestamp and counts from
+     * service initialisation, where this property resets with the session.
      */
     METRIC_AV_RESYNC_COUNT = 1001,
 }

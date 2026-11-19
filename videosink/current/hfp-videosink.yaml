@@ -25,6 +25,23 @@
 videosink:
   interfaceVersion: current
 
+  # Metrics this product serves through IVideoSink.getMetrics(), for every
+  # resource instance, and the episodes it raises; getCapabilities() reports
+  # the same lists in Capabilities. Entries marked mandatory are listed by every
+  # product; optional ones only where the product serves them.
+  metrics:
+    supported:
+      - FRAMES_RENDERED        # mandatory
+      - FRAMES_DROPPED         # mandatory
+      - FRAMES_REPEATED        # mandatory
+      - FRAME_REPEAT_EPISODES  # mandatory
+      - UNDERFLOW_EPISODES     # mandatory
+      - UNDERFLOW_DURATION_NS  # mandatory
+    supportedEpisodes:
+      - FRAME_DROP    # mandatory
+      - FRAME_REPEAT  # mandatory
+      - UNDERFLOW     # mandatory
+
   IVideoSink:
     - id: 0
       supportsAVSync: true

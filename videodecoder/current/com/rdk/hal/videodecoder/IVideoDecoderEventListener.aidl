@@ -19,6 +19,8 @@
 package com.rdk.hal.videodecoder;
 import com.rdk.hal.videodecoder.ErrorCode;
 import com.rdk.hal.videodecoder.State;
+import com.rdk.hal.videodecoder.metrics.EpisodeResolved;
+import com.rdk.hal.videodecoder.metrics.EpisodeStarted;
 
 /**
  *  @brief     Event callbacks listener interface from video decoder.
@@ -44,4 +46,27 @@ oneway interface IVideoDecoderEventListener {
      * @param[in] newState              The new state that the decoder has transitioned to.
      */
     void onStateChanged(in State oldState, in State newState);
+
+    /**
+     * Raised once when an episode starts. onMetricEpisodeResolved() follows, with the
+     * same Episode, when it ends.
+     *
+     * Episodes are the only metric events: nothing is raised per frame, and
+     * per-frame figures are read with IVideoDecoder.getMetrics().
+     *
+     * @param[in] event    Which episode started, and when.
+     *
+     * @see Episode, EpisodeStarted
+     */
+    void onMetricEpisodeStarted(in EpisodeStarted event);
+
+    /**
+     * Raised once when the episode reported by onMetricEpisodeStarted() ends.
+     *
+     * @param[in] event    Which episode ended, when, how long it lasted and
+     * what it counted.
+     *
+     * @see Episode, EpisodeResolved
+     */
+    void onMetricEpisodeResolved(in EpisodeResolved event);
 }

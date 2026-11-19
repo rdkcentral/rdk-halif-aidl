@@ -2,6 +2,7 @@ aidl_interface:
   name: audiosink
   srcs:
     - com/rdk/hal/audiosink/*.aidl
+    - com/rdk/hal/audiosink/metrics/*.aidl
   imports:
     - audiodecoder@current
     - avclock@current

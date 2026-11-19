@@ -23,6 +23,35 @@
 audiosink:
   interfaceVersion: current
 
+  # Metrics this product serves through IAudioSink.getMetrics(), for every
+  # resource instance, and the episodes it raises; getCapabilities() reports
+  # the same lists in Capabilities. Entries marked mandatory are listed by every
+  # product; optional ones only where the product serves them.
+  metrics:
+    supported:
+      - FRAMES_RENDERED        # optional
+      - FRAMES_DROPPED         # mandatory
+      - GAP_EPISODES           # mandatory
+      - GAP_FRAMES             # mandatory
+      - GAP_DURATION_NS        # mandatory
+      - UNDERFLOW_EPISODES     # mandatory
+      - UNDERFLOW_DURATION_NS  # mandatory
+      - RENDER_LATENCY_NS      # optional
+      - QUEUE_DEPTH_NS         # optional
+    supportedEpisodes:
+      - FRAME_DROP  # mandatory
+      - GAP         # mandatory
+      - UNDERFLOW   # mandatory
+  # Error codes this product raises through onRenderError(), also reported in
+  # Capabilities.supportedErrorCodes. Mandatory codes are raised by every product.
+  errorCodes:
+    raised:
+      - RENDER_FAILED        # mandatory
+      - UNSUPPORTED_FORMAT   # mandatory
+      - OUTPUT_UNAVAILABLE   # optional
+      - SECURE_PATH_FAILURE  # optional
+      - HARDWARE_FAILURE     # optional
+
   IAudioSink:
     - id: 0
       supportsSecure: true

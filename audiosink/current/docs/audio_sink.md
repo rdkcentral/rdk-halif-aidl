@@ -46,6 +46,11 @@ The interaction between the RDK GStreamer Audio Sink element and the Audio Sink 
 | **HAL.AUDIOSINK.4** | The default reference level for an audio sink session shall be -31dB. ||
 | **HAL.AUDIOSINK.5** | If a client process exits, the Audio Sink server shall automatically stop and close any Audio Sink instance controlled by that client. ||
 | **HAL.AUDIOSINK.6** | Shall run a session with no mixer input routed, consuming queued frames and freeing their buffers against the attached AV Clock while producing no audio. | The routing is owned by the Audio Mixer and may be set or cleared at any point in the session, including while the sink is `STARTED`. |
+| **HAL.AUDIOSINK.7** | Shall serve every metric listed under `metrics.supported` in the HAL Feature Profile through `getMetrics()` and `getMetric()`, in any state, counting from service initialisation. The list includes every metric marked mandatory. | See [metrics](#metrics). |
+| **HAL.AUDIOSINK.8** | Shall raise `onMetricEpisodeStarted()` when an episode of a supported metric starts and `onMetricEpisodeResolved()` when it ends, for every episode listed under `metrics.supportedEpisodes`, which includes every episode marked mandatory. | See [metrics](#metrics). |
+| **HAL.AUDIOSINK.9** | Shall report audio it fails to render with `onRenderError()`, separately from `queueAudioFrame()` returning false for a full queue. | Lets middleware tell a render failure from back-pressure. |
+| **HAL.AUDIOSINK.10** | Shall notify the client with `onAudioUnderflow()` when the frame queue is empty at the presentation time of the next frame on the attached AV Clock. | Not raised before the first frame of a session, after a flush, while paused or after end of stream. |
+| **HAL.AUDIOSINK.11** | Shall raise `onAudioResumed()` once when audio plays again after an underflow; `onAudioUnderflow()` is not raised again until `onAudioResumed()` has been. | Edge-triggered, one pair per `UNDERFLOW` episode. |
 
 ## Interface Definition
 
@@ -62,6 +67,12 @@ The interaction between the RDK GStreamer Audio Sink element and the Audio Sink 
 | `Property.aidl` | Enum list of audio sink properties. |
 | `Volume.aidl` | Parcelable for defining a volume and mute state. |
 | `VolumeRamp.aidl` | Enum list of volume ramp types. |
+| `metrics/Metric.aidl` | Enum list of the metrics the audio sink serves. |
+| `metrics/MetricValue.aidl` | Parcelable pairing a `Metric` with its value. |
+| `metrics/MetricSnapshot.aidl` | Parcelable holding metric values latched at one instant. |
+| `metrics/Episode.aidl` | Enum list of the episodes the component reports. |
+| `metrics/EpisodeStarted.aidl` | Parcelable carried by `onMetricEpisodeStarted()`. |
+| `metrics/EpisodeResolved.aidl` | Parcelable carried by `onMetricEpisodeResolved()`. |
 
 ## Initialization
 
@@ -242,6 +253,34 @@ EOS is a discrete signal. After queuing its final frame, the RDK middleware clie
 All audio frame buffers already queued continue to be consumed — and, where a mixer input is routed, audible — in the usual way. Once consumption of the final queued frame completes on the attached clock, the sink fires `IAudioSinkControllerListener.onEndOfStream(nsPresentationTime)` exactly once, carrying the presentation time of that final frame. If no frames were queued when `signalEndOfStream()` was called, `nsPresentationTime` is the undefined-time sentinel (`IAVClock.UNDEFINED_TIME`) so the client sees the same callback in all cases.
 
 For audio decoded by the Audio Decoder, the middleware forwards each decoded frame to the Audio Sink via `queueAudioFrame()`; once the decoder has fired its own `onEndOfStream()` and the final frame has been queued, the middleware calls `signalEndOfStream()` on the sink. For PCM audio (no Audio Decoder in the path), the middleware queues its final frame and then calls `signalEndOfStream()` directly.
+
+## Metrics
+
+`IAudioSink.getMetrics()` returns the metrics asked for, latched at one instant with a `CLOCK_MONOTONIC_RAW` timestamp; `getMetric()` returns one. Both are callable in any state. Counters count from service initialisation and are never reset, so a session or interval figure is the difference of two snapshots. The rules common to every component are in the [HAL Metrics Pattern](../standards/hal_metrics_pattern.md); what each metric measures, excludes and is used for is in the Doxygen of `Metric.aidl`. The product lists what it supports under `metrics.supported` and `metrics.supportedEpisodes` in the HAL Feature Profile, and `getCapabilities()` reports the same lists at run time in `Capabilities`.
+
+| Metric | Unit | Kind | Support | Meaning |
+|---|---|---|---|---|
+| `FRAMES_RENDERED` | frames | counter | optional | Frames played at their time. |
+| `FRAMES_DROPPED` | frames | counter | mandatory | Frames discarded because they arrived too late. |
+| `GAP_EPISODES` | episodes | counter | mandatory | Audio gaps started. |
+| `GAP_FRAMES` | frames | counter | mandatory | Frame periods of silence output in gaps. |
+| `GAP_DURATION_NS` | nanoseconds | counter | mandatory | Total time spent in audio gaps. |
+| `UNDERFLOW_EPISODES` | episodes | counter | mandatory | Underflows started. |
+| `UNDERFLOW_DURATION_NS` | nanoseconds | counter | mandatory | Total time spent in underflow. |
+| `RENDER_LATENCY_NS` | nanoseconds | gauge | optional | Latency from leaving the sink queue to leaving the device. |
+| `QUEUE_DEPTH_NS` | nanoseconds | gauge | optional | Audio queued in the sink and not yet played, as time. |
+
+Events are episodes only: nothing is raised per frame. `IAudioSinkEventListener.onMetricEpisodeStarted()` is raised once when an episode starts and `onMetricEpisodeResolved()` once when it ends, each naming the `Episode`. The resolved event carries the episode's `durationNs` and `count`. Both events carry `metrics`, a `MetricSnapshot` of every supported metric latched at the event, so no second read is needed. A product raises an episode where it supports the metric shown.
+
+| Episode | Support | Starts and ends | Metric |
+|---|---|---|---|
+| `FRAME_DROP` | mandatory | Covers frames counted by FRAMES_DROPPED. The episode starts at the first dropped frame when no such episode is open and ends when 1 second has passed without another. | `FRAMES_DROPPED` |
+| `GAP` | mandatory | Starts when the sink outputs silence because the audio due was missing or late, and ends when audio plays again. | `GAP_EPISODES` |
+| `UNDERFLOW` | mandatory | Starts when the frame queue is empty at the presentation time of the next frame, and ends when a frame is played. | `UNDERFLOW_EPISODES` |
+
+Frames lost before they reach the sink are counted by the [Audio Decoder](../audiodecoder/audio_decoder.md). The two components latch separately, so figures read from both are not one atomic read.
+
+The `RENDER_LATENCY_NS` and `QUEUE_DEPTH_NS` properties, which these gauges replace, are deprecated and remain readable.
 
 ## Audio Sink States
 

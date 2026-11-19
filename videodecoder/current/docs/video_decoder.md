@@ -50,6 +50,8 @@ The **RDK middleware GStreamer pipeline** includes a dedicated **RDK Video Decod
 | **HAL.VIDEODECODER.11** | The video decoder shall be able to decode back to back I-frames.| Used in I-frame trick modes. |
 | **HAL.VIDEODECODER.12** | The video decoder shall discard any frames until the first reference frame has been received. |
 | **HAL.VIDEODECODER.13** | If a client process exits, the Video Decoder server shall automatically stop and close any Video Decoder instance controlled by that client. |
+| **HAL.VIDEODECODER.14** | Shall serve every metric listed under `metrics.supported` in the HAL Feature Profile through `getMetrics()` and `getMetric()`, in any state, counting from service initialisation. The list includes every metric marked mandatory. | See [metrics](#metrics). |
+| **HAL.VIDEODECODER.15** | Shall raise `onMetricEpisodeStarted()` when an episode of a supported metric starts and `onMetricEpisodeResolved()` when it ends, for every episode listed under `metrics.supportedEpisodes`, which includes every episode marked mandatory. | See [metrics](#metrics). |
 
 ## Interface Definition
 
@@ -72,6 +74,12 @@ The **RDK middleware GStreamer pipeline** includes a dedicated **RDK Video Decod
 | `OperationalMode.aidl` | Common enum value describing the current output routing mode. |
 | `PropertyKVPair.aidl` | Parcelable of a Property and PropertyValue pair. |
 | `ScanType.aidl` | Enum list of video frame scan types. |
+| `metrics/Metric.aidl` | Enum list of the metrics the video decoder serves. |
+| `metrics/MetricValue.aidl` | Parcelable pairing a `Metric` with its value. |
+| `metrics/MetricSnapshot.aidl` | Parcelable holding metric values latched at one instant. |
+| `metrics/Episode.aidl` | Enum list of the episodes the component reports. |
+| `metrics/EpisodeStarted.aidl` | Parcelable carried by `onMetricEpisodeStarted()`. |
+| `metrics/EpisodeResolved.aidl` | Parcelable carried by `onMetricEpisodeResolved()`. |
 
 ## Initialization
 
@@ -408,6 +416,28 @@ The byte array in `onUserDataOutput()` starts from the `user_identifier` field (
 ### Client Handling
 
 The RDK media pipeline is responsible for parsing the SEI user data from the byte array to extract CEA-608 or CEA-708 caption packets and synchronize them with playback.
+
+## Metrics
+
+`IVideoDecoder.getMetrics()` returns the metrics asked for, latched at one instant with a `CLOCK_MONOTONIC_RAW` timestamp; `getMetric()` returns one. Both are callable in any state. Counters count from service initialisation and are never reset, so a session or interval figure is the difference of two snapshots. The rules common to every component are in the [HAL Metrics Pattern](../standards/hal_metrics_pattern.md); what each metric measures, excludes and is used for is in the Doxygen of `Metric.aidl`. The product lists what it supports under `metrics.supported` and `metrics.supportedEpisodes` in the HAL Feature Profile, and `getCapabilities()` reports the same lists at run time in `Capabilities`.
+
+| Metric | Unit | Kind | Support | Meaning |
+|---|---|---|---|---|
+| `FRAMES_DECODED` | frames | counter | optional | Frames the decoder has output. |
+| `FRAMES_DROPPED` | frames | counter | mandatory | Input frames for which the decoder output nothing. |
+| `FRAMES_CORRUPTED` | frames | counter | mandatory | Frames output with visible damage or concealment. |
+| `DECODE_ERRORS` | errors | counter | mandatory | Errors the decoder has raised. |
+
+Events are episodes only: nothing is raised per frame. `IVideoDecoderEventListener.onMetricEpisodeStarted()` is raised once when an episode starts and `onMetricEpisodeResolved()` once when it ends, each naming the `Episode`. The resolved event carries the episode's `durationNs` and `count`. Both events carry `metrics`, a `MetricSnapshot` of every supported metric latched at the event, so no second read is needed. A product raises an episode where it supports the metric shown.
+
+| Episode | Support | Starts and ends | Metric |
+|---|---|---|---|
+| `FRAME_DROP` | mandatory | Covers frames counted by FRAMES_DROPPED. The episode starts at the first dropped frame when no such episode is open and ends when 1 second has passed without another. | `FRAMES_DROPPED` |
+| `DECODE_ERROR` | mandatory | Covers errors counted by DECODE_ERRORS. The episode starts at the first error when no such episode is open and ends when 1 second has passed without another. | `DECODE_ERRORS` |
+
+Frames the decoder outputs can still be dropped for lateness by the [Video Sink](../videosink/video_sink.md), which serves the rendered and late-dropped counts. The two components latch separately, so figures read from both are not one atomic read.
+
+The `METRIC_*` properties that these metrics replace are deprecated and remain readable.
 
 ## Video Decoder States
 

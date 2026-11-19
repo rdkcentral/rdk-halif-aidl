@@ -193,6 +193,10 @@ enum Property {
      * @exception binder::Status::Exception::EX_NONE for success
      * @exception binder::Status::Exception::EX_UNSUPPORTED_OPERATION if try to modify Read-only property.
      *
+     * @deprecated Deprecated since 2026-11-10. Use Metric::FRAMES_DECODED through
+     * IAudioDecoder.getMetrics().
+     * Reason: the metric is typed, latched with a timestamp and counts from
+     * service initialisation, where this property resets with the session.
      */
     METRIC_FRAMES_DECODED = 1000,
 
@@ -207,6 +211,10 @@ enum Property {
      * @exception binder::Status::Exception::EX_NONE for success
      * @exception binder::Status::Exception::EX_UNSUPPORTED_OPERATION if try to modify Read-only property.
      *
+     * @deprecated Deprecated since 2026-11-10. Use Metric::DECODE_ERRORS through
+     * IAudioDecoder.getMetrics().
+     * Reason: the metric is typed, latched with a timestamp and counts from
+     * service initialisation, where this property resets with the session.
      */
     METRIC_DECODE_ERRORS = 1001,
 
@@ -223,6 +231,10 @@ enum Property {
      * @exception binder::Status::Exception::EX_NONE for success
      * @exception binder::Status::Exception::EX_UNSUPPORTED_OPERATION if try to modify Read-only property.
      *
+     * @deprecated Deprecated since 2026-11-10. Use Metric::FRAMES_DROPPED through
+     * IAudioDecoder.getMetrics().
+     * Reason: the metric is typed, latched with a timestamp and counts from
+     * service initialisation, where this property resets with the session.
      */
     METRIC_FRAMES_DROPPED = 1002,
 }

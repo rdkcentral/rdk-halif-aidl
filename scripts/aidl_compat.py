@@ -223,6 +223,9 @@ def declarations(path):
     text = _strip_block(text, r"constexpr\s+inline\s+std::array<[^=]*=\s*\{")
     text = _strip_block(text, r"inline\s+bool\s+operator\s*(?:==|!=|<=|>=|<|>)\s*\([^)]*\)\s*const\s*\{")
     text = _strip_block(text, r"inline\s+std::string\s+toString\s*\(\s*\)\s*const\s*\{")
+    # Access labels group members; where aidl writes one moves when a
+    # parcelable gains its first field, which must not read as a change.
+    text = re.sub(r"\b(?:public|protected|private)\s*:(?!:)", " ", text)
     text = re.sub(r"\s+", " ", text)
     text = re.sub(r" (?=[;,)])", "", text)
     # Commas split too: an enum body and a template argument list are one

@@ -2,6 +2,7 @@ aidl_interface:
   name: videosink
   srcs:
     - com/rdk/hal/videosink/*.aidl
+    - com/rdk/hal/videosink/metrics/*.aidl
   imports:
     - avclock@current
     - common@current
