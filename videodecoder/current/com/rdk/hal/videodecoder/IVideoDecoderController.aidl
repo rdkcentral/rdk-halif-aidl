@@ -62,7 +62,8 @@ interface IVideoDecoderController {
      * Stops the Video Decoder.
      *
      * The decoder enters the `STOPPING` state and then any input data buffers that have been passed for decode but have
-     * not yet been decoded are automatically freed.  This is effectively the same as a flush.
+     * not yet been decoded are automatically freed.  This is effectively the same as a flush,
+     * including the handling of output buffers described for `flush()`.
      * Once buffers are freed and the internal Video Decoder state is reset, the decoder enters the `READY` state.
      *
      * @exception binder::Status::Exception::EX_NONE for success
@@ -154,7 +155,14 @@ interface IVideoDecoderController {
      * Any input data buffers that have been passed for decode but have
      * not yet been decoded are automatically freed.
      *
-     * Any pending decoded video frames due for callback are returned to the video frame buffer pool.
+     * Ownership of an output buffer passes to the client when the HAL issues
+     * `onFrameOutput()` for it, even though the `oneway` callback may arrive
+     * later. Output buffers with no `onFrameOutput()` yet issued are freed and
+     * never delivered. Output buffers whose `onFrameOutput()` has been issued,
+     * including callbacks still in flight, are the client's: the HAL does not
+     * free them, and the client frees them with `IAVBuffer.free()` or passes
+     * them on. Once this call returns, no `onFrameOutput()` is issued for data
+     * submitted before it.
      * The internal Video Decoder state is optionally reset.
      *
      * On completion the decoder transitions from `FLUSHING` to `STARTED` when
