@@ -400,6 +400,31 @@ Releases are **not** cut on every PR merge. Multiple changes batch into one
 coherent release narrative. See the [0.20.0](../releases/0.20.0.md) and
 [0.15.0](../releases/0.15.0.md) release notes for the pattern.
 
+#### Upgrading an Implementation Between Releases
+
+A released snapshot is `current/` as it stood at the release tag, so git
+shows what changed in a component between any two releases. No separate
+upgrade manifest is produced.
+
+```bash
+# Which components changed
+git diff --name-only 0.22.0 0.23.0 -- ':(glob)*/current/**' | cut -d/ -f1 | sort -u
+
+# What changed in one component: AIDL, documentation and HFP
+git diff 0.22.0 0.23.0 -- planecontrol/current
+
+# The pull requests behind it
+git log --oneline --no-merges 0.22.0..0.23.0 -- planecontrol/current
+
+# Two snapshots in the working tree, without tags
+git diff --no-index planecontrol/0.2.0.0 planecontrol/0.3.0.0
+```
+
+The diff is the input for an upgrade, whether an engineer or an AI tool
+reads it. The pull requests' change-class labels, and the release notes
+in `docs/releases/`, say whether a change is breaking, additive or
+documentation only.
+
 ### Post-Baseline: AIDL Stable Versioning
 
 Once a component reaches AIDL Baseline and is frozen, it follows **AIDL
