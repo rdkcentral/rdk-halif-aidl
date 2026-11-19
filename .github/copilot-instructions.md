@@ -13,6 +13,8 @@ This codebase defines **RDK Hardware Abstraction Layer interfaces using Android 
 - Use development scripts (`build_binder.sh`, `build_interfaces.sh`) in production/Yocto builds
 - Use British English alternatives to UK English spelling in documentation
 
+**AI tool attribution:** do not allow it in a commit message or a PR, and do not add it to either. That means no "Generated with …" footer and no `Co-authored-by:` trailer naming an AI tool or an `anthropic.com` address. When reviewing a PR, flag any you find in its description or commits.
+
 **ALWAYS:**
 - Annotate all AIDL interfaces with `@VintfStability`
 - Use UK English spelling in comments and documentation
