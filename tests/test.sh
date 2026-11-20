@@ -36,8 +36,6 @@ NC='\033[0m' # No Color
 TESTS_PASSED=0
 TESTS_FAILED=0
 
-CMAKE_INSTALL_PREFIX="${CMAKE_INSTALL_PREFIX:-$(pwd)/out/target}"
-
 # The binder wire protocol the cross-compiled SDK is built for. It follows the
 # KERNEL the image runs, not the toolchain, so it is stated rather than
 # inherited. The ARM target here is row B of
@@ -478,11 +476,10 @@ test_8() {
     fi
     
     echo ""
-    echo "==> cmake -S . -B build/current -DINTERFACE_TARGET=bootreason -DAIDL_SRC_VERSION=current"
+    echo "==> cmake -S . -B build/current -DINTERFACE_TARGET=bootreason"
     if cmake -S . -B build/current \
+        -DBUILD_MODULES_MODE=ON \
         -DINTERFACE_TARGET=bootreason \
-        -DAIDL_SRC_VERSION=current \
-        -DCMAKE_INSTALL_PREFIX="${CMAKE_INSTALL_PREFIX}" \
         >/tmp/cmake_config.log 2>&1; then
         echo "✅ CMake configuration successful"
     else
@@ -533,11 +530,10 @@ test_9() {
     fi
     
     echo ""
-    echo "==> cmake -S . -B build/production -DINTERFACE_TARGET=all"
+    echo "==> cmake -S . -B build/production"
     if cmake -S . -B build/production \
-        -DINTERFACE_TARGET=all \
+        -DBUILD_MODULES_MODE=ON \
         -DCMAKE_BUILD_TYPE=Release \
-        -DCMAKE_INSTALL_PREFIX="${CMAKE_INSTALL_PREFIX}" \
         >/tmp/cmake_prod_config.log 2>&1; then
         echo "✅ CMake production configuration successful"
     else
@@ -615,9 +611,9 @@ test_10() {
     echo ""
     echo "==> Test 10.1: Build bootreason module (current version)"
     if cmake -S . -B build/test10-bootreason \
+        -DBUILD_MODULES_MODE=ON \
         -DINTERFACE_TARGET=bootreason \
-        -DAIDL_SRC_VERSION=current \
-        -DCMAKE_INSTALL_PREFIX="${CMAKE_INSTALL_PREFIX}" \
+        -DINTERFACE_VERSION=current \
         >/tmp/cmake_test10_boot_config.log 2>&1 && \
        cmake --build build/test10-bootreason -- -j"$(nproc)" \
         >/tmp/cmake_test10_boot_build.log 2>&1 && \
@@ -634,9 +630,9 @@ test_10() {
     echo ""
     echo "==> Test 10.2: Build common module (current version)"
     if cmake -S . -B build/test10-common \
+        -DBUILD_MODULES_MODE=ON \
         -DINTERFACE_TARGET=common \
-        -DAIDL_SRC_VERSION=current \
-        -DCMAKE_INSTALL_PREFIX="${CMAKE_INSTALL_PREFIX}" \
+        -DINTERFACE_VERSION=current \
         >/tmp/cmake_test10_common_config.log 2>&1 && \
        cmake --build build/test10-common -- -j"$(nproc)" \
         >/tmp/cmake_test10_common_build.log 2>&1 && \
@@ -653,9 +649,9 @@ test_10() {
     echo ""
     echo "==> Test 10.3: Build deviceinfo module (current version)"
     if cmake -S . -B build/test10-deviceinfo \
+        -DBUILD_MODULES_MODE=ON \
         -DINTERFACE_TARGET=deviceinfo \
-        -DAIDL_SRC_VERSION=current \
-        -DCMAKE_INSTALL_PREFIX="${CMAKE_INSTALL_PREFIX}" \
+        -DINTERFACE_VERSION=current \
         >/tmp/cmake_test10_deviceinfo_config.log 2>&1 && \
        cmake --build build/test10-deviceinfo -- -j"$(nproc)" \
         >/tmp/cmake_test10_deviceinfo_build.log 2>&1 && \
@@ -672,10 +668,10 @@ test_10() {
     echo ""
     echo "==> Test 10.4: Build with CMAKE_BUILD_TYPE=Debug"
     if cmake -S . -B build/test10-debug \
+        -DBUILD_MODULES_MODE=ON \
         -DINTERFACE_TARGET=firmwareupdate \
-        -DAIDL_SRC_VERSION=current \
+        -DINTERFACE_VERSION=current \
         -DCMAKE_BUILD_TYPE=Debug \
-        -DCMAKE_INSTALL_PREFIX="${CMAKE_INSTALL_PREFIX}" \
         >/tmp/cmake_test10_debug_config.log 2>&1 && \
        cmake --build build/test10-debug -- -j"$(nproc)" \
         >/tmp/cmake_test10_debug_build.log 2>&1; then
