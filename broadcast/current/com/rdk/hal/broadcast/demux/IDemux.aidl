@@ -94,7 +94,8 @@ interface IDemux {
      * The DemuxController object will be invalidated.
      *
      * @exception ::android::binder::Status::EX_ILLEGAL_ARGUMENT The DemuxController is not originating from this Demux.
-     * @exception ::android::binder::Status::EX_ILLEGAL_STATE isConnected() is false.
+     * @exception ::android::binder::Status::EX_ILLEGAL_STATE isConnected() is false or there are still active filters
+     *                                                        on the DemuxController.
      *
      * @param[in] controller Non-null DemuxController obtained from connect() on the same Demux.
      *
