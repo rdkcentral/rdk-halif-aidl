@@ -83,9 +83,10 @@ oneway interface IPanelOutputEventListener {
     /**
      * Callback when the panel output transitions to a new lifecycle state.
      *
-     * Fired for all transitions driven by start(), stop(), and error
-     * conditions. The panel output State enum covers STOPPED, STARTING,
-     * STARTED, STOPPING, and ERROR.
+     * Fired for all lifecycle transitions driven by start(), stop(), and
+     * controller ownership acquisition/release. The panel output State enum
+     * covers CLOSED, OPENING, READY, STARTING, STARTED, STOPPING, and
+     * CLOSING.
      *
      * @param[in] oldState  The state being left.
      * @param[in] newState  The state being entered.
