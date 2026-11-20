@@ -1,106 +1,72 @@
 # HAL Interface Generation
 
-This document describes how to generate Hardware Abstraction Layer (HAL) interface definitions using the Android Interface Definition Language (AIDL).
+Each HAL component's AIDL generates C++ bindings and builds into one interface library. Three scripts at the
+repository root do it, in three stages.
 
-## Prerequisites
+```mermaid
+flowchart LR
+    A["./build_binder.sh<br/>Stage 1: binder SDK"] --> B["./build_interfaces.sh &lt;component&gt;<br/>Stage 2: generate C++"]
+    B --> C["build_modules.sh<br/>Stage 3: compile and stage"]
+    A -. "out/target/<br/>aidl, libbinder, headers" .-> B
+    B -. "&lt;component&gt;/current/<br/>include/, src/" .-> C
+    C -. "out/target/lib/rdk-halif-aidl/<br/>out/build/include/" .-> D["Clients and HAL services"]
+```
 
-Building this repository requires the AIDL compiler (`aidl`).  This can be obtained by building the `linux_binder_idl` project, available on GitHub: [github.com/rdkcentral/linux_binder_idl.git](https://github.com/rdkcentral/linux_binder_idl). Alternatively, you can use a Docker image that includes `aidl`, such as `rdk-dunfell` or the recommended `rdk-kirkstone`.
-
-## Building `aidl` from `linux_binder_idl`
-
-**Minimum Required GCC Version:** 9.4.0
-
-Using the `rdk-kirkstone` Docker image is highly recommended.
-
-**Clone the `linux_binder_idl` repository:**
+## Stage 1: the binder SDK
 
 ```bash
-git clone git@github.com:rdkcentral/linux_binder_idl.git
-cd linux_binder_idl
+./build_binder.sh
 ```
 
-**Build `aidl`:**
+Run it once per checkout. It clones [linux_binder_idl](https://github.com/rdkcentral/linux_binder_idl) at the
+version pinned in `binder_sdk.version` into `build-tools/`, builds it, and stages the SDK under `out/target/`:
+the `aidl` compiler, `libbinder` and the other runtime libraries, and their headers.
+`BINDER_VERSION=<ref> ./build_binder.sh` builds another version for a one-off build.
+
+Stages 2 and 3 stop with a pointer to this command until it has run.
+
+## Stage 2: generate and build a component
 
 ```bash
-# Optional: Run inside the Docker container
-sc docker run rdk-kirkstone /bin/bash
+./scripts/validate_aidl.sh audiodecoder   # check the AIDL in seconds, no build
+./build_interfaces.sh audiodecoder        # generate the C++ and build the library
+./build_interfaces.sh all                 # every component
+./build_interfaces.sh audiodecoder --version 0.3.0.0   # a released snapshot
 ```
 
-Then build the aidl tool.
+The generated C++ goes into the component's own tree:
 
-```bash
-./build-aidl-generator-tool.sh
+```text
+audiodecoder/current/
+├── com/rdk/hal/audiodecoder/*.aidl     # the interface, committed
+├── include/com/rdk/hal/audiodecoder/   # generated headers: IFoo.h, BpFoo.h, BnFoo.h
+└── src/                                # generated sources
 ```
 
-**Locate the `aidl` binary:**
+Generated `include/` and `src/` under `current/` are build output: gitignored and never committed. A released
+snapshot, such as `audiodecoder/0.3.0.0/`, carries its generated C++ committed.
 
-The compiled `aidl` binary will be located in the `local/bin` directory within the `linux_binder_idl` project.  The full path might resemble:
+## Stage 3: compile and stage
 
-```bash
-linux_binder_idl/local/bin/aidl
-```
+`build_interfaces.sh` hands the compile to `build_modules.sh`, which builds each component's interface library
+against the SDK and stages:
 
-For more detailed information, refer to the [github.com/rdkcentral/linux_binder_idl.git](https://github.com/rdkcentral/linux_binder_idl) repository.
+| Output | Location |
+| --- | --- |
+| Interface libraries, `lib<component>-v<version>-cpp.so` | `out/target/lib/rdk-halif-aidl/` |
+| Generated headers, by component | `out/build/include/` |
 
-## Generating AIDL Proxy and Native Interfaces
+`./build_modules.sh <component>` runs Stage 3 on its own; it generates any sources that are missing.
 
-**Clone the `hal` repository:**
+## Cleaning
 
-```bash
-git clone git@github.com:rdkcentral/rdk-halif-aidl.git
-```
+| Command | Removes |
+| --- | --- |
+| `./build_interfaces.sh clean` | `out/` |
+| `./build_interfaces.sh cleanall` | `out/` and `build-tools/` |
 
-**Generate the AIDL proxy and native interfaces:**
+## Cross-compilation and Yocto
 
-The following example demonstrates generating interfaces for the `audiodecoder` module. Adapt the `AIDL_TARGET` CMake variable for other modules.
-
-```bash
-cd hal
-
-# Optional: Run inside the Docker container
-sc docker run rdk-kirkstone /bin/bash
-
-# Optional: Set AIDL binary path if not in system PATH.  Replace with the actual path from the previous step.
-export PATH=$PATH:/path/to/linux_binder_idl/local/bin
-
-cmake -DAIDL_TARGET=audiodecoder .
-```
-
-!!! warning
-    CMake *must* be run from the root directory of the `hal` repository, not within a specific module directory.
-
-**Locate the generated files:**
-
-The generated proxy and interface files will be placed under `audiodecoder/gen/<version>`.  For example:
-
-```
-hal/audiodecoder/gen/current/cpp/com/rdk/hal/audiodecoder/...  (C++ files)
-hal/audiodecoder/gen/current/h/com/rdk/hal/audiodecoder/...   (Header files)
-hal/audiodecoder/current/com/rdk/hal/audiodecoder/...        (AIDL files)
-```
-
-## Example CMake Commands
-
-```bash
-# Use a custom path to the `aidl` binary
-cmake -DAIDL_TARGET=audiodecoder -DAIDL_BIN=/home/example/bin/aidl .
-
-# Specify a specific AIDL interface version (e.g., version 2)
-cmake -DAIDL_TARGET=audiodecoder -DAIDL_SRC_VERSION=2 .
-
-# Specify a custom output directory for generated files
-cmake -DAIDL_TARGET=audiodecoder -DAIDL_GEN_DIR=/home/example/example_out .
-```
-
-## CMake Variables
-
-| Variable        | Description                                                              |
-|-----------------|--------------------------------------------------------------------------|
-| `AIDL_BIN`      | *Optional*. Path to the `aidl` executable. If not set, CMake will attempt to locate it. |
-| `AIDL_GEN_DIR`  | *Optional*. Output directory for generated files. Default: `<module>/gen/<version>`. |
-| `AIDL_SRC_VERSION` | *Optional*. Version of the AIDL interface to generate. Default: `current`.     |
-| `AIDL_TARGET`   | *Mandatory*. Name of the module for which to generate interfaces.         |
-
-## Notes
-
-The `Broadcast` module is currently disabled because its `demux` submodule depends on the Android framework.
+These scripts are for host development and refuse to run in a cross or OpenEmbedded environment. A production
+build stages the binder SDK from the `linux-binder` recipe and builds each component's `CMakeLists.txt`
+directly; [Third-Party Build Integration](../standards/build_integration.md) describes it.
