@@ -213,6 +213,7 @@ nav:
       - RDK Documentation Structure: governance/rdk-release-documentation-structure.md
       - RDK Engineering Validation Framework: governance/rdk-engineering-validation-framework.md
       - HAL Delivery & Versioning SOP: governance/versioning-sop.md
+      - Component Priority List: governance/component-priority.md
     - Architecture:
       - 'HLA: What a Released HAL Snapshot Contains': architecture/hla-released-snapshot-contents.md
     - White Papers:
