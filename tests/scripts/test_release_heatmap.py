@@ -24,7 +24,9 @@ Run: python3 -m unittest discover -s tests/scripts
 """
 
 import importlib.util
+import io
 import os
+import tempfile
 import unittest
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -136,8 +138,9 @@ class Render(unittest.TestCase):
 
     def test_page_is_only_the_heatmap(self):
         t = rh.classify(issue(1, labels=["Minor Change"], milestone="0.24.0"), set(), "2026-11-03", None)
-        page = rh.render([t], [{"title": "0.24.0", "due": None}], "now")
-        self.assertEqual([l for l in page.splitlines() if l.startswith("#")], ["# Release heatmap"])
+        page = rh.render([t], [{"title": "0.24.0", "due": None}], "now", sections=SECTIONS)
+        self.assertEqual([l for l in page.splitlines() if l.startswith("#")],
+                         ["# Release heatmap", "## P1 – Critical", "## P3 – Low", "## Not yet prioritised"])
 
     def test_closed_milestone_is_flagged(self):
         t = rh.classify(issue(1, labels=["component:panel"], milestone="0.22.0"), set(), "2026-11-03", None)
@@ -270,9 +273,9 @@ class Render(unittest.TestCase):
         one = rh.classify(issue(1, labels=["component:panel"], milestone="0.24.0"), set(), "2026-11-03", None)
         two = rh.classify(issue(2, labels=["component:videosink", "component:audiosink"], milestone="0.24.0"),
                           set(), "2026-11-03", None)
-        page = rh.render([one, two], [{"title": "0.24.0", "due": None}], "now")
+        page = rh.render([one, two], [{"title": "0.24.0", "due": None}], "now", root=EMPTY)
         self.assertEqual(page.count("](u2)"), 1)
-        self.assertIn("| audiosink |", page)
+        self.assertIn("| audiosink | [", page)
         self.assertNotIn("| videosink |", page)
         self.assertNotIn("several components) |", page)
         totals = [int(l.rsplit("|", 2)[1]) for l in page.splitlines()
@@ -286,6 +289,101 @@ class Render(unittest.TestCase):
 
     def test_ticket_with_a_pr_gets_its_own_line(self):
         self.assertEqual(rh.flow(["a", "b", "c", "d"], [False, True, False, False]), "a<br>b<br>c d")
+
+
+EMPTY = tempfile.mkdtemp()   # a repo root with no metadata.yaml: rows carry no version
+SECTIONS = [
+    {"priority": "P1", "title": "P1 – Critical", "about": "Core.",
+     "rows": [{"name": "DRM", "row": "drm"}, {"name": "Video Sink", "row": "videosink"}]},
+    {"priority": "P3", "title": "P3 – Low", "about": "Later.",
+     "rows": [{"name": "Panel", "row": "panel"}, {"name": "General documentation", "row": "(documentation)"}]},
+]
+
+
+class Priorities(unittest.TestCase):
+
+    def test_reads_the_component_priority_list(self):
+        secs = rh.read_priorities()
+        self.assertEqual([s["priority"] for s in secs], ["P1", "P2", "P3"])
+        rank = rh.rank_of(secs)
+        self.assertEqual((rank["drm"], rank["avclock"], rank["hdmioutput"]), (1, 1, 1))
+        self.assertEqual((rank["boot"], rank["vsi/abstractfilesystem"]), (2, 2))
+        self.assertEqual((rank["panel"], rank["(documentation)"], rank["(infrastructure)"]), (3, 3, 3))
+        self.assertTrue(all(s["about"] for s in secs))
+        # The HAL architecture documentation row has no label, so it is no heatmap row.
+        self.assertNotIn("HAL architecture documentation", [r["name"] for s in secs for r in s["rows"]])
+
+    def test_every_component_is_listed_even_without_tickets(self):
+        page = rh.render([], [], "now", sections=SECTIONS, components=["drm", "videosink", "ffv"], root=EMPTY)
+        p1 = page.split("## P1")[1].split("## P3")[0]
+        self.assertIn("| DRM |  | 0 |", p1)
+        self.assertIn("| Video Sink |  | 0 |", p1)
+        self.assertIn("| ffv |  | 0 |", page.split("## Not yet prioritised")[1])
+
+    def test_a_ticket_goes_to_its_highest_priority_component(self):
+        t = rh.classify(issue(4, labels=["component:panel", "component:videosink"], milestone="0.24.0"),
+                        set(), "2026-11-03", None)
+        page = rh.render([t], [{"title": "0.24.0", "due": None}], "now", sections=SECTIONS, root=EMPTY)
+        self.assertIn("| Video Sink | [![#4", page)
+        self.assertIn("| Panel | · | 0 |", page)
+
+    def test_row_heading_has_the_component_version(self):
+        root = tempfile.mkdtemp()
+        for d, v in (("drm", "0.2.0.0"), ("bootreason", "0.2.1.0")):
+            os.makedirs(os.path.join(root, d))
+            with open(os.path.join(root, d, "metadata.yaml"), "w") as fh:
+                fh.write("component: %s\nversion: %s\nstatus: GREEN\n" % (d, v))
+        self.assertEqual(rh.row_heading("drm", "DRM", root), "DRM 0.2.0.0")
+        self.assertEqual(rh.row_heading("boot", "Boot", root), "Boot 0.2.1.0")
+        self.assertEqual(rh.row_heading("crypto", "Crypto", root), "Crypto")
+        self.assertEqual(rh.row_heading("(documentation)", "General documentation", root), "General documentation")
+        self.assertEqual(rh.all_components(root, ["component:crypto", "component:boot", "bug"]),
+                         ["boot", "crypto", "drm"])
+
+    def test_column_heading_has_the_due_date(self):
+        t = rh.classify(issue(1, labels=["component:drm"], milestone="0.23.1"), set(), "2026-11-03", None)
+        u = rh.classify(issue(2, labels=["component:drm"], milestone="0.24.0 - Next"), set(), "2026-11-03", None)
+        page = rh.render([t, u], [{"title": "0.23.1", "due": "2026-11-28T08:00:00Z"},
+                                  {"title": "0.24.0 - Next", "due": None}], "now", sections=SECTIONS, root=EMPTY)
+        self.assertIn("| Component | 0.23.1<br>due 2026-11-28 | 0.24.0<br>no date | Total |", page)
+
+    def test_wanted_priority(self):
+        w = lambda labels, cur=None: rh.wanted_priority(labels, cur, SECTIONS)
+        self.assertEqual(w(["component:panel", "component:drm"]), "P1")
+        self.assertEqual(w(["component:panel"], "P1"), "P3")
+        self.assertIsNone(w(["component:panel"], "P3"))          # already right
+        self.assertIsNone(w(["component:drm"], "P0"))            # P0 is a hand-set override
+        self.assertIsNone(w(["component:ffv"], "P2"))            # not yet prioritised
+        self.assertEqual(w(["component:ffv", "component:panel"]), "P3")
+        self.assertEqual(w(["documentation"]), "P3")             # repo-wide: filled in when empty
+        self.assertIsNone(w(["documentation"], "P1"))            # ... but a hand-set value stays
+        self.assertIsNone(w(["scope:overview", "documentation"]))  # the overview row is not prioritised
+
+    def test_set_priorities_dry_run_changes_nothing(self):
+        def node(n, labels, prio=None, state="OPEN", repo=rh.REPO):
+            return {"id": "I%d" % n, "fieldValueByName": {"name": prio} if prio else None,
+                    "content": {"number": n, "state": state, "repository": {"nameWithOwner": repo},
+                                "labels": {"nodes": [{"name": l} for l in labels]}}}
+        page = {"data": {"organization": {"projectV2": {
+            "id": "P", "field": {"id": "F", "options": [{"id": "o1", "name": "P1 - High"},
+                                                        {"id": "o3", "name": "P3 - Low"}]},
+            "items": {"pageInfo": {"hasNextPage": False}, "nodes": [
+                node(1, ["component:drm"], "P3 - Low"), node(2, ["component:drm"], "P1 - High"),
+                node(3, ["component:drm"], state="CLOSED"), node(4, ["component:drm"], repo="other/x"),
+                node(5, ["component:panel"])]}}}}}
+        calls, real = [], rh.gh_json
+        try:
+            rh.gh_json = lambda args, **k: calls.append(args) or page
+            out = io.StringIO()
+            self.assertEqual(rh.set_priorities(True, SECTIONS, out), 2)
+            self.assertEqual(len(calls), 1)
+            self.assertIn("#1: P3 -> P1", out.getvalue())
+            self.assertIn("#5: none -> P3", out.getvalue())
+            calls.clear()
+            rh.set_priorities(False, SECTIONS, io.StringIO())
+            self.assertEqual([c[-1] for c in calls[1:]], ["o=o1", "o=o3"])
+        finally:
+            rh.gh_json = real
 
 
 if __name__ == "__main__":
