@@ -20,16 +20,19 @@ package com.rdk.hal.deviceinfo;
 import com.rdk.hal.deviceinfo.PropertyType;
 
 /**
- * @brief Property definition for DeviceInfo HAL.
- * Each property includes type, size, and zero-termination info for validation.
+ * @brief A DeviceInfo property's value, with the metadata to validate it.
+ * Returned by IDeviceInfo.getProperty() for the key the caller asked for.
  */
 @VintfStability
 parcelable Property {
-    /** Property key string (e.g., "MANUFACTURER") */
-    @utf8InCpp String key;
-    /** Data type, defined by PropertyType enum (see PropertyType.aidl) */
+    /**
+     * The property's value, formatted as `type` defines
+     * (e.g. "RDK Inc." for MANUFACTURER).
+     */
+    @utf8InCpp String value;
+    /** Data type of `value`, defined by PropertyType enum (see PropertyType.aidl) */
     PropertyType type;
-    /** Maximum size in bytes */
+    /** Maximum size of `value` in bytes */
     int sizeInBytes;
     /** True if value is zero-terminated */
     boolean zeroTerminated;
