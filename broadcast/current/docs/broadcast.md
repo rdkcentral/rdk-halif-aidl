@@ -102,6 +102,7 @@ Comments column names the interface element or capability field against which it
 | **HAL.BROADCAST.35** | `createSoftwareInput()` shall throw `EX_UNSUPPORTED_OPERATION` on a demultiplexer that reports `acceptsDataFromSoftware` as false. | |
 | **HAL.BROADCAST.36** | A software-input ID shall remain valid while no client holds the interface, and shall be invalidated only by `destroySoftwareInput()`. | Creation, acquisition and destruction are distinct stages. |
 | **HAL.BROADCAST.37** | `destroySoftwareInput()` shall throw `EX_ILLEGAL_STATE` while the input is still acquired. | |
+| **HAL.BROADCAST.42** | `destroySoftwareInput()` shall throw `EX_ILLEGAL_ARGUMENT` when the caller is not the client that created the input, the client whose token was passed to `createSoftwareInput()`. | Holding or guessing another client's ID does not let a client destroy its input. |
 | **HAL.BROADCAST.38** | Data written through a software input shall be processed by the demultiplexer's filters as if received from a hardware source. | |
 | **HAL.BROADCAST.39** | The ring buffer returned by `openForWriting()` shall be non-overflowing: when full, the producer's `acquire()` shall return `null` rather than overwrite unread data. | Back-pressure, not data loss; a replayed stream must not be corrupted. |
 
