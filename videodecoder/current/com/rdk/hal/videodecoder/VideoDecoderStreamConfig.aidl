@@ -18,6 +18,7 @@
  */
 package com.rdk.hal.videodecoder;
 
+import com.rdk.hal.videodecoder.BitstreamFormat;
 import com.rdk.hal.videodecoder.Colorimetry;
 import com.rdk.hal.videodecoder.ContentLightLevel;
 import com.rdk.hal.videodecoder.DolbyVisionLayerFlags;
@@ -115,4 +116,26 @@ parcelable VideoDecoderStreamConfig {
      * null = leave existing Dolby Vision layer hint unchanged.
      */
     @nullable DolbyVisionLayerFlags dolbyVisionLayerFlags;
+
+    /**
+     * H.264/H.265 input layout of the buffers that will be passed to
+     * `decodeBufferWithMetadata()`.
+     * null = leave unchanged; until first set, the decoder uses its
+     * pre-0.3.1.0 (vendor default) behaviour.
+     *
+     * This is binding configuration, not a hint: the "bitstream wins"
+     * precedence rule does not apply.
+     *
+     * Validation: MUST be one of the pairs in
+     * `CodecCapabilities.supportedBitstreamFormats` for the open codec;
+     * otherwise `setStreamConfig()` fails with `EX_ILLEGAL_ARGUMENT`.
+     *
+     * A client sets this field only when that list is non-empty. A
+     * non-empty list proves the server is 0.3.1.0 or later; a server older
+     * than 0.3.1.0 would skip the field without reporting an error.
+     *
+     * @since 0.3.1.0
+     * @see BitstreamFormat, CodecCapabilities.supportedBitstreamFormats
+     */
+    @nullable BitstreamFormat bitstreamFormat;
 }
