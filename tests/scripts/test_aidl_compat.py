@@ -116,6 +116,19 @@ class ChangeClass(unittest.TestCase):
         self.assertClass({"P": PARCEL % "int a;", "helper.h": old},
                          {"P": PARCEL % "int a;", "helper.h": new}, "major")
 
+    def test_hand_header_unnamed_struct_member_made_private_is_major(self):
+        # An unnamed struct body starts public, whatever access encloses it.
+        body = ("class IHelper\n{\n    typedef struct {\n        %sint value;\n    } Data;\n"
+                "public:\n    Data data;\n};\n")
+        self.assertClass({"P": PARCEL % "int a;", "helper.h": body % ""},
+                         {"P": PARCEL % "int a;", "helper.h": body % "private:\n        "}, "major")
+
+    def test_first_constant_on_interface_is_minor(self):
+        # aidl writes the first constant as an inline enum, whose closing
+        # brace sits on the constant itself.
+        self.assertClass({"I": IFACE % "void f();"},
+                         {"I": IFACE % "const int ADDED = 1;\n    void f();"}, "minor")
+
     def test_hand_header_label_repeated_is_none(self):
         # Every member keeps its access; only where public: is written
         # changes.

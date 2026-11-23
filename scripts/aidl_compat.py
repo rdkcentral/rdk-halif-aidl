@@ -237,7 +237,9 @@ def declarations(path):
     return _with_access(parts)
 
 
-_CLASS_HEAD = re.compile(r"(?:^|[\s>])(class|struct)\s+[A-Za-z_][\w:]*[^;{]*\{$")
+# A class or struct head, named or not (typedef struct { ... } Data;), and
+# not a function whose parameter list names a struct.
+_CLASS_HEAD = re.compile(r"(?:^|[\s>])(class|struct)\b[^;{()]*\{$")
 
 
 def _with_access(parts):
@@ -270,6 +272,12 @@ def _with_access(parts):
         if not decl.endswith(("{", ";", "}")):
             continue
         whole, stmt = " ".join(stmt), []
+        if decl.endswith("}"):
+            # The last item of a brace list with no trailing comma carries
+            # the closing brace (enum : int32_t { ADDED = 1 }).
+            if len(scopes) > 1:
+                scopes.pop()
+            continue
         if decl.endswith("{"):
             head = _CLASS_HEAD.search(whole)
             if head and not re.search(r"\benum\s+(?:class|struct)\b", whole):
