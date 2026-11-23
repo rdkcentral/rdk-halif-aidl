@@ -223,16 +223,52 @@ def declarations(path):
     text = _strip_block(text, r"constexpr\s+inline\s+std::array<[^=]*=\s*\{")
     text = _strip_block(text, r"inline\s+bool\s+operator\s*(?:==|!=|<=|>=|<|>)\s*\([^)]*\)\s*const\s*\{")
     text = _strip_block(text, r"inline\s+std::string\s+toString\s*\(\s*\)\s*const\s*\{")
-    # Access labels group members; where aidl writes one moves when a
-    # parcelable gains its first field, which must not read as a change.
-    text = re.sub(r"\b(?:public|protected|private)\s*:(?!:)", " ", text)
+    # An access label is kept as a marker and applied to each declaration
+    # below it, not compared where it is written: aidl moves its public:
+    # when a parcelable gains its first field, which must not read as a
+    # change, while public: becoming private: in a hand-authored header must.
+    text = re.sub(r"\b(public|protected|private)\s*:(?!:)",
+                  lambda m: " \x00%s\x00 " % m.group(1), text)
     text = re.sub(r"\s+", " ", text)
     text = re.sub(r" (?=[;,)])", "", text)
     # Commas split too: an enum body and a template argument list are one
     # statement, and a single added value must not read as a rewrite.
     parts = re.split(r"(?<=[;{},])", text)
-    return [p.strip().rstrip(",").strip() for p in parts
-            if p.strip().rstrip(",").strip() not in ("", "{", "}", "};", ";")]
+    return _with_access(parts)
+
+
+_CLASS_HEAD = re.compile(r"(?:^|[\s>])(class|struct)\s+[A-Za-z_][\w:]*[^;{]*\{$")
+
+
+def _with_access(parts):
+    """Prefix each declaration inside a class or struct with its access, as
+    "[public] ...". A class body starts private and a struct body public; a
+    label switches the access of the body it is written in. Other braces (a
+    namespace, an enum, a function body) inherit the access around them."""
+    out, scopes = [], [None]
+    for part in parts:
+        while "\x00" in part:
+            m = re.search(r"\x00(\w+)\x00", part)
+            if scopes[-1] is not None:
+                scopes[-1] = m.group(1)
+            part = part[:m.start()] + part[m.end():]
+        decl = part.strip().rstrip(",").strip()
+        if decl in ("}", "};"):
+            if len(scopes) > 1:
+                scopes.pop()
+            continue
+        if decl in ("", "{", ";"):
+            if decl == "{":
+                scopes.append(scopes[-1])
+            continue
+        out.append(decl if scopes[-1] is None else "[%s] %s" % (scopes[-1], decl))
+        if decl.endswith("{"):
+            head = _CLASS_HEAD.search(decl)
+            if head and not re.search(r"\benum\s+(?:class|struct)\b", decl):
+                scopes.append("private" if head.group(1) == "class" else "public")
+            else:
+                scopes.append(scopes[-1])
+    return out
 
 
 def _short(decl, limit=110):
