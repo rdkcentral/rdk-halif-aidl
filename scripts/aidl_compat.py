@@ -246,6 +246,8 @@ def _with_access(parts):
     label switches the access of the body it is written in. Other braces (a
     namespace, an enum, a function body) inherit the access around them."""
     out, scopes = [], [None]
+    stmt = []   # pieces of the statement so far: a class head with several
+                # bases, or a template argument list, is split at its commas
     for part in parts:
         while "\x00" in part:
             m = re.search(r"\x00(\w+)\x00", part)
@@ -254,17 +256,23 @@ def _with_access(parts):
             part = part[:m.start()] + part[m.end():]
         decl = part.strip().rstrip(",").strip()
         if decl in ("}", "};"):
+            stmt = []
             if len(scopes) > 1:
                 scopes.pop()
             continue
         if decl in ("", "{", ";"):
             if decl == "{":
+                stmt = []
                 scopes.append(scopes[-1])
             continue
         out.append(decl if scopes[-1] is None else "[%s] %s" % (scopes[-1], decl))
+        stmt.append(decl)
+        if not decl.endswith(("{", ";", "}")):
+            continue
+        whole, stmt = " ".join(stmt), []
         if decl.endswith("{"):
-            head = _CLASS_HEAD.search(decl)
-            if head and not re.search(r"\benum\s+(?:class|struct)\b", decl):
+            head = _CLASS_HEAD.search(whole)
+            if head and not re.search(r"\benum\s+(?:class|struct)\b", whole):
                 scopes.append("private" if head.group(1) == "class" else "public")
             else:
                 scopes.append(scopes[-1])

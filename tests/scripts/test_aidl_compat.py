@@ -107,6 +107,15 @@ class ChangeClass(unittest.TestCase):
         self.assertClass({"P": PARCEL % "int a;", "helper.h": HELPER % "public"},
                          {"P": PARCEL % "int a;", "helper.h": HELPER % "private"}, "major")
 
+    def test_hand_header_member_made_private_with_two_bases_is_major(self):
+        # The class head is split at the comma between its bases; it must
+        # still open a class scope.
+        bases = "class IHelper : public Base1, public Base2"
+        old = "struct Base1 {};\nstruct Base2 {};\n" + (HELPER % "public").replace("class IHelper", bases)
+        new = "struct Base1 {};\nstruct Base2 {};\n" + (HELPER % "private").replace("class IHelper", bases)
+        self.assertClass({"P": PARCEL % "int a;", "helper.h": old},
+                         {"P": PARCEL % "int a;", "helper.h": new}, "major")
+
     def test_hand_header_label_repeated_is_none(self):
         # Every member keeps its access; only where public: is written
         # changes.
