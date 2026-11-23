@@ -500,22 +500,22 @@ def wiki_git():
     return ["git", "-c", "credential.helper=", "-c", "credential.helper=" + helper]
 
 
-def publish(page):
+def publish(page, name=WIKI_PAGE, message="Update release heatmap"):
     """Commit the page to the wiki repo; a no-op when nothing changed."""
     git = wiki_git()
     with tempfile.TemporaryDirectory() as tmp:
         wiki = os.path.join(tmp, "wiki")
         subprocess.run(git + ["clone", "-q", "--depth", "1",
                         "https://github.com/%s.wiki.git" % REPO, wiki], check=True)
-        with open(os.path.join(wiki, WIKI_PAGE + ".md"), "w") as fh:
+        with open(os.path.join(wiki, name + ".md"), "w") as fh:
             fh.write(page)
-        subprocess.run(["git", "-C", wiki, "add", WIKI_PAGE + ".md"], check=True)
+        subprocess.run(["git", "-C", wiki, "add", name + ".md"], check=True)
         if subprocess.run(["git", "-C", wiki, "diff", "--cached", "--quiet"]).returncode == 0:
-            print("wiki: %s unchanged" % WIKI_PAGE)
+            print("wiki: %s unchanged" % name)
             return
-        subprocess.run(["git", "-C", wiki, "commit", "-q", "-m", "Update release heatmap"], check=True)
+        subprocess.run(["git", "-C", wiki, "commit", "-q", "-m", message], check=True)
         subprocess.run(git + ["-C", wiki, "push", "-q"], check=True)
-        print("wiki: https://github.com/%s/wiki/%s" % (REPO, WIKI_PAGE))
+        print("wiki: https://github.com/%s/wiki/%s" % (REPO, name))
 
 
 def parse_args(argv):
