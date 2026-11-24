@@ -362,7 +362,7 @@ class Priorities(unittest.TestCase):
     def test_set_priorities_dry_run_changes_nothing(self):
         def node(n, labels, prio=None, state="OPEN", repo=rh.REPO):
             return {"id": "I%d" % n, "fieldValueByName": {"name": prio} if prio else None,
-                    "content": {"number": n, "state": state, "repository": {"nameWithOwner": repo},
+                    "content": {"number": n, "itemState": state, "repository": {"nameWithOwner": repo},
                                 "labels": {"nodes": [{"name": l} for l in labels]}}}
         page = {"data": {"organization": {"projectV2": {
             "id": "P", "field": {"id": "F", "options": [{"id": "o1", "name": "P1 - High"},
@@ -388,3 +388,98 @@ class Priorities(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+def _meta(root, d, version):
+    os.makedirs(os.path.join(root, d), exist_ok=True)
+    with open(os.path.join(root, d, "metadata.yaml"), "w") as fh:
+        fh.write("component: %s\nversion: %s\nstatus: GREEN\n" % (d, version))
+
+
+class Settling(unittest.TestCase):
+
+    HISTORY = {"tags": ["0.21.0", "0.22.0", "0.23.0"],
+               "versions": {"drm": {"0.21.0": "0.1.0.0", "0.22.0": "0.1.0.0", "0.23.0": "0.2.0.0"},
+                            "videosink": {"0.21.0": "0.2.0.0", "0.22.0": "0.2.1.0", "0.23.0": "0.3.0.0"},
+                            "panel": {"0.22.0": "0.1.0.0", "0.23.0": "0.1.0.0"}}}
+
+    def test_step_reads_a_generation_bump_as_breaking(self):
+        self.assertEqual(rh.step("0.2.0.0", "0.3.0.0"), "**B**")
+        self.assertEqual(rh.step("0.2.0.0", "0.2.1.0"), "m")
+        self.assertEqual(rh.step("0.2.0.0", "0.2.0.0"), "·")
+        self.assertEqual((rh.step(None, "0.1.0.0"), rh.step(None, None)), ("new", ""))
+
+    def test_compatible_from_follows_the_last_breaking_milestone(self):
+        self.assertEqual(rh.compatible_from("0.3.0.0", {}), "now")
+        self.assertEqual(rh.compatible_from("0.3.0.0", {"0.25.0": [], "0.24.0": []}), "after 0.25.0")
+        self.assertEqual(rh.compatible_from("0.3.0.0", {rh.NO_MILESTONE: []}),
+                         "unknown: breaking work with no milestone")
+        self.assertEqual(rh.compatible_from("0.0.0.1", {}), "not defined yet")
+        self.assertEqual(rh.compatible_from(None, {}), "not released yet")
+
+    def test_settling_leaves_out_removed_components_and_lists_repo_wide_breaks(self):
+        history = {"tags": ["0.21.0", "0.22.0"],
+                   "versions": {"drm": {"0.21.0": "0.1.0.0", "0.22.0": "0.1.0.0"},
+                                "flash": {"0.21.0": "0.1.0.0"}}}
+        wide = rh.classify(issue(500, labels=["scope:overview"], milestone="0.24.0 - Next", effect="Major"),
+                           set(), "2026-11-03", None)
+        secs = [{"priority": "P1", "title": "P1", "about": "", "rows": [
+            {"name": None, "row": "drm"}, {"name": None, "row": "flash"}]}]
+        page = rh.render([wide], [{"title": "0.24.0 - Next", "due": None}], "now", sections=secs,
+                         root=EMPTY, history=history)
+        settling = page.split("## Settling")[1]
+        self.assertIn("| drm | · | 0.1.0.0 | · | now |", settling)
+        self.assertNotIn("| flash |", settling)
+        self.assertIn("Breaking work on no single component, so on every one it reaches: [#500](u500) (0.24.0).",
+                      settling)
+
+    def test_settling_counts_breaking_work_on_every_component_of_a_ticket(self):
+        # #5 is shown in the Video Sink row, but it is breaking work for Panel too.
+        t = rh.classify(issue(5, labels=["component:panel", "component:videosink"], milestone="0.24.0",
+                              effect="Major"), set(), "2026-11-03", None)
+        minor = rh.classify(issue(6, labels=["component:drm"], milestone="0.25.0", effect="Minor"),
+                            set(), "2026-11-03", None)
+        page = rh.render([t, minor], [{"title": "0.24.0", "due": None}, {"title": "0.25.0", "due": None}],
+                         "now", sections=SECTIONS, root=EMPTY, history=self.HISTORY)
+        settling = page.split("## Settling")[1]
+        self.assertIn("| Component | →0.22.0 | →0.23.0 | In 0.23.0 | Breaking work open | Compatible-only |",
+                      settling)
+        self.assertIn("| DRM | · | **B** | 0.2.0.0 | · | now |", settling)
+        self.assertIn("| Video Sink | m | **B** | 0.3.0.0 | 0.24.0: [#5](u5) | after 0.24.0 |", settling)
+        self.assertIn("| Panel | new | · | 0.1.0.0 | 0.24.0: [#5](u5) | after 0.24.0 |", settling)
+        self.assertNotIn("(documentation)", settling)
+
+    def test_no_settling_section_without_release_history(self):
+        self.assertNotIn("## Settling", rh.render([], [], "now", sections=SECTIONS, root=EMPTY))
+
+    def test_release_history_reads_each_tag(self):
+        root = tempfile.mkdtemp()
+        git = lambda *a: rh.subprocess.run(["git", "-C", root, "-c", "user.name=t", "-c", "user.email=t@t"] + list(a),
+                                           check=True, capture_output=True)
+        git("init", "-q")
+        for tag, v in (("0.1.0", "0.1.0.0"), ("0.2.0", "0.2.0.0")):
+            _meta(root, "sensor", v)
+            _meta(root, "vsi/wifi", "0.0.0.1")
+            git("add", "-A"); git("commit", "-qm", tag); git("tag", tag)
+        git("tag", "not-a-release")
+        h = rh.release_history(root)
+        self.assertEqual(h["tags"], ["0.1.0", "0.2.0"])
+        self.assertEqual(h["versions"]["motion_sensor"], {"0.1.0": "0.1.0.0", "0.2.0": "0.2.0.0"})
+        self.assertEqual(h["versions"]["thermal_sensor"]["0.2.0"], "0.2.0.0")
+        self.assertEqual(h["versions"]["vsi/wifi"]["0.2.0"], "0.0.0.1")
+        self.assertIsNone(rh.release_history(EMPTY))
+
+    def test_nested_and_shared_component_directories(self):
+        root = tempfile.mkdtemp()
+        for d in ("sensor", "vsi/wifi", "vsi/kernel", "bootreason", "drm"):
+            _meta(root, d, "0.1.0.0")
+        self.assertEqual(rh.all_components(root, ["component:motion_sensor"]),
+                         ["boot", "drm", "motion_sensor", "thermal_sensor", "vsi/kernel", "vsi/wifi"])
+        self.assertEqual(rh.version_of("thermal_sensor", root), "0.1.0.0")
+        self.assertEqual(rh.version_of("vsi/wifi", root), "0.1.0.0")
+
+    def test_priority_query_aliases_the_two_state_types(self):
+        # Issue.state and PullRequest.state are different enum types; one response name
+        # for both is a GraphQL field conflict.
+        self.assertEqual(rh.PRIORITY_ITEMS.count("itemState: state"), 2)
+        self.assertNotIn("number state", rh.PRIORITY_ITEMS)

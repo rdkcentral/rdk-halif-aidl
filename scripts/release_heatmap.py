@@ -89,7 +89,7 @@ UNPRIORITISED = {"priority": None, "title": "Not yet prioritised", "rows": [],
                  "about": "Components with no row in the [component priority list](https://github.com/%s/"
                           "blob/develop/docs/governance/component-priority.md)." % REPO}
 # A component label whose directory has another name.
-DIR_OF = {"boot": "bootreason"}
+DIR_OF = {"boot": "bootreason", "motion_sensor": "sensor", "thermal_sensor": "sensor"}
 
 
 TRANSIENT = re.compile(r"HTTP 50[234]")
@@ -299,11 +299,17 @@ def version_of(row, root=ROOT):
 
 
 def all_components(root=ROOT, labels=()):
-    """Every component: its component:* labels and every directory with a metadata.yaml."""
-    dirs = {d for d in os.listdir(root) if os.path.exists(os.path.join(root, d, "metadata.yaml"))}
+    """Every component: its component:* labels and every directory, at any depth, with a
+    metadata.yaml. A directory named by DIR_OF appears under its label names instead."""
+    dirs = set()
+    for here, subdirs, files in os.walk(root):
+        subdirs[:] = [d for d in subdirs if not d.startswith(".") and d not in ("build-tools", "node_modules")]
+        if "metadata.yaml" in files and here != root:
+            dirs.add(os.path.relpath(here, root).replace(os.sep, "/"))
+            subdirs[:] = []
     names = {l[len("component:"):] for l in labels if l.startswith("component:")}
-    back = {v: k for k, v in DIR_OF.items()}
-    return sorted(names | {back.get(d, d) for d in dirs})
+    aliased = set(DIR_OF.values())
+    return sorted(names | {d for d in dirs if d not in aliased} | {n for n, d in DIR_OF.items() if d in dirs})
 
 
 def fetch_labels():
@@ -460,6 +466,101 @@ def column_heading(title, due):
     return "%s<br>%s" % (title, "due %s" % due[:10] if due else "no date")
 
 
+RELEASE_TAG = re.compile(r"^\d+\.\d+\.\d+$")
+
+
+def _git(root, *args):
+    r = subprocess.run(["git", "-C", root] + list(args), capture_output=True, text=True)
+    return r.stdout if r.returncode == 0 else ""
+
+
+def release_history(root=ROOT, count=4):
+    """The last `count` releases and the one before them, oldest first, with each component's
+    version at each: {"tags": [...], "versions": {row: {tag: version}}}. None when the checkout
+    has fewer than two release tags (a shallow clone has none)."""
+    tags = sorted((t for t in _git(root, "tag").split() if RELEASE_TAG.match(t)), key=version_key)
+    tags = tags[-(count + 1):]
+    if len(tags) < 2:
+        return None
+    versions = {}
+    for tag in tags:
+        for path in _git(root, "ls-tree", "-r", "--name-only", tag).split():
+            if not path.endswith("/metadata.yaml"):
+                continue
+            m = re.search(r"^version:\s*(\S+)", _git(root, "show", "%s:%s" % (tag, path)), re.M)
+            d = path[:-len("/metadata.yaml")]
+            for row in [n for n, x in DIR_OF.items() if x == d] or [d]:
+                if m:
+                    versions.setdefault(row, {})[tag] = m.group(1)
+    return {"tags": tags, "versions": versions}
+
+
+def step(old, new):
+    """What a release did to a version: B a generation bump (an ABI break), m a minor or patch
+    bump, · nothing, new the first release with the component, blank before it."""
+    if not new:
+        return ""
+    if not old:
+        return "new"
+    if old.split(".")[1] != new.split(".")[1]:
+        return "**B**"
+    return "m" if old != new else "·"
+
+
+def compatible_from(released, breaking):
+    """When a component takes only backwards-compatible changes: after the last milestone that
+    holds breaking work, now when none does."""
+    if not released:
+        return "not released yet"
+    if released.startswith("0.0."):
+        return "not defined yet"
+    if not breaking:
+        return "now"
+    if NO_MILESTONE in breaking:
+        return "unknown: breaking work with no milestone"
+    return "after %s" % max(breaking, key=version_key).split(" ")[0]
+
+
+def render_settling(tickets, history, groups, root=ROOT):
+    """Per component, in priority order: what each recent release did to its version, the
+    version in the last release, its open breaking tickets and when it can take only
+    backwards-compatible changes."""
+    tags, versions = history["tags"], history["versions"]
+    last = tags[-1]
+    lines = ["", "## Settling", "",
+             "What each release did to a component's version: **B** a generation bump (an ABI "
+             "break), m a minor or patch bump, · nothing. Breaking work is every open Major or "
+             "CR-Major ticket on the component, whichever row it is shown in above. A component "
+             "takes only backwards-compatible changes once its last breaking milestone has shipped.", "",
+             "| Component | " + " | ".join("→" + t for t in tags[1:]) + " | In %s | Breaking work open | "
+             "Compatible-only |" % last,
+             "| --- |" + " --- |" * (len(tags) + 2)]
+    for sec in groups:
+        for r in sec["rows"]:
+            row = r["row"]
+            have = versions.get(row, {})
+            # A component gone from both the last release and develop is no longer one.
+            if row.startswith("(") or not (have.get(last) or version_of(row, root)):
+                continue
+            breaking = {}
+            for t in tickets:
+                if t["effect"] in BREAKING and row in t["components"]:
+                    breaking.setdefault(t["milestone"], []).append(t)
+            work = "<br>".join("%s: %s" % (m.split(" ")[0], " ".join(
+                "[#%d](%s)" % (t["number"], t["url"]) for t in sorted(ts, key=lambda t: t["number"])))
+                for m, ts in sorted(breaking.items(), key=lambda kv: version_key(kv[0]))) or "·"
+            lines.append("| %s | %s | %s | %s | %s |" % (
+                r["name"] or row,
+                " | ".join(step(have.get(a), have.get(b)) for a, b in zip(tags, tags[1:])),
+                have.get(last, "—"), work, compatible_from(have.get(last), breaking)))
+    wide = sorted((t for t in tickets if t["effect"] in BREAKING
+                   and all(c.startswith("(") for c in t["components"])), key=lambda t: t["number"])
+    if wide:
+        lines += ["", "Breaking work on no single component, so on every one it reaches: " + ", ".join(
+            "[#%d](%s) (%s)" % (t["number"], t["url"], t["milestone"].split(" ")[0]) for t in wide) + "."]
+    return lines
+
+
 def shield(label, message, colour):
     # shields.io static badge: "-" and "_" are doubled, everything else URL-encoded.
     q = lambda s: urllib.parse.quote(s.replace("-", "--").replace("_", "__"), safe="")
@@ -531,7 +632,7 @@ def sectioned(tickets, sections, components):
 
 
 def render(tickets, milestones, generated, project_title="halif_aidl", resolved=(), release=None,
-           sections=(), components=(), root=ROOT):
+           sections=(), components=(), root=ROOT, history=None):
     used = {t["milestone"] for t in tickets}
     due = {m["title"]: m["due"] for m in milestones}
     cols = [m["title"] for m in milestones if m["title"] in used]
@@ -569,6 +670,8 @@ def render(tickets, milestones, generated, project_title="halif_aidl", resolved=
         lines.append("| **Tickets** | %s | **%d** |" % (" | ".join(
             "**%d**" % sum(1 for t in in_sec if t["milestone"] == c) for c in cols), len(in_sec)))
 
+    if history:
+        lines += render_settling(tickets, history, groups, root)
     if release:
         names = {r["row"]: r["name"] for sec in groups for r in sec["rows"]}
         lines += render_resolved(resolved, release, rank, names, root)
@@ -605,8 +708,8 @@ query($owner:String!,$number:Int!,$cursor:String){
         id
         fieldValueByName(name:"Priority"){ ... on ProjectV2ItemFieldSingleSelectValue{ name } }
         content{
-          ... on Issue{ number state repository{ nameWithOwner } labels(first:50){ nodes{ name } } }
-          ... on PullRequest{ number state repository{ nameWithOwner } labels(first:50){ nodes{ name } } }
+          ... on Issue{ number itemState: state repository{ nameWithOwner } labels(first:50){ nodes{ name } } }
+          ... on PullRequest{ number itemState: state repository{ nameWithOwner } labels(first:50){ nodes{ name } } }
         }
       }
     }
@@ -657,7 +760,7 @@ def set_priorities(dry_run, sections, out=sys.stdout):
     changed = 0
     for item in items:
         c = item.get("content") or {}
-        if c.get("state") != "OPEN" or (c.get("repository") or {}).get("nameWithOwner") != REPO:
+        if c.get("itemState") != "OPEN" or (c.get("repository") or {}).get("nameWithOwner") != REPO:
             continue
         current = ((item.get("fieldValueByName") or {}).get("name") or "").split(" ")[0] or None
         want = wanted_priority([l["name"] for l in c["labels"]["nodes"]], current, sections)
@@ -729,7 +832,7 @@ def main(argv):
     project = fetch_project()
     page = render(tickets, milestones, now.strftime("%Y-%m-%d %H:%M UTC"),
                   project["title"] or "project %d" % PROJECT_NUMBER, resolved, release,
-                  sections, all_components(labels=fetch_labels()))
+                  sections, all_components(labels=fetch_labels()), history=release_history())
 
     if a.output:
         with open(a.output, "w") as fh:
