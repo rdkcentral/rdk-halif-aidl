@@ -49,6 +49,17 @@ parcelable P {
     %s
 }
 """
+HELPER = """#pragma once
+#include <cstdint>
+class IHelper
+{
+%s:
+    struct Map {
+        uint32_t offset;
+    };
+    virtual ~IHelper() = default;
+};
+"""
 IFACE = """package com.x;
 @VintfStability
 interface I {
@@ -64,10 +75,15 @@ class ChangeClass(unittest.TestCase):
         """aidl_compat.py's result for one component, old -> new sources."""
         with tempfile.TemporaryDirectory() as tmp:
             for side, files in (("old", old), ("new", new)):
-                pkg = os.path.join(tmp, side, "comp", "current", "com", "x")
+                comp = os.path.join(tmp, side, "comp", "current")
+                pkg = os.path.join(comp, "com", "x")
                 os.makedirs(pkg)
                 for name, body in files.items():
-                    with open(os.path.join(pkg, name + ".aidl"), "w") as fh:
+                    # A name ending .h is a hand-authored header at the
+                    # module root; anything else is an .aidl source.
+                    path = (os.path.join(comp, name) if name.endswith(".h")
+                            else os.path.join(pkg, name + ".aidl"))
+                    with open(path, "w") as fh:
                         fh.write(body)
             r = subprocess.run([sys.executable, SCRIPT, "--repo", os.path.join(tmp, "new"),
                                 "--old-repo", os.path.join(tmp, "old"), "--aidl", AIDL,
@@ -83,6 +99,42 @@ class ChangeClass(unittest.TestCase):
     def test_appended_field_is_minor(self):
         self.assertClass({"P": PARCEL % "int a;\n    int b;"},
                          {"P": PARCEL % "int a;\n    int b;\n    int c;"}, "minor")
+
+    def test_first_field_on_empty_parcelable_is_minor(self):
+        self.assertClass({"P": PARCEL % ""}, {"P": PARCEL % "int a;"}, "minor")
+
+    def test_hand_header_member_made_private_is_major(self):
+        self.assertClass({"P": PARCEL % "int a;", "helper.h": HELPER % "public"},
+                         {"P": PARCEL % "int a;", "helper.h": HELPER % "private"}, "major")
+
+    def test_hand_header_member_made_private_with_two_bases_is_major(self):
+        # The class head is split at the comma between its bases; it must
+        # still open a class scope.
+        bases = "class IHelper : public Base1, public Base2"
+        old = "struct Base1 {};\nstruct Base2 {};\n" + (HELPER % "public").replace("class IHelper", bases)
+        new = "struct Base1 {};\nstruct Base2 {};\n" + (HELPER % "private").replace("class IHelper", bases)
+        self.assertClass({"P": PARCEL % "int a;", "helper.h": old},
+                         {"P": PARCEL % "int a;", "helper.h": new}, "major")
+
+    def test_hand_header_unnamed_struct_member_made_private_is_major(self):
+        # An unnamed struct body starts public, whatever access encloses it.
+        body = ("class IHelper\n{\n    typedef struct {\n        %sint value;\n    } Data;\n"
+                "public:\n    Data data;\n};\n")
+        self.assertClass({"P": PARCEL % "int a;", "helper.h": body % ""},
+                         {"P": PARCEL % "int a;", "helper.h": body % "private:\n        "}, "major")
+
+    def test_first_constant_on_interface_is_minor(self):
+        # aidl writes the first constant as an inline enum, whose closing
+        # brace sits on the constant itself.
+        self.assertClass({"I": IFACE % "void f();"},
+                         {"I": IFACE % "const int ADDED = 1;\n    void f();"}, "minor")
+
+    def test_hand_header_label_repeated_is_none(self):
+        # Every member keeps its access; only where public: is written
+        # changes.
+        repeated = (HELPER % "public").replace("    virtual", "public:\n    virtual")
+        self.assertClass({"P": PARCEL % "int a;", "helper.h": HELPER % "public"},
+                         {"P": PARCEL % "int a;", "helper.h": repeated}, "none")
 
     def test_deprecated_enum_value_is_minor(self):
         self.assertClass({"E": ENUM % "M = 1000,"},
