@@ -339,7 +339,8 @@ class Priorities(unittest.TestCase):
         self.assertEqual(rh.row_heading("boot", "Boot", root), "Boot 0.2.1.0")
         self.assertEqual(rh.row_heading("crypto", "Crypto", root), "Crypto")
         self.assertEqual(rh.row_heading("(documentation)", "General documentation", root), "General documentation")
-        self.assertEqual(rh.all_components(root), ["boot", "drm"])
+        self.assertEqual(rh.all_components(root, ["component:crypto", "component:boot", "bug"]),
+                         ["boot", "crypto", "drm"])
 
     def test_column_heading_has_the_due_date(self):
         t = rh.classify(issue(1, labels=["component:drm"], milestone="0.23.1"), set(), "2026-11-03", None)
@@ -526,10 +527,11 @@ class MetadataPriority(unittest.TestCase):
         self.assertIn("| hdmiinput 0.2.0.0 | TV | 0 |", page)
 
     def test_retired_names_are_not_rows(self):
-        # component:cdm is a label with no directory and no tickets; flash shipped as firmwareupdate.
+        # cdm became drm and flash shipped as firmwareupdate; metrics is a label-only component.
         root = tempfile.mkdtemp()
         _meta_fields(root, "firmwareupdate", "0.2.0.1", "P2")
-        self.assertEqual(rh.all_components(root), ["firmwareupdate"])
+        self.assertEqual(rh.all_components(root, ["component:cdm", "component:flash", "component:metrics"]),
+                         ["firmwareupdate", "metrics"])
         git = lambda *a: rh.subprocess.run(["git", "-C", root, "-c", "user.name=t", "-c", "user.email=t@t"] + list(a),
                                            check=True, capture_output=True)
         git("init", "-q")

@@ -94,6 +94,8 @@ UNPRIORITISED = {"priority": None, "title": "Not yet prioritised", "rows": [],
 DIR_OF = {"boot": "bootreason", "motion_sensor": "sensor", "thermal_sensor": "sensor"}
 # A component directory renamed since a release, by its old name: flash shipped as firmwareupdate.
 RENAMED = {"flash": "firmwareupdate"}
+# component:* labels of components that no longer exist: flash is firmwareupdate, cdm became drm.
+RETIRED = {"flash", "cdm"}
 # The device classes in metadata.yaml's devices field, as the heatmap groups them.
 DEVICE_GROUPS = [("stb", "tv"), ("stb",), ("tv",)]
 
@@ -320,19 +322,23 @@ def devices_of(row, root=ROOT):
     return ", ".join(d.upper() for d in metadata(row, root).get("devices", ()))
 
 
-def all_components(root=ROOT):
-    """Every component: every directory, at any depth, with a metadata.yaml. A directory named
-    by DIR_OF appears under its label names instead. A label with no directory is a component
-    only where the priority list names it or a ticket carries it: a retired label such as
-    component:cdm, with neither, is not listed."""
+def all_components(root=ROOT, labels=()):
+    """Every component: each component:* label but the RETIRED ones, and every directory, at any
+    depth, with a metadata.yaml. A directory named by DIR_OF appears under its label names instead."""
     dirs = set()
     for here, subdirs, files in os.walk(root):
         subdirs[:] = [d for d in subdirs if not d.startswith(".") and d not in ("build-tools", "node_modules")]
         if "metadata.yaml" in files and here != root:
             dirs.add(os.path.relpath(here, root).replace(os.sep, "/"))
             subdirs[:] = []
+    names = {l[len("component:"):] for l in labels if l.startswith("component:")} - RETIRED
     aliased = set(DIR_OF.values())
-    return sorted({d for d in dirs if d not in aliased} | {n for n, d in DIR_OF.items() if d in dirs})
+    return sorted(names | {d for d in dirs if d not in aliased} | {n for n, d in DIR_OF.items() if d in dirs})
+
+
+def fetch_labels():
+    pages = gh_json(["api", "--paginate", "--slurp", "repos/%s/labels?per_page=100" % REPO])
+    return [l["name"] for page in pages for l in page]
 
 
 def device_order(row, root=ROOT):
@@ -873,11 +879,11 @@ def parse_args(argv):
 
 def main(argv):
     a = parse_args(argv)
-    components = all_components()
-    sections = with_metadata(read_priorities(), components)
     if a.set_priority:
-        set_priorities(a.dry_run, sections)
+        set_priorities(a.dry_run, with_metadata(read_priorities(), all_components()))
         return 0
+    components = all_components(labels=fetch_labels())
+    sections = with_metadata(read_priorities(), components)
 
     now = datetime.datetime.now(datetime.timezone.utc)
     today = now.strftime("%Y-%m-%d")
