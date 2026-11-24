@@ -25,6 +25,7 @@
 # priority    - Delivery priority: P1, P2 or P3; ~ when not yet set       [manual]
 #               (docs/governance/component-priority.md)
 # devices     - Device classes that use it: stb, tv                       [manual]
+# labels      - GitHub labels for it, when not component:<directory>      [manual]
 component: kernel
 version: 0.0.0.1
 status: AMBER

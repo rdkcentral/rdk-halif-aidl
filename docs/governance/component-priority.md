@@ -4,9 +4,10 @@ The order in which HAL components are worked on, set by the core IP set-top-box 
 
 ## Where the priority is kept
 
+- A component is a directory with a `metadata.yaml`. Its tickets are those carrying `component:<directory>`, or the labels its `labels` field names instead (Boot's is `component:boot`, Sensor's are `component:motion_sensor` and `component:thermal_sensor`).
 - Each component's `metadata.yaml` holds its `priority` (`P1`, `P2`, `P3`, or `~` when not yet set) and its `devices` (`stb`, `tv`, or both). The scripts read them from there; this page gives the reasons.
 - A component with a `metadata.yaml` must carry the same priority here and there: `tests/scripts/test_release_heatmap.py` fails when they differ. Change both in the same PR.
-- Rows here with no directory, such as Crypto, and the documentation and infrastructure rows, take their priority from this page alone.
+- Rows here with no directory, such as Crypto, are not components yet: they appear on the heatmap only while a ticket carries their label. They, and the documentation and infrastructure rows, take their priority from this page alone.
 - Within each priority, the heatmap lists the components used on both STB and TV first, then STB only, then TV only.
 
 ## How a ticket gets its priority
@@ -35,8 +36,7 @@ Components and changes needed for core IP set-top-box functionality, particularl
 | Indicator | `component:indicator` | P1 | — |
 | Plane Control | `component:planecontrol` | P1 | Graphics and video plane composition for HDMI output. |
 | Ring Buffer | `component:ringbuffer` | P1 | — |
-| Motion Sensor | `component:motion_sensor` | P1 | Shares `sensor/` with Thermal Sensor. |
-| Thermal Sensor | `component:thermal_sensor` | P1 | Shares `sensor/` with Motion Sensor. |
+| Sensor (Motion, Thermal) | `component:motion_sensor` `component:thermal_sensor` | P1 | — |
 | Video Decoder | `component:videodecoder` | P1* | Important to the core delivery. |
 | Video Sink | `component:videosink` | P1 | Video output rendering for HDMI output. |
 

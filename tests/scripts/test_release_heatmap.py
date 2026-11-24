@@ -307,7 +307,7 @@ class Priorities(unittest.TestCase):
         self.assertEqual([s["priority"] for s in secs], ["P1", "P2", "P3"])
         rank = rh.rank_of(secs)
         self.assertEqual((rank["drm"], rank["avclock"], rank["hdmioutput"]), (1, 1, 1))
-        self.assertEqual((rank["boot"], rank["vsi/abstractfilesystem"]), (2, 2))
+        self.assertEqual((rank["bootreason"], rank["vsi/abstractfilesystem"], rank["sensor"]), (2, 2, 1))
         self.assertEqual((rank["panel"], rank["(documentation)"], rank["(infrastructure)"]), (3, 3, 3))
         self.assertTrue(all(s["about"] for s in secs))
         # The HAL architecture documentation row has no label, so it is no heatmap row.
@@ -336,11 +336,12 @@ class Priorities(unittest.TestCase):
             with open(os.path.join(root, d, "metadata.yaml"), "w") as fh:
                 fh.write("component: %s\nversion: %s\nstatus: GREEN\n" % (d, v))
         self.assertEqual(rh.row_heading("drm", "DRM", root), "DRM 0.2.0.0")
-        self.assertEqual(rh.row_heading("boot", "Boot", root), "Boot 0.2.1.0")
+        self.assertEqual(rh.row_heading("bootreason", "Boot", root), "Boot 0.2.1.0")
         self.assertEqual(rh.row_heading("crypto", "Crypto", root), "Crypto")
         self.assertEqual(rh.row_heading("(documentation)", "General documentation", root), "General documentation")
+        # With metadata.yaml in the repo, a label is not a component on its own.
         self.assertEqual(rh.all_components(root, ["component:crypto", "component:boot", "bug"]),
-                         ["boot", "crypto", "drm"])
+                         ["bootreason", "drm"])
 
     def test_column_heading_has_the_due_date(self):
         t = rh.classify(issue(1, labels=["component:drm"], milestone="0.23.1"), set(), "2026-11-03", None)
@@ -470,8 +471,7 @@ class Settling(unittest.TestCase):
         git("tag", "not-a-release")
         h = rh.release_history(root)
         self.assertEqual(h["tags"], ["0.1.0", "0.2.0"])
-        self.assertEqual(h["versions"]["motion_sensor"], {"0.1.0": "0.1.0.0", "0.2.0": "0.2.0.0"})
-        self.assertEqual(h["versions"]["thermal_sensor"]["0.2.0"], "0.2.0.0")
+        self.assertEqual(h["versions"]["sensor"], {"0.1.0": "0.1.0.0", "0.2.0": "0.2.0.0"})
         self.assertEqual(h["versions"]["vsi/wifi"]["0.2.0"], "0.0.0.1")
         self.assertIsNone(rh.release_history(EMPTY))
 
@@ -479,9 +479,8 @@ class Settling(unittest.TestCase):
         root = tempfile.mkdtemp()
         for d in ("sensor", "vsi/wifi", "vsi/kernel", "bootreason", "drm"):
             _meta(root, d, "0.1.0.0")
-        self.assertEqual(rh.all_components(root),
-                         ["boot", "drm", "motion_sensor", "thermal_sensor", "vsi/kernel", "vsi/wifi"])
-        self.assertEqual(rh.version_of("thermal_sensor", root), "0.1.0.0")
+        self.assertEqual(rh.all_components(root), ["bootreason", "drm", "sensor", "vsi/kernel", "vsi/wifi"])
+        self.assertEqual(rh.version_of("sensor", root), "0.1.0.0")
         self.assertEqual(rh.version_of("vsi/wifi", root), "0.1.0.0")
 
     def test_priority_query_aliases_the_two_state_types(self):
@@ -530,8 +529,10 @@ class MetadataPriority(unittest.TestCase):
         # cdm became drm, flash shipped as firmwareupdate, factory was dropped; metrics is label-only.
         root = tempfile.mkdtemp()
         _meta_fields(root, "firmwareupdate", "0.2.0.1", "P2")
-        self.assertEqual(rh.all_components(root, ["component:cdm", "component:flash", "component:factory", "component:metrics"]),
-                         ["firmwareupdate", "metrics"])
+        labels = ["component:cdm", "component:flash", "component:factory", "component:metrics"]
+        self.assertEqual(rh.all_components(root, labels), ["firmwareupdate"])
+        # A repo with no metadata.yaml (linux_binder_idl) has its labels, less the retired ones.
+        self.assertEqual(rh.all_components(EMPTY, labels), ["metrics"])
         git = lambda *a: rh.subprocess.run(["git", "-C", root, "-c", "user.name=t", "-c", "user.email=t@t"] + list(a),
                                            check=True, capture_output=True)
         git("init", "-q")
@@ -541,6 +542,21 @@ class MetadataPriority(unittest.TestCase):
         git("add", "-A"); git("commit", "-qm", "b"); git("tag", "0.21.0")
         h = rh.release_history(root)
         self.assertEqual(h["versions"], {"firmwareupdate": {"0.20.0": "0.2.0.1", "0.21.0": "0.2.0.1"}})
+
+    def test_labels_point_tickets_at_their_component(self):
+        root = tempfile.mkdtemp()
+        _meta_fields(root, "drm", "0.2.0.0", "P1")
+        _meta_fields(root, "sensor", "0.3.0.0", "P1")
+        with open(os.path.join(root, "sensor", "metadata.yaml"), "a") as fh:
+            fh.write("labels: [component:motion_sensor, component:thermal_sensor]\n")
+        dirs = rh.label_map(root)
+        self.assertEqual(dirs, {"drm": "drm", "motion_sensor": "sensor", "thermal_sensor": "sensor"})
+        self.assertEqual(rh.row_name("component:thermal_sensor", dirs), "sensor")
+        self.assertEqual(rh.row_name("component:metrics", dirs), "metrics")   # claimed by none
+        # The repo's own: one ticket on both sensor labels is one sensor ticket.
+        t = rh.classify(issue(7, labels=["component:motion_sensor", "component:thermal_sensor", "component:boot"]),
+                        set(), "2026-11-03", None)
+        self.assertEqual(t["components"], ["bootreason", "sensor"])
 
     def test_priority_list_agrees_with_metadata(self):
         # The list names a component's priority for people; its metadata.yaml sets it for the

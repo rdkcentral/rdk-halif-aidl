@@ -90,10 +90,9 @@ REPO_WIDE = [("scope:infrastructure", "(infrastructure)"), ("scope:overview", "(
 UNPRIORITISED = {"priority": None, "title": "Not yet prioritised", "rows": [],
                  "about": "Components with no row in the [component priority list](https://github.com/%s/"
                           "blob/develop/docs/governance/component-priority.md)." % REPO}
-# A component label whose directory has another name.
-DIR_OF = {"boot": "bootreason", "motion_sensor": "sensor", "thermal_sensor": "sensor"}
-# A component directory renamed since a release, by its old name: flash shipped as firmwareupdate.
-RENAMED = {"flash": "firmwareupdate"}
+# A component directory renamed since a release, by its old name: flash shipped as
+# firmwareupdate, boot as bootreason.
+RENAMED = {"flash": "firmwareupdate", "boot": "bootreason"}
 # component:* labels of components that no longer exist: flash is firmwareupdate, cdm became drm,
 # and factory was dropped. Not rows even while an old ticket still carries the label.
 RETIRED = {"flash", "cdm", "factory"}
@@ -263,10 +262,43 @@ def fetch_project():
     return ((data["data"].get("organization") or {}).get("projectV2")) or {"title": None, "public": False}
 
 
-def row_name(label):
-    """The heatmap row of a label: the component, or the bracketed repo-wide row."""
+def metadata_dirs(root=ROOT):
+    """Every directory, at any depth, with a metadata.yaml: the repo's components."""
+    dirs = set()
+    for here, subdirs, files in os.walk(root):
+        subdirs[:] = [d for d in subdirs if not d.startswith(".") and d not in ("build-tools", "node_modules")]
+        if "metadata.yaml" in files and here != root:
+            dirs.add(os.path.relpath(here, root).replace(os.sep, "/"))
+            subdirs[:] = []
+    return dirs
+
+
+def _labels_field(path):
+    with open(path) as fh:
+        m = re.search(r"^labels:[ \t]*\[(.*)\]", fh.read(), re.M)
+    return [l.strip() for l in m.group(1).split(",") if l.strip()] if m else []
+
+
+def label_map(root=ROOT):
+    """{component label name: component directory}. A component's labels are component:<its
+    directory>, unless its metadata.yaml names others in its labels field (bootreason's is
+    component:boot; sensor's are component:motion_sensor and component:thermal_sensor)."""
+    out = {}
+    for d in metadata_dirs(root):
+        for label in _labels_field(os.path.join(root, d, "metadata.yaml")) or ["component:" + d]:
+            out[label[len("component:"):] if label.startswith("component:") else label] = d
+    return out
+
+
+LABEL_DIRS = label_map()
+
+
+def row_name(label, dirs=None):
+    """The heatmap row of a label: the component directory it names, or the bracketed
+    repo-wide row. A label no metadata.yaml claims is its own row."""
     if label.startswith("component:"):
-        return label[len("component:"):]
+        name = label[len("component:"):]
+        return (LABEL_DIRS if dirs is None else dirs).get(name, name)
     return dict(REPO_WIDE).get(label, label)
 
 
@@ -286,8 +318,8 @@ def read_priorities(path=PRIORITY_DOC):
                 cur["about"] = line
             elif cur:
                 # | Name | `label` | ...: a row without a label is not a heatmap row.
-                m = re.match(r"\|\s*([^|]+?)\s*\|\s*`([^`]+)`\s*\|", line)
-                if m:
+                m = re.match(r"\|\s*([^|]+?)\s*\|\s*`([^`]+)`", line)
+                if m and row_name(m.group(2)) not in [r["row"] for r in cur["rows"]]:
                     cur["rows"].append({"name": m.group(1), "row": row_name(m.group(2))})
     return sections
 
@@ -300,7 +332,7 @@ def rank_of(sections):
 def metadata(row, root=ROOT):
     """The component's version, priority and devices from its metadata.yaml; {} without one.
     A priority of ~ is none; devices is a tuple in DEVICE_GROUPS order."""
-    path = os.path.join(root, DIR_OF.get(row, row), "metadata.yaml")
+    path = os.path.join(root, row, "metadata.yaml")
     if row.startswith("(") or not os.path.exists(path):
         return {}
     with open(path) as fh:
@@ -324,17 +356,14 @@ def devices_of(row, root=ROOT):
 
 
 def all_components(root=ROOT, labels=()):
-    """Every component: each component:* label but the RETIRED ones, and every directory, at any
-    depth, with a metadata.yaml. A directory named by DIR_OF appears under its label names instead."""
-    dirs = set()
-    for here, subdirs, files in os.walk(root):
-        subdirs[:] = [d for d in subdirs if not d.startswith(".") and d not in ("build-tools", "node_modules")]
-        if "metadata.yaml" in files and here != root:
-            dirs.add(os.path.relpath(here, root).replace(os.sep, "/"))
-            subdirs[:] = []
-    names = {l[len("component:"):] for l in labels if l.startswith("component:")} - RETIRED
-    aliased = set(DIR_OF.values())
-    return sorted(names | {d for d in dirs if d not in aliased} | {n for n, d in DIR_OF.items() if d in dirs})
+    """Every component: each directory with a metadata.yaml. Labels only point tickets at them;
+    a repo with no metadata.yaml at all (linux_binder_idl) has its component:* labels, but the
+    RETIRED ones, as its components instead. A label-only name with an open ticket still gets
+    a row, from the ticket."""
+    dirs = metadata_dirs(root)
+    if dirs:
+        return sorted(dirs)
+    return sorted({l[len("component:"):] for l in labels if l.startswith("component:")} - RETIRED)
 
 
 def fetch_labels():
@@ -416,7 +445,7 @@ def classify(issue, maintainers, today, next_due):
     priority = (fields.get("Priority") or "").split(" ")[0] or None
     ms = issue["milestone"]
     due = ms["dueOn"][:10] if ms and ms["dueOn"] else None
-    comps = sorted(l[len("component:"):] for l in labels if l.startswith("component:"))
+    comps = sorted({row_name(l) for l in labels if l.startswith("component:")})
     if not comps:
         # Repo-wide work has no component: its row comes from the scope or class label.
         comps = next(([row] for lbl, row in REPO_WIDE if lbl in labels), ["(no component)"])
@@ -545,9 +574,8 @@ def release_history(root=ROOT, count=4):
             m = re.search(r"^version:\s*(\S+)", _git(root, "show", "%s:%s" % (tag, path)), re.M)
             d = path[:-len("/metadata.yaml")]
             d = RENAMED.get(d, d)
-            for row in [n for n, x in DIR_OF.items() if x == d] or [d]:
-                if m:
-                    versions.setdefault(row, {})[tag] = m.group(1)
+            if m:
+                versions.setdefault(d, {})[tag] = m.group(1)
     return {"tags": tags, "versions": versions}
 
 
