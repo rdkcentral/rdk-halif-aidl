@@ -299,15 +299,23 @@ def label_map(root=ROOT):
     return out
 
 
-LABEL_DIRS = label_map()
+_LABEL_MAPS = {}
+
+
+def label_dirs(root=ROOT):
+    """label_map(root), read once per root."""
+    if root not in _LABEL_MAPS:
+        _LABEL_MAPS[root] = label_map(root)
+    return _LABEL_MAPS[root]
 
 
 def row_name(label, dirs=None):
     """The heatmap row of a label: the component directory it names, or the bracketed
-    repo-wide row. A label no metadata.yaml claims is its own row."""
+    repo-wide row. A label no metadata.yaml claims is its own row. `dirs` is the label map
+    to use; by default, this checkout's."""
     if label.startswith("component:"):
         name = label[len("component:"):]
-        return (LABEL_DIRS if dirs is None else dirs).get(name, name)
+        return (label_dirs() if dirs is None else dirs).get(name, name)
     return dict(REPO_WIDE).get(label, label)
 
 
@@ -454,7 +462,9 @@ def classify(issue, maintainers, today, next_due, repo=REPO):
     priority = (fields.get("Priority") or "").split(" ")[0] or None
     ms = issue["milestone"]
     due = ms["dueOn"][:10] if ms and ms["dueOn"] else None
-    comps = sorted({row_name(l) for l in labels if l.startswith("component:")})
+    # This checkout's metadata.yaml maps this repo's labels; another repo's labels are their own rows.
+    dirs = label_dirs() if repo == REPO else {}
+    comps = sorted({row_name(l, dirs) for l in labels if l.startswith("component:")})
     if not comps:
         # Repo-wide work has no component: its row comes from the scope or class label.
         comps = next(([row] for lbl, row in REPO_WIDE if lbl in labels), ["(no component)"])

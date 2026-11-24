@@ -291,7 +291,16 @@ class Render(unittest.TestCase):
         self.assertEqual(rh.flow(["a", "b", "c", "d"], [False, True, False, False]), "a<br>b<br>c d")
 
 
-EMPTY = tempfile.mkdtemp()   # a repo root with no metadata.yaml: rows carry no version
+_TMP = []
+
+
+def tmpdir():
+    """A temporary directory, removed when the test run ends."""
+    _TMP.append(tempfile.TemporaryDirectory())
+    return _TMP[-1].name
+
+
+EMPTY = tmpdir()   # a repo root with no metadata.yaml: rows carry no version
 SECTIONS = [
     {"priority": "P1", "title": "P1 – Critical", "about": "Core.",
      "rows": [{"name": "DRM", "row": "drm"}, {"name": "Video Sink", "row": "videosink"}]},
@@ -331,7 +340,7 @@ class Priorities(unittest.TestCase):
         self.assertIn("| Panel |  | · | 0 |", page)
 
     def test_row_heading_has_the_component_version(self):
-        root = tempfile.mkdtemp()
+        root = tmpdir()
         for d, v in (("drm", "0.2.0.0"), ("bootreason", "0.2.1.0")):
             os.makedirs(os.path.join(root, d))
             with open(os.path.join(root, d, "metadata.yaml"), "w") as fh:
@@ -461,7 +470,7 @@ class Settling(unittest.TestCase):
         self.assertNotIn("## Settling", rh.render([], [], "now", sections=SECTIONS, root=EMPTY))
 
     def test_release_history_reads_each_tag(self):
-        root = tempfile.mkdtemp()
+        root = tmpdir()
         git = lambda *a: rh.subprocess.run(["git", "-C", root, "-c", "user.name=t", "-c", "user.email=t@t"] + list(a),
                                            check=True, capture_output=True)
         git("init", "-q")
@@ -477,7 +486,7 @@ class Settling(unittest.TestCase):
         self.assertIsNone(rh.release_history(EMPTY))
 
     def test_nested_and_shared_component_directories(self):
-        root = tempfile.mkdtemp()
+        root = tmpdir()
         for d in ("sensor", "vsi/wifi", "vsi/kernel", "bootreason", "drm"):
             _meta(root, d, "0.1.0.0")
         self.assertEqual(rh.all_components(root), ["bootreason", "drm", "sensor", "vsi/kernel", "vsi/wifi"])
@@ -502,7 +511,7 @@ def _meta_fields(root, d, version, priority="~", devices="[stb, tv]"):
 class MetadataPriority(unittest.TestCase):
 
     def test_metadata_reads_priority_and_devices(self):
-        root = tempfile.mkdtemp()
+        root = tmpdir()
         _meta_fields(root, "panel", "0.1.0.0", "P3", "[TV]")
         _meta_fields(root, "ffv", "0.0.0.1")
         self.assertEqual(rh.metadata("panel", root), {"version": "0.1.0.0", "priority": "P3", "devices": ("tv",)})
@@ -511,7 +520,7 @@ class MetadataPriority(unittest.TestCase):
         self.assertEqual(rh.metadata("crypto", root), {})
 
     def test_metadata_priority_places_the_component_and_rows_group_by_device(self):
-        root = tempfile.mkdtemp()
+        root = tmpdir()
         _meta_fields(root, "drm", "0.2.0.0", "P1")
         _meta_fields(root, "videosink", "0.3.0.0", "P1", "[stb]")
         _meta_fields(root, "hdmiinput", "0.2.0.0", "P1", "[tv]")    # moved up from no section
@@ -528,7 +537,7 @@ class MetadataPriority(unittest.TestCase):
 
     def test_retired_names_are_not_rows(self):
         # cdm became drm, flash shipped as firmwareupdate, factory was dropped; metrics is label-only.
-        root = tempfile.mkdtemp()
+        root = tmpdir()
         _meta_fields(root, "firmwareupdate", "0.2.0.1", "P2")
         labels = ["component:cdm", "component:flash", "component:factory", "component:metrics"]
         self.assertEqual(rh.all_components(root, labels), ["firmwareupdate"])
@@ -545,7 +554,7 @@ class MetadataPriority(unittest.TestCase):
         self.assertEqual(h["versions"], {"firmwareupdate": {"0.20.0": "0.2.0.1", "0.21.0": "0.2.0.1"}})
 
     def test_labels_point_tickets_at_their_component(self):
-        root = tempfile.mkdtemp()
+        root = tmpdir()
         _meta_fields(root, "drm", "0.2.0.0", "P1")
         _meta_fields(root, "sensor", "0.3.0.0", "P1")
         with open(os.path.join(root, "sensor", "metadata.yaml"), "a") as fh:
@@ -558,6 +567,10 @@ class MetadataPriority(unittest.TestCase):
         t = rh.classify(issue(7, labels=["component:motion_sensor", "component:thermal_sensor", "component:boot"]),
                         set(), "2026-11-03", None)
         self.assertEqual(t["components"], ["bootreason", "sensor"])
+        # Another repo's labels are not mapped through this checkout's metadata.yaml.
+        other = rh.classify(issue(8, labels=["component:boot"]), set(), "2026-11-03", None, "rdkcentral/linux_binder_idl")
+        self.assertEqual(other["components"], ["boot"])
+        self.assertEqual(rh.label_dirs(root), dirs)
 
     def test_a_listed_label_shows_only_with_an_open_ticket(self):
         # Crypto is on the priority list but has no metadata.yaml: it ranks, and shows only with a ticket.
