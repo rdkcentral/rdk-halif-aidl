@@ -2,6 +2,13 @@
 
 The order in which HAL components are worked on, set by the core IP set-top-box delivery on Broadcom XI1. The [Release-Heatmap](https://github.com/rdkcentral/rdk-halif-aidl/wiki/Release-Heatmap) wiki page reads this file: one section per priority, one row per `Label`.
 
+## Where the priority is kept
+
+- Each component's `metadata.yaml` holds its `priority` (`P1`, `P2`, `P3`, or `~` when not yet set) and its `devices` (`stb`, `tv`, or both). The scripts read them from there; this page gives the reasons.
+- A component with a `metadata.yaml` must carry the same priority here and there: `tests/scripts/test_release_heatmap.py` fails when they differ. Change both in the same PR.
+- Rows here with no directory, such as Crypto, and the documentation and infrastructure rows, take their priority from this page alone.
+- Within each priority, the heatmap lists the components used on both STB and TV first, then STB only, then TV only.
+
 ## How a ticket gets its priority
 
 - A ticket or PR takes the priority of its highest-priority `component:*` label. One with no component label takes the priority of its `scope:infrastructure` or `documentation` row.

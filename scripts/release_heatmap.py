@@ -24,9 +24,11 @@ Run at any time. It reads the open issues, their labels and milestones, and
 the Priority and Interface Effect fields of project 41, and writes one markdown
 page, the heatmap: components (component:* labels; repo-wide work by its
 scope:infrastructure, scope:overview or documentation label) against the open
-milestones, in one section per priority of docs/governance/component-priority.md
-(#1053). Every component is listed, with its metadata.yaml version, whether or
-not it has tickets; each milestone heading carries its due date. Each cell
+milestones, in one section per priority (#1053): each component's priority and
+devices (stb, tv) come from its metadata.yaml, and labels with no directory take
+theirs from docs/governance/component-priority.md. Every component is listed,
+with its metadata.yaml version, whether or not it has tickets; each milestone
+heading carries its due date. Each cell
 lists its tickets, most urgent first, as badges coloured by change class, each
 followed by a badge for each of its open PRs. Below it, the tickets resolved
 since the last release, with the PRs that took them into develop.
@@ -90,6 +92,10 @@ UNPRIORITISED = {"priority": None, "title": "Not yet prioritised", "rows": [],
                           "blob/develop/docs/governance/component-priority.md)." % REPO}
 # A component label whose directory has another name.
 DIR_OF = {"boot": "bootreason", "motion_sensor": "sensor", "thermal_sensor": "sensor"}
+# A component directory renamed since a release, by its old name: flash shipped as firmwareupdate.
+RENAMED = {"flash": "firmwareupdate"}
+# The device classes in metadata.yaml's devices field, as the heatmap groups them.
+DEVICE_GROUPS = [("stb", "tv"), ("stb",), ("tv",)]
 
 
 TRANSIENT = re.compile(r"HTTP 50[234]")
@@ -288,33 +294,75 @@ def rank_of(sections):
     return {r["row"]: int(s["priority"][1:]) for s in sections for r in s["rows"]}
 
 
-def version_of(row, root=ROOT):
-    """The component's version from its metadata.yaml, or None."""
+def metadata(row, root=ROOT):
+    """The component's version, priority and devices from its metadata.yaml; {} without one.
+    A priority of ~ is none; devices is a tuple in DEVICE_GROUPS order."""
     path = os.path.join(root, DIR_OF.get(row, row), "metadata.yaml")
     if row.startswith("(") or not os.path.exists(path):
-        return None
+        return {}
     with open(path) as fh:
-        m = re.search(r"^version:\s*(\S+)", fh.read(), re.M)
-    return m.group(1) if m else None
+        text = fh.read()
+    field = lambda key: (re.search(r"^%s:[ \t]*(.*?)\s*$" % key, text, re.M) or [None, None])[1]
+    priority = field("priority")
+    devices = {d.strip().lower() for d in (field("devices") or "").strip("[]").split(",") if d.strip()}
+    return {"version": (field("version") or "").split(" ")[0] or None,
+            "priority": priority if priority and re.match(r"P\d$", priority) else None,
+            "devices": tuple(d for d in DEVICE_GROUPS[0] if d in devices)}
 
 
-def all_components(root=ROOT, labels=()):
-    """Every component: its component:* labels and every directory, at any depth, with a
-    metadata.yaml. A directory named by DIR_OF appears under its label names instead."""
+def version_of(row, root=ROOT):
+    """The component's version from its metadata.yaml, or None."""
+    return metadata(row, root).get("version")
+
+
+def devices_of(row, root=ROOT):
+    """The devices that use the component, as the heatmap shows them: STB, TV."""
+    return ", ".join(d.upper() for d in metadata(row, root).get("devices", ()))
+
+
+def all_components(root=ROOT):
+    """Every component: every directory, at any depth, with a metadata.yaml. A directory named
+    by DIR_OF appears under its label names instead. A label with no directory is a component
+    only where the priority list names it or a ticket carries it: a retired label such as
+    component:cdm, with neither, is not listed."""
     dirs = set()
     for here, subdirs, files in os.walk(root):
         subdirs[:] = [d for d in subdirs if not d.startswith(".") and d not in ("build-tools", "node_modules")]
         if "metadata.yaml" in files and here != root:
             dirs.add(os.path.relpath(here, root).replace(os.sep, "/"))
             subdirs[:] = []
-    names = {l[len("component:"):] for l in labels if l.startswith("component:")}
     aliased = set(DIR_OF.values())
-    return sorted(names | {d for d in dirs if d not in aliased} | {n for n, d in DIR_OF.items() if d in dirs})
+    return sorted({d for d in dirs if d not in aliased} | {n for n, d in DIR_OF.items() if d in dirs})
 
 
-def fetch_labels():
-    pages = gh_json(["api", "--paginate", "--slurp", "repos/%s/labels?per_page=100" % REPO])
-    return [l["name"] for page in pages for l in page]
+def device_order(row, root=ROOT):
+    """Where a row sorts by its devices: STB and TV, then STB only, then TV only, then unknown."""
+    devices = metadata(row, root).get("devices")
+    return DEVICE_GROUPS.index(devices) if devices in DEVICE_GROUPS else len(DEVICE_GROUPS)
+
+
+def with_metadata(sections, components, root=ROOT):
+    """The priority sections with each component in the one its metadata.yaml's priority names,
+    and each section's rows grouped by device. The priority list's rows without a metadata.yaml
+    (labels such as crypto, and the repo-wide rows) stay where the list puts them."""
+    sections = [dict(s, rows=list(s["rows"])) for s in sections]
+    names = {r["row"]: r["name"] for s in sections for r in s["rows"]}
+    for row in components:
+        want = metadata(row, root).get("priority")
+        if not want:
+            continue
+        for s in sections:
+            s["rows"] = [r for r in s["rows"] if r["row"] != row]
+        sec = next((s for s in sections if s["priority"] == want), None)
+        if sec is None:
+            sec = {"priority": want, "title": want, "about": None, "rows": []}
+            sections.append(sec)
+            sections.sort(key=lambda s: s["priority"])
+        sec["rows"].append({"name": names.get(row), "row": row})
+    for s in sections:
+        s["rows"].sort(key=lambda r: (r["row"].startswith("("), device_order(r["row"], root),
+                                      (r["name"] or r["row"]).lower()))
+    return sections
 
 
 def fetch_milestones():
@@ -489,6 +537,7 @@ def release_history(root=ROOT, count=4):
                 continue
             m = re.search(r"^version:\s*(\S+)", _git(root, "show", "%s:%s" % (tag, path)), re.M)
             d = path[:-len("/metadata.yaml")]
+            d = RENAMED.get(d, d)
             for row in [n for n, x in DIR_OF.items() if x == d] or [d]:
                 if m:
                     versions.setdefault(row, {})[tag] = m.group(1)
@@ -561,6 +610,11 @@ def render_settling(tickets, history, groups, root=ROOT):
     return lines
 
 
+def md_row(cells):
+    """One markdown table row: as many cells as the header, whatever their content."""
+    return "| " + " | ".join(cells) + " |"
+
+
 def shield(label, message, colour):
     # shields.io static badge: "-" and "_" are doubled, everything else URL-encoded.
     q = lambda s: urllib.parse.quote(s.replace("-", "--").replace("_", "__"), safe="")
@@ -621,12 +675,12 @@ def flow(items, alone):
     return "<br>".join(lines + ([" ".join(run)] if run else []))
 
 
-def sectioned(tickets, sections, components):
+def sectioned(tickets, sections, components, root=ROOT):
     """The page's sections: each priority's rows, then every other row under Not yet prioritised."""
     rank = rank_of(sections)
     placed = set(rank)
     rest = sorted((set(components) | {row_of(t, rank) for t in tickets}) - placed,
-                  key=lambda c: (c.startswith("("), c))
+                  key=lambda c: (c.startswith("("), device_order(c, root), c))
     other = dict(UNPRIORITISED, rows=[{"name": None, "row": r} for r in rest])
     return [s for s in sections] + ([other] if rest else []), rank
 
@@ -641,8 +695,12 @@ def render(tickets, milestones, generated, project_title="halif_aidl", resolved=
     closed = sorted(used - set(cols) - {NO_MILESTONE}, key=version_key)
     cols += closed + ([NO_MILESTONE] if NO_MILESTONE in used else [])
     short = {c: (c if c == NO_MILESTONE else column_heading(c.split(" ")[0], due.get(c))) for c in cols}
-    short.update({c: "⚠️ %s closed" % c.split(" ")[0] for c in closed})
-    groups, rank = sectioned(tickets, list(sections), components)
+    short.update({c: column_heading("⚠️ %s closed" % c.split(" ")[0], due.get(c)) for c in closed})
+    if history:
+        # A component in the last release stays on the page until a release without it.
+        last = history["tags"][-1]
+        components = set(components) | {r for r, v in history["versions"].items() if last in v}
+    groups, rank = sectioned(tickets, list(sections), components, root)
     lines = [
         "# Release heatmap", "",
         "_Generated %s by [`scripts/release_heatmap.py`](https://github.com/%s/blob/develop/"
@@ -652,6 +710,8 @@ def render(tickets, milestones, generated, project_title="halif_aidl", resolved=
         "%d open issues, each shown once: a ticket on several components is in the "
         "row of its highest-priority component, so the row totals add up to the open issues. "
         "Every component is listed, with its version, whether or not it has tickets. "
+        "Priority and devices come from each component's metadata.yaml; within a priority, "
+        "components used on both STB and TV come first, then STB only, then TV only. "
         "Each cell lists its tickets, most urgent "
         "first, as a badge coloured by its change class; each of its open PRs is "
         "on the line below it, marked ↳:" % len(tickets), "", legend(), "", "PR: " + pr_legend() + " (open: "
@@ -659,16 +719,16 @@ def render(tickets, milestones, generated, project_title="halif_aidl", resolved=
     ]
     for sec in groups:
         lines += ["", "## " + sec["title"], ""] + ([sec["about"], ""] if sec["about"] else []) + [
-            "| Component | " + " | ".join(short[c] for c in cols) + " | Total |",
-            "| --- |" + " --- |" * (len(cols) + 1)]
+            md_row(["Component", "Devices"] + [short[c] for c in cols] + ["Total"]),
+            md_row(["---"] * (len(cols) + 3))]
         in_sec = []
         for r in sec["rows"]:
             row = [t for t in tickets if row_of(t, rank) == r["row"]]
             in_sec += row
-            lines.append("| %s | %s | %d |" % (row_heading(r["row"], r["name"], root), " | ".join(
-                cell([t for t in row if t["milestone"] == c]) for c in cols), len(row)))
-        lines.append("| **Tickets** | %s | **%d** |" % (" | ".join(
-            "**%d**" % sum(1 for t in in_sec if t["milestone"] == c) for c in cols), len(in_sec)))
+            lines.append(md_row([row_heading(r["row"], r["name"], root), devices_of(r["row"], root)] + [
+                cell([t for t in row if t["milestone"] == c]) for c in cols] + [str(len(row))]))
+        lines.append(md_row(["**Tickets**", ""] + ["**%d**" % sum(1 for t in in_sec if t["milestone"] == c)
+                                                  for c in cols] + ["**%d**" % len(in_sec)]))
 
     if history:
         lines += render_settling(tickets, history, groups, root)
@@ -708,8 +768,8 @@ query($owner:String!,$number:Int!,$cursor:String){
         id
         fieldValueByName(name:"Priority"){ ... on ProjectV2ItemFieldSingleSelectValue{ name } }
         content{
-          ... on Issue{ number itemState: state repository{ nameWithOwner } labels(first:50){ nodes{ name } } }
-          ... on PullRequest{ number itemState: state repository{ nameWithOwner } labels(first:50){ nodes{ name } } }
+          ... on Issue{ number issueState: state repository{ nameWithOwner } labels(first:50){ nodes{ name } } }
+          ... on PullRequest{ number prState: state repository{ nameWithOwner } labels(first:50){ nodes{ name } } }
         }
       }
     }
@@ -760,7 +820,7 @@ def set_priorities(dry_run, sections, out=sys.stdout):
     changed = 0
     for item in items:
         c = item.get("content") or {}
-        if c.get("itemState") != "OPEN" or (c.get("repository") or {}).get("nameWithOwner") != REPO:
+        if (c.get("issueState") or c.get("prState")) != "OPEN" or (c.get("repository") or {}).get("nameWithOwner") != REPO:
             continue
         current = ((item.get("fieldValueByName") or {}).get("name") or "").split(" ")[0] or None
         want = wanted_priority([l["name"] for l in c["labels"]["nodes"]], current, sections)
@@ -813,7 +873,8 @@ def parse_args(argv):
 
 def main(argv):
     a = parse_args(argv)
-    sections = read_priorities()
+    components = all_components()
+    sections = with_metadata(read_priorities(), components)
     if a.set_priority:
         set_priorities(a.dry_run, sections)
         return 0
@@ -832,7 +893,7 @@ def main(argv):
     project = fetch_project()
     page = render(tickets, milestones, now.strftime("%Y-%m-%d %H:%M UTC"),
                   project["title"] or "project %d" % PROJECT_NUMBER, resolved, release,
-                  sections, all_components(labels=fetch_labels()), history=release_history())
+                  sections, components, history=release_history())
 
     if a.output:
         with open(a.output, "w") as fh:

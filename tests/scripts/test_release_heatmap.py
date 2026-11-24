@@ -145,7 +145,7 @@ class Render(unittest.TestCase):
     def test_closed_milestone_is_flagged(self):
         t = rh.classify(issue(1, labels=["component:panel"], milestone="0.22.0"), set(), "2026-11-03", None)
         page = rh.render([t], [{"title": "0.24.0", "due": None}], "now")
-        self.assertIn("| Component | ⚠️ 0.22.0 closed | Total |", page)
+        self.assertIn("| Component | Devices | ⚠️ 0.22.0 closed<br>no date | Total |", page)
 
     def test_maintainer_takes_several_logins(self):
         a = rh.parse_args(["--maintainer", "alice", "bob", "--maintainer", "carol"])
@@ -275,7 +275,7 @@ class Render(unittest.TestCase):
                           set(), "2026-11-03", None)
         page = rh.render([one, two], [{"title": "0.24.0", "due": None}], "now", root=EMPTY)
         self.assertEqual(page.count("](u2)"), 1)
-        self.assertIn("| audiosink | [", page)
+        self.assertIn("| audiosink |  | [", page)
         self.assertNotIn("| videosink |", page)
         self.assertNotIn("several components) |", page)
         totals = [int(l.rsplit("|", 2)[1]) for l in page.splitlines()
@@ -316,6 +316,8 @@ class Priorities(unittest.TestCase):
     def test_every_component_is_listed_even_without_tickets(self):
         page = rh.render([], [], "now", sections=SECTIONS, components=["drm", "videosink", "ffv"], root=EMPTY)
         p1 = page.split("## P1")[1].split("## P3")[0]
+        # No open milestone: every row has the header's three cells.
+        self.assertIn("| Component | Devices | Total |\n| --- | --- | --- |", p1)
         self.assertIn("| DRM |  | 0 |", p1)
         self.assertIn("| Video Sink |  | 0 |", p1)
         self.assertIn("| ffv |  | 0 |", page.split("## Not yet prioritised")[1])
@@ -324,8 +326,8 @@ class Priorities(unittest.TestCase):
         t = rh.classify(issue(4, labels=["component:panel", "component:videosink"], milestone="0.24.0"),
                         set(), "2026-11-03", None)
         page = rh.render([t], [{"title": "0.24.0", "due": None}], "now", sections=SECTIONS, root=EMPTY)
-        self.assertIn("| Video Sink | [![#4", page)
-        self.assertIn("| Panel | · | 0 |", page)
+        self.assertIn("| Video Sink |  | [![#4", page)
+        self.assertIn("| Panel |  | · | 0 |", page)
 
     def test_row_heading_has_the_component_version(self):
         root = tempfile.mkdtemp()
@@ -337,15 +339,14 @@ class Priorities(unittest.TestCase):
         self.assertEqual(rh.row_heading("boot", "Boot", root), "Boot 0.2.1.0")
         self.assertEqual(rh.row_heading("crypto", "Crypto", root), "Crypto")
         self.assertEqual(rh.row_heading("(documentation)", "General documentation", root), "General documentation")
-        self.assertEqual(rh.all_components(root, ["component:crypto", "component:boot", "bug"]),
-                         ["boot", "crypto", "drm"])
+        self.assertEqual(rh.all_components(root), ["boot", "drm"])
 
     def test_column_heading_has_the_due_date(self):
         t = rh.classify(issue(1, labels=["component:drm"], milestone="0.23.1"), set(), "2026-11-03", None)
         u = rh.classify(issue(2, labels=["component:drm"], milestone="0.24.0 - Next"), set(), "2026-11-03", None)
         page = rh.render([t, u], [{"title": "0.23.1", "due": "2026-11-28T08:00:00Z"},
                                   {"title": "0.24.0 - Next", "due": None}], "now", sections=SECTIONS, root=EMPTY)
-        self.assertIn("| Component | 0.23.1<br>due 2026-11-28 | 0.24.0<br>no date | Total |", page)
+        self.assertIn("| Component | Devices | 0.23.1<br>due 2026-11-28 | 0.24.0<br>no date | Total |", page)
 
     def test_wanted_priority(self):
         w = lambda labels, cur=None: rh.wanted_priority(labels, cur, SECTIONS)
@@ -362,7 +363,7 @@ class Priorities(unittest.TestCase):
     def test_set_priorities_dry_run_changes_nothing(self):
         def node(n, labels, prio=None, state="OPEN", repo=rh.REPO):
             return {"id": "I%d" % n, "fieldValueByName": {"name": prio} if prio else None,
-                    "content": {"number": n, "itemState": state, "repository": {"nameWithOwner": repo},
+                    "content": {"number": n, "issueState": state, "repository": {"nameWithOwner": repo},
                                 "labels": {"nodes": [{"name": l} for l in labels]}}}
         page = {"data": {"organization": {"projectV2": {
             "id": "P", "field": {"id": "F", "options": [{"id": "o1", "name": "P1 - High"},
@@ -384,10 +385,6 @@ class Priorities(unittest.TestCase):
             self.assertEqual([c[-1] for c in calls[1:]], ["o=o1", "o=o3"])
         finally:
             rh.gh_json = real
-
-
-if __name__ == "__main__":
-    unittest.main()
 
 
 def _meta(root, d, version):
@@ -449,6 +446,14 @@ class Settling(unittest.TestCase):
         self.assertIn("| Panel | new | · | 0.1.0.0 | 0.24.0: [#5](u5) | after 0.24.0 |", settling)
         self.assertNotIn("(documentation)", settling)
 
+    def test_a_component_in_the_last_release_stays_listed(self):
+        # Gone from develop, no label and no priority row: still in 0.23.0, so still shown.
+        page = rh.render([], [], "now", sections=[], components=[], root=EMPTY, history=self.HISTORY)
+        self.assertIn("| panel | new | · | 0.1.0.0 | · | now |", page.split("## Settling")[1])
+        self.assertIn("| panel |  | 0 |", page.split("## Not yet prioritised")[1])
+        gone = dict(self.HISTORY, versions={"drm": {"0.21.0": "0.1.0.0"}})
+        self.assertNotIn("| DRM |", rh.render([], [], "now", sections=[], root=EMPTY, history=gone).split("## Settling")[1])
+
     def test_no_settling_section_without_release_history(self):
         self.assertNotIn("## Settling", rh.render([], [], "now", sections=SECTIONS, root=EMPTY))
 
@@ -473,7 +478,7 @@ class Settling(unittest.TestCase):
         root = tempfile.mkdtemp()
         for d in ("sensor", "vsi/wifi", "vsi/kernel", "bootreason", "drm"):
             _meta(root, d, "0.1.0.0")
-        self.assertEqual(rh.all_components(root, ["component:motion_sensor"]),
+        self.assertEqual(rh.all_components(root),
                          ["boot", "drm", "motion_sensor", "thermal_sensor", "vsi/kernel", "vsi/wifi"])
         self.assertEqual(rh.version_of("thermal_sensor", root), "0.1.0.0")
         self.assertEqual(rh.version_of("vsi/wifi", root), "0.1.0.0")
@@ -481,5 +486,68 @@ class Settling(unittest.TestCase):
     def test_priority_query_aliases_the_two_state_types(self):
         # Issue.state and PullRequest.state are different enum types; one response name
         # for both is a GraphQL field conflict.
-        self.assertEqual(rh.PRIORITY_ITEMS.count("itemState: state"), 2)
+        self.assertIn("issueState: state", rh.PRIORITY_ITEMS)
+        self.assertIn("prState: state", rh.PRIORITY_ITEMS)
         self.assertNotIn("number state", rh.PRIORITY_ITEMS)
+
+
+def _meta_fields(root, d, version, priority="~", devices="[stb, tv]"):
+    os.makedirs(os.path.join(root, d), exist_ok=True)
+    with open(os.path.join(root, d, "metadata.yaml"), "w") as fh:
+        fh.write("component: %s\nversion: %s\ntype: SOC\npriority: %s\ndevices: %s\n"
+                 % (d, version, priority, devices))
+
+
+class MetadataPriority(unittest.TestCase):
+
+    def test_metadata_reads_priority_and_devices(self):
+        root = tempfile.mkdtemp()
+        _meta_fields(root, "panel", "0.1.0.0", "P3", "[TV]")
+        _meta_fields(root, "ffv", "0.0.0.1")
+        self.assertEqual(rh.metadata("panel", root), {"version": "0.1.0.0", "priority": "P3", "devices": ("tv",)})
+        self.assertEqual(rh.metadata("ffv", root)["priority"], None)
+        self.assertEqual(rh.devices_of("ffv", root), "STB, TV")
+        self.assertEqual(rh.metadata("crypto", root), {})
+
+    def test_metadata_priority_places_the_component_and_rows_group_by_device(self):
+        root = tempfile.mkdtemp()
+        _meta_fields(root, "drm", "0.2.0.0", "P1")
+        _meta_fields(root, "videosink", "0.3.0.0", "P1", "[stb]")
+        _meta_fields(root, "hdmiinput", "0.2.0.0", "P1", "[tv]")    # moved up from no section
+        _meta_fields(root, "panel", "0.1.0.0", "P2", "[tv]")        # moved from P3 to a new P2
+        secs = rh.with_metadata(SECTIONS, rh.all_components(root), root)
+        self.assertEqual([s["priority"] for s in secs], ["P1", "P2", "P3"])
+        self.assertEqual([r["row"] for r in secs[0]["rows"]], ["drm", "videosink", "hdmiinput"])
+        self.assertEqual(secs[1]["rows"], [{"name": "Panel", "row": "panel"}])
+        self.assertEqual([r["row"] for r in secs[2]["rows"]], ["(documentation)"])
+        self.assertEqual([r["row"] for r in SECTIONS[1]["rows"]], ["panel", "(documentation)"])  # not changed
+        page = rh.render([], [], "now", sections=secs, components=rh.all_components(root), root=root)
+        self.assertIn("| DRM 0.2.0.0 | STB, TV | 0 |", page)
+        self.assertIn("| hdmiinput 0.2.0.0 | TV | 0 |", page)
+
+    def test_retired_names_are_not_rows(self):
+        # component:cdm is a label with no directory and no tickets; flash shipped as firmwareupdate.
+        root = tempfile.mkdtemp()
+        _meta_fields(root, "firmwareupdate", "0.2.0.1", "P2")
+        self.assertEqual(rh.all_components(root), ["firmwareupdate"])
+        git = lambda *a: rh.subprocess.run(["git", "-C", root, "-c", "user.name=t", "-c", "user.email=t@t"] + list(a),
+                                           check=True, capture_output=True)
+        git("init", "-q")
+        os.rename(os.path.join(root, "firmwareupdate"), os.path.join(root, "flash"))
+        git("add", "-A"); git("commit", "-qm", "a"); git("tag", "0.20.0")
+        os.rename(os.path.join(root, "flash"), os.path.join(root, "firmwareupdate"))
+        git("add", "-A"); git("commit", "-qm", "b"); git("tag", "0.21.0")
+        h = rh.release_history(root)
+        self.assertEqual(h["versions"], {"firmwareupdate": {"0.20.0": "0.2.0.1", "0.21.0": "0.2.0.1"}})
+
+    def test_priority_list_agrees_with_metadata(self):
+        # The list names a component's priority for people; its metadata.yaml sets it for the
+        # scripts. A component in both must not have two priorities.
+        listed = {r["row"]: s["priority"] for s in rh.read_priorities() for r in s["rows"]}
+        for row in rh.all_components():
+            if row in listed:
+                self.assertEqual(rh.metadata(row).get("priority"), listed[row], row)
+
+
+if __name__ == "__main__":
+    unittest.main()
