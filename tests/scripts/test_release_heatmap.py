@@ -604,63 +604,26 @@ class MetadataPriority(unittest.TestCase):
 
 
 
-class Binder(unittest.TestCase):
-    RELEASE = {"tag": "2.7.1", "url": "r", "at": "2026-11-13T17:54:06Z"}
+OTHER = "rdkcentral/linux_binder_idl"
 
-    def binder(self, number, milestone, **kw):
-        return rh.classify(issue(number, milestone=milestone, **kw), set(), "2026-11-18", None, rh.BINDER_REPO)
 
-    def test_heatmap_links_the_binder_page_and_ends_with_resolved(self):
-        t = rh.classify(issue(1, labels=["component:panel"], milestone="0.24.0"), set(), "2026-11-18", None)
-        release = {"tag": "0.23.0", "url": "r", "at": "2026-10-26T23:10:03Z"}
-        page = rh.render([t], [{"title": "0.24.0", "due": None}], "now", release=release,
-                         binder_page=rh.BINDER_WIKI_PAGE)
-        link = page.index("](%s)" % rh.BINDER_WIKI_PAGE)
-        self.assertLess(link, page.index("| Component |"))
-        self.assertEqual([l for l in page.splitlines() if l.startswith("## ")][-1], "## Resolved since 0.23.0")
+class OtherRepo(unittest.TestCase):
+    # The fetch and classify helpers take a repo, for a copy of this script in another repo (#1047).
 
-    def test_no_binder_link_unless_asked(self):
-        self.assertNotIn(rh.BINDER_WIKI_PAGE, rh.render([], [], "now"))
-
-    def test_binder_rows_are_milestones_in_version_order(self):
-        ts = [self.binder(1, "2.8.0"), self.binder(2, "2.7.2"), self.binder(3, None), self.binder(4, "2.7.2")]
-        ms = [{"title": "2.8.0", "due": "2026-11-30T00:00:00Z"}, {"title": "2.7.2", "due": None},
-              {"title": "3.0.0", "due": None}]
-        ms = sorted(ms, key=lambda m: rh.version_key(m["title"]))
-        page = rh.render_binder(ts, ms, "now")
-        heads = [l.split(" | ")[0][2:] for l in page.splitlines() if l.startswith("| ") and "---" not in l]
-        # Each milestone carries its due date, as on the HAL heatmap.
-        self.assertEqual(heads, ["Milestone", "2.7.2<br>no date", "2.8.0<br>due 2026-11-30", rh.NO_MILESTONE,
-                                 "**Tickets**"])
-        self.assertIn("| **Tickets** | | **4** |", page)
-        self.assertIn("](%s)" % rh.WIKI_PAGE, page)
-
-    def test_binder_flags_a_closed_milestone(self):
-        page = rh.render_binder([self.binder(1, "2.7.1")], [{"title": "2.7.2", "due": None}], "now")
-        self.assertIn("| ⚠️ 2.7.1 closed<br>no date |", page)
-
-    def test_binder_resolved_is_by_milestone_with_merged_prs(self):
-        done = [self.binder(5, "2.7.2", prs=[{"number": 50, "state": "MERGED"}]), self.binder(6, "2.8.0")]
-        section = rh.render_binder([], [], "now", resolved=done, release=self.RELEASE).split(
-            "## Resolved since 2.7.1")[1]
-        self.assertIn("| Milestone | Resolved | Total |", section)
-        self.assertLess(section.index("| 2.7.2 |"), section.index("| 2.8.0 |"))
-        self.assertIn("%E2%86%B350-merged", section)
-
-    def test_binder_refs_come_from_the_binder_repo(self):
-        ref = {"number": 7, "state": "OPEN", "repository": {"isPrivate": False, "nameWithOwner": rh.BINDER_REPO},
+    def test_refs_come_from_the_named_repo(self):
+        ref = {"number": 7, "state": "OPEN", "repository": {"isPrivate": False, "nameWithOwner": OTHER},
                "body": "Refs #1"}
-        here = rh.classify(issue(1, ref_prs=[ref]), set(), "2026-11-18", None, rh.BINDER_REPO)
+        here = rh.classify(issue(1, ref_prs=[ref]), set(), "2026-11-18", None, OTHER)
         elsewhere = rh.classify(issue(1, ref_prs=[ref]), set(), "2026-11-18", None)
         self.assertEqual([p["number"] for p in here["open_prs"]], [7])
         self.assertEqual(elsewhere["open_prs"], [])
 
-    def test_project_fields_for_the_binder_repo(self):
+    def test_project_fields_for_the_named_repo(self):
         def node(n, repo, prio):
             return {"content": {"number": n, "repository": {"nameWithOwner": repo}},
                     "fieldValues": {"nodes": [{"name": prio, "field": {"name": "Priority"}}]}}
-        nodes = [node(1, rh.REPO, "P1 - High"), node(1, rh.BINDER_REPO, "P0 - Critical")]
-        self.assertEqual(rh.item_fields(nodes, rh.BINDER_REPO), {1: {"Priority": "P0 - Critical"}})
+        nodes = [node(1, rh.REPO, "P1 - High"), node(1, OTHER, "P0 - Critical")]
+        self.assertEqual(rh.item_fields(nodes, OTHER), {1: {"Priority": "P0 - Critical"}})
         self.assertEqual(rh.item_fields(nodes), {1: {"Priority": "P1 - High"}})
 
 

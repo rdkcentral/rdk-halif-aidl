@@ -36,15 +36,10 @@ that took them into develop.
 --set-priority writes each open ticket's and PR's component priority into the
 project's Priority field; see component-priority.md for the rules.
 
-It writes a second page for linux_binder_idl, the toolchain every HAL builds on:
-its open work by milestone, and what it has resolved since its own last release.
-The heatmap links to it.
-
 Usage:
     scripts/release_heatmap.py                 # print the page
     scripts/release_heatmap.py -o page.md      # write it to a file
-    scripts/release_heatmap.py --publish       # push both pages to the wiki
-    [--binder-output page.md]                  # also write the binder page
+    scripts/release_heatmap.py --publish       # push it to the wiki page
     [--maintainer LOGIN ...]                   # raised by anyone else scores 2
     scripts/release_heatmap.py --set-priority [--dry-run]
 
@@ -71,8 +66,6 @@ REPO = os.environ.get("GITHUB_REPOSITORY", "rdkcentral/rdk-halif-aidl")
 OWNER, NAME = REPO.split("/")
 PROJECT_NUMBER = int(os.environ.get("PROJECT_NUMBER", "41"))
 WIKI_PAGE = "Release-Heatmap"
-BINDER_REPO = os.environ.get("BINDER_REPOSITORY", "rdkcentral/linux_binder_idl")
-BINDER_WIKI_PAGE = "Binder-Release-Heatmap"
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
 PRIORITY_DOC = os.path.join(ROOT, "docs", "governance", "component-priority.md")
@@ -770,7 +763,7 @@ def generated_note(generated, project_title, what):
 
 
 def render(tickets, milestones, generated, project_title="halif_aidl", resolved=(), release=None,
-           sections=(), components=(), root=ROOT, history=None, binder_page=None):
+           sections=(), components=(), root=ROOT, history=None):
     cols, short = milestone_columns(tickets, milestones)
     if history:
         # A component in the last release stays on the page until a release without it.
@@ -778,9 +771,6 @@ def render(tickets, milestones, generated, project_title="halif_aidl", resolved=
         components = set(components) | {r for r, v in history["versions"].items() if last in v}
     groups, rank = sectioned(tickets, list(sections), components, root)
     lines = ["# Release heatmap", "", generated_note(generated, project_title, "the open issues"), ""]
-    if binder_page:
-        lines += ["%s, the toolchain every HAL builds on, has its own page: [%s](%s)." % (
-            BINDER_REPO.split("/")[1], binder_page.replace("-", " "), binder_page), ""]
     lines += [
         "%d open issues, each shown once: a ticket on several components is in the "
         "row of its highest-priority component, so the row totals add up to the open issues. "
@@ -813,18 +803,16 @@ def render(tickets, milestones, generated, project_title="halif_aidl", resolved=
     return "\n".join(lines) + "\n"
 
 
-def render_resolved(tickets, release, rank=None, names=None, root=ROOT, row_key=None, row_title="Component",
-                    order=None):
+def render_resolved(tickets, release, rank=None, names=None, root=ROOT):
     """What has landed since the last release: completed tickets, and the PRs that took them into develop."""
     lines = ["", "## Resolved since %s" % release["tag"], "",
              "Tickets closed as completed since the [%s release](%s) on %s, with the PRs that "
              "took them into develop." % (release["tag"], release["url"], release["at"][:10]), ""]
     if not tickets:
         return lines + ["Nothing yet."]
-    lines += ["| %s | Resolved | Total |" % row_title, "| --- | --- | --- |"]
-    key = row_key or (lambda t: row_of(t, rank))
-    for comp in (order(tickets) if order else rows(tickets, rank)):
-        row = sorted((t for t in tickets if key(t) == comp), key=lambda t: t["number"])
+    lines += ["| Component | Resolved | Total |", "| --- | --- | --- |"]
+    for comp in rows(tickets, rank):
+        row = sorted((t for t in tickets if row_of(t, rank) == comp), key=lambda t: t["number"])
         merged = [[p for p in t["prs"] if p["state"] == "merged" and p["base"] == "develop"] for t in row]
         lines.append("| %s | %s | %d |" % (row_heading(comp, (names or {}).get(comp), root), flow(
             [under(badge(t), [pr_badge(p) for p in m]) for t, m in zip(row, merged)],
@@ -912,30 +900,6 @@ def set_priorities(dry_run, sections, out=sys.stdout):
     return changed
 
 
-def render_binder(tickets, milestones, generated, project_title="halif_aidl", resolved=(), release=None):
-    """The binder toolchain's page: its open work by milestone, then what it resolved since its last release."""
-    cols, short = milestone_columns(tickets, milestones)
-    by_milestone = lambda ts: sorted({t["milestone"] for t in ts}, key=lambda m: (m == NO_MILESTONE, version_key(m)))
-    lines = [
-        "# Binder release heatmap", "",
-        generated_note(generated, project_title, "the open issues of [%s](https://github.com/%s)" % (
-            BINDER_REPO, BINDER_REPO)), "",
-        "What %s must ship: %d open issues by milestone, most urgent first, each a badge "
-        "coloured by its change class with its open PRs on the line below, marked ↳. "
-        "The HAL heatmap is [Release heatmap](%s)." % (BINDER_REPO.split("/")[1], len(tickets), WIKI_PAGE), "",
-        legend(), "", "PR: " + pr_legend() + " (open: review needed)", "",
-        "| Milestone | Tickets | Total |", "| --- | --- | --- |",
-    ]
-    for c in cols:
-        row = [t for t in tickets if t["milestone"] == c]
-        lines.append("| %s | %s | %d |" % (short[c], cell(row), len(row)))
-    lines.append("| **Tickets** | | **%d** |" % len(tickets))
-    if release:
-        lines += render_resolved(resolved, release, row_key=lambda t: t["milestone"], row_title="Milestone",
-                                 order=by_milestone)
-    return "\n".join(lines) + "\n"
-
-
 def wiki_git():
     """git with one credential helper: WIKI_TOKEN when set (CI), else the caller's gh login."""
     helper = ("!f(){ echo username=x-access-token; echo password=$WIKI_TOKEN; }; f"
@@ -966,28 +930,12 @@ def publish(pages):
 def parse_args(argv):
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("-o", "--output")
-    ap.add_argument("--binder-output", metavar="PATH", help="also write the binder page here")
     ap.add_argument("--publish", action="store_true")
     ap.add_argument("--maintainer", action="extend", nargs="+", default=[], metavar="LOGIN")
     ap.add_argument("--set-priority", action="store_true",
                     help="set each open ticket's and PR's project Priority from its component")
     ap.add_argument("--dry-run", action="store_true", help="with --set-priority: print, change nothing")
     return ap.parse_args(argv)
-
-
-def binder_page(maintainers, today, generated, project_title):
-    """Fetch and render the binder toolchain's page."""
-    milestones = fetch_milestones(BINDER_REPO)
-    upcoming = sorted(m["due"][:10] for m in milestones if m["due"] and m["due"][:10] >= today)
-    next_due = upcoming[0] if upcoming else None
-    fields = fetch_project_fields(BINDER_REPO)
-    with_fields = lambda issues: [dict(i, projectFields=fields.get(i["number"], {})) for i in issues]
-    tickets = [classify(i, maintainers, today, next_due, BINDER_REPO)
-               for i in with_fields(fetch_issues(repo=BINDER_REPO))]
-    release = fetch_last_release(BINDER_REPO)
-    resolved = ([classify(i, maintainers, today, next_due, BINDER_REPO)
-                 for i in with_fields(fetch_resolved(release["at"], BINDER_REPO))] if release else [])
-    return render_binder(tickets, milestones, generated, project_title, resolved, release)
 
 
 def main(argv):
@@ -1013,19 +961,15 @@ def main(argv):
     generated = now.strftime("%Y-%m-%d %H:%M UTC")
     title = project["title"] or "project %d" % PROJECT_NUMBER
     page = render(tickets, milestones, generated, title, resolved, release, sections, components,
-                  history=release_history(), binder_page=BINDER_WIKI_PAGE)
-    binder = binder_page(set(a.maintainer), today, generated, title)
+                  history=release_history())
 
     if a.output:
         with open(a.output, "w") as fh:
             fh.write(page)
-    if a.binder_output:
-        with open(a.binder_output, "w") as fh:
-            fh.write(binder)
     if a.publish:
         if not project["public"]:
             sys.exit("project %d is not public: its fields cannot go on the public wiki" % PROJECT_NUMBER)
-        publish({WIKI_PAGE: page, BINDER_WIKI_PAGE: binder})
+        publish({WIKI_PAGE: page})
     if not a.output and not a.publish:
         sys.stdout.write(page)
     return 0
