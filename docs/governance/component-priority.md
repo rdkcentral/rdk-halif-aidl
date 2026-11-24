@@ -30,8 +30,13 @@ Components and changes needed for core IP set-top-box functionality, particularl
 | AV Clock (Audio Sync, Video Sync) | `component:avclock` | P1 | Audio and video synchronisation. |
 | Common | `component:common` | P1 | Structural changes, including dissolving Common, because they can affect every HAL. |
 | DRM | `component:drm` | P1 | Needs further technical discussion. |
+| HDMI-CEC | `component:hdmicec` | P1 | — |
 | HDMI Output | `component:hdmioutput` | P1 | Every open ticket, as soon as possible: needed for platform qualification. |
+| Indicator | `component:indicator` | P1 | — |
 | Plane Control | `component:planecontrol` | P1 | Graphics and video plane composition for HDMI output. |
+| Ring Buffer | `component:ringbuffer` | P1 | — |
+| Motion Sensor | `component:motion_sensor` | P1 | Shares `sensor/` with Thermal Sensor. |
+| Thermal Sensor | `component:thermal_sensor` | P1 | Shares `sensor/` with Motion Sensor. |
 | Video Decoder | `component:videodecoder` | P1* | Important to the core delivery. |
 | Video Sink | `component:videosink` | P1 | Video output rendering for HDMI output. |
 

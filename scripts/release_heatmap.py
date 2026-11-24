@@ -94,8 +94,9 @@ UNPRIORITISED = {"priority": None, "title": "Not yet prioritised", "rows": [],
 DIR_OF = {"boot": "bootreason", "motion_sensor": "sensor", "thermal_sensor": "sensor"}
 # A component directory renamed since a release, by its old name: flash shipped as firmwareupdate.
 RENAMED = {"flash": "firmwareupdate"}
-# component:* labels of components that no longer exist: flash is firmwareupdate, cdm became drm.
-RETIRED = {"flash", "cdm"}
+# component:* labels of components that no longer exist: flash is firmwareupdate, cdm became drm,
+# and factory was dropped. Not rows even while an old ticket still carries the label.
+RETIRED = {"flash", "cdm", "factory"}
 # The device classes in metadata.yaml's devices field, as the heatmap groups them.
 DEVICE_GROUPS = [("stb", "tv"), ("stb",), ("tv",)]
 

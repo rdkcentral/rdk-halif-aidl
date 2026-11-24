@@ -527,10 +527,10 @@ class MetadataPriority(unittest.TestCase):
         self.assertIn("| hdmiinput 0.2.0.0 | TV | 0 |", page)
 
     def test_retired_names_are_not_rows(self):
-        # cdm became drm and flash shipped as firmwareupdate; metrics is a label-only component.
+        # cdm became drm, flash shipped as firmwareupdate, factory was dropped; metrics is label-only.
         root = tempfile.mkdtemp()
         _meta_fields(root, "firmwareupdate", "0.2.0.1", "P2")
-        self.assertEqual(rh.all_components(root, ["component:cdm", "component:flash", "component:metrics"]),
+        self.assertEqual(rh.all_components(root, ["component:cdm", "component:flash", "component:factory", "component:metrics"]),
                          ["firmwareupdate", "metrics"])
         git = lambda *a: rh.subprocess.run(["git", "-C", root, "-c", "user.name=t", "-c", "user.email=t@t"] + list(a),
                                            check=True, capture_output=True)

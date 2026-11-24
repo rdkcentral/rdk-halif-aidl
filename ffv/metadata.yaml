@@ -31,7 +31,7 @@ status: AMBER
 description: "Far-field voice capture and mic array processing"
 type: OEM
 priority: ~
-devices: [stb, tv]
+devices: [tv]
 
 # lifecycle - 14+5 review cycle dates                                    [pr_cycle.sh]
 #   review_started    - Date the review window opened
