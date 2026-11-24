@@ -43,11 +43,11 @@ parcelable DvbCCapabilities {
     DvbCBandwidth[] bandwidths;
     /** Supported annex standards. */
     DvbCAnnex[] dvbCAnnexes;
-    /** Supported modulations (AUTO only where the frontend auto-detects, HAL.BROADCAST.21). */
+    /** Supported modulations (AUTO is mandatory for proper operation). */
     DvbCModulation[] modulations;
-    /** Supported code rates (AUTO only where the frontend auto-detects, HAL.BROADCAST.21). */
+    /** Supported code rates (AUTO is mandatory for proper operation). */
     DvbCCodeRate[] codeRates;
-    /** Supported spectral inversion modes (AUTO only where the frontend auto-detects, HAL.BROADCAST.21). */
+    /** Supported spectral inversion modes (AUTO is mandatory for proper operation). */
     SpectralInversion[] inversions;
 
     /** Reserved for future use. */

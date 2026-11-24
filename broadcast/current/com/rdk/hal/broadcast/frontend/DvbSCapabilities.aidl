@@ -45,15 +45,15 @@ parcelable DvbSCapabilities {
     DvbSStandard[] dvbSStandards;
     /** Supported modulations. */
     DvbSModulation[] modulations;
-    /** Supported code rates (inner FEC) (AUTO only where the frontend auto-detects, HAL.BROADCAST.21). */
+    /** Supported code rates (inner FEC) (AUTO is mandatory for proper operation). */
     DvbSInnerFec[] innerFecs;
-    /** Supported roll-off values (AUTO only where the frontend auto-detects, HAL.BROADCAST.21). */
+    /** Supported roll-off values (AUTO is mandatory for proper operation). */
     DvbSRollOff[] rollOffs;
-    /** Supported DVB-S2/S2X pilot modes (AUTO only where the frontend auto-detects, HAL.BROADCAST.21). */
+    /** Supported DVB-S2/S2X pilot modes (AUTO is mandatory for proper operation). */
     DvbSPilot[] pilots;
-    /** Supported DVB-S/S2/S2X spectral inversion modes (AUTO only where the frontend auto-detects, HAL.BROADCAST.21). */
+    /** Supported DVB-S/S2/S2X spectral inversion modes (AUTO is mandatory for proper operation). */
     SpectralInversion[] inversions;
-    /** Supported DVB-S2/S2X physical-layer scrambling modes (AUTO only where the frontend auto-detects, HAL.BROADCAST.21). */
+    /** Supported DVB-S2/S2X physical-layer scrambling modes (AUTO is mandatory for proper operation). */
     DvbSPlsMode[] plsModes;
     /** Whether DVB-S2/S2X input stream selection is supported. */
     boolean isInputStreamIdSupported;
