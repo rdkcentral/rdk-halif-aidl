@@ -453,7 +453,7 @@ def project_fields(issue):
     return issue.get("projectFields") or {}
 
 
-def classify(issue, maintainers, today, next_due, repo=REPO):
+def classify(issue, maintainers, today, next_due, repo=REPO, dirs=None):
     labels = [l["name"] for l in issue["labels"]["nodes"]]
     fields = project_fields(issue)
     label_class = pie.class_of(labels)
@@ -463,7 +463,8 @@ def classify(issue, maintainers, today, next_due, repo=REPO):
     ms = issue["milestone"]
     due = ms["dueOn"][:10] if ms and ms["dueOn"] else None
     # This checkout's metadata.yaml maps this repo's labels; another repo's labels are their own rows.
-    dirs = label_dirs() if repo == REPO else {}
+    if dirs is None:
+        dirs = label_dirs() if repo == REPO else {}
     comps = sorted({row_name(l, dirs) for l in labels if l.startswith("component:")})
     if not comps:
         # Repo-wide work has no component: its row comes from the scope or class label.
@@ -490,7 +491,7 @@ def classify(issue, maintainers, today, next_due, repo=REPO):
 
     return {
         "number": issue["number"], "title": issue["title"], "url": issue["url"],
-        "milestone": ms["title"] if ms else NO_MILESTONE, "components": comps,
+        "milestone": ms["title"] if ms else NO_MILESTONE, "due": due, "components": comps,
         "effect": effect, "label_class": label_class, "field": fields.get("Interface Effect"),
         "priority": priority, "score": score, "why": why, "prs": pr_states(issue), "open_prs": open_prs(issue, repo),
     }
@@ -750,7 +751,9 @@ def milestone_columns(tickets, milestones):
     ticket was not closed, or the milestone was never moved. Its column is flagged.
     """
     used = {t["milestone"] for t in tickets}
-    due = {m["title"]: m["due"] for m in milestones}
+    # Only open milestones are fetched: a closed one's due date comes from its tickets.
+    due = {t["milestone"]: t.get("due") for t in tickets if t.get("due")}
+    due.update({m["title"]: m["due"] for m in milestones})
     cols = [m["title"] for m in milestones if m["title"] in used]
     closed = sorted(used - set(cols) - {NO_MILESTONE}, key=version_key)
     cols += closed + ([NO_MILESTONE] if NO_MILESTONE in used else [])

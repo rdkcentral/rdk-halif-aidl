@@ -146,6 +146,11 @@ class Render(unittest.TestCase):
         t = rh.classify(issue(1, labels=["component:panel"], milestone="0.22.0"), set(), "2026-11-03", None)
         page = rh.render([t], [{"title": "0.24.0", "due": None}], "now")
         self.assertIn("| Component | Devices | ⚠️ 0.22.0 closed<br>no date | Total |", page)
+        # A closed milestone is not fetched: its due date comes from the ticket.
+        t = rh.classify(issue(1, labels=["component:panel"], milestone="0.22.0", due="2026-07-22T00:00:00Z"),
+                        set(), "2026-11-03", None)
+        page = rh.render([t], [{"title": "0.24.0", "due": None}], "now")
+        self.assertIn("| Component | Devices | ⚠️ 0.22.0 closed<br>due 2026-07-22 | Total |", page)
 
     def test_maintainer_takes_several_logins(self):
         a = rh.parse_args(["--maintainer", "alice", "bob", "--maintainer", "carol"])
@@ -563,14 +568,19 @@ class MetadataPriority(unittest.TestCase):
         self.assertEqual(dirs, {"drm": "drm", "motion_sensor": "sensor", "thermal_sensor": "sensor"})
         self.assertEqual(rh.row_name("component:thermal_sensor", dirs), "sensor")
         self.assertEqual(rh.row_name("component:metrics", dirs), "metrics")   # claimed by none
+        self.assertEqual(rh.label_dirs(root), dirs)
         # The repo's own: one ticket on both sensor labels is one sensor ticket.
+        _meta_fields(root, "bootreason", "0.2.0.0", "P2")
+        with open(os.path.join(root, "bootreason", "metadata.yaml"), "a") as fh:
+            fh.write("labels: [component:boot]\n")
+        dirs = rh.label_map(root)
+        # One ticket on both sensor labels is one sensor ticket.
         t = rh.classify(issue(7, labels=["component:motion_sensor", "component:thermal_sensor", "component:boot"]),
-                        set(), "2026-11-03", None)
+                        set(), "2026-11-03", None, dirs=dirs)
         self.assertEqual(t["components"], ["bootreason", "sensor"])
         # Another repo's labels are not mapped through this checkout's metadata.yaml.
         other = rh.classify(issue(8, labels=["component:boot"]), set(), "2026-11-03", None, "rdkcentral/linux_binder_idl")
         self.assertEqual(other["components"], ["boot"])
-        self.assertEqual(rh.label_dirs(root), dirs)
 
     def test_a_listed_label_shows_only_with_an_open_ticket(self):
         # Crypto is on the priority list but has no metadata.yaml: it ranks, and shows only with a ticket.
