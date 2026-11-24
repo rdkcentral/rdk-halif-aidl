@@ -138,7 +138,7 @@ class Render(unittest.TestCase):
 
     def test_page_is_only_the_heatmap(self):
         t = rh.classify(issue(1, labels=["Minor Change"], milestone="0.24.0"), set(), "2026-11-03", None)
-        page = rh.render([t], [{"title": "0.24.0", "due": None}], "now", sections=SECTIONS)
+        page = rh.render([t], [{"title": "0.24.0", "due": None}], "now", sections=SECTIONS, components=["drm"])
         self.assertEqual([l for l in page.splitlines() if l.startswith("#")],
                          ["# Release heatmap", "## P1 – Critical", "## P3 – Low", "## Not yet prioritised"])
 
@@ -325,7 +325,8 @@ class Priorities(unittest.TestCase):
     def test_a_ticket_goes_to_its_highest_priority_component(self):
         t = rh.classify(issue(4, labels=["component:panel", "component:videosink"], milestone="0.24.0"),
                         set(), "2026-11-03", None)
-        page = rh.render([t], [{"title": "0.24.0", "due": None}], "now", sections=SECTIONS, root=EMPTY)
+        page = rh.render([t], [{"title": "0.24.0", "due": None}], "now", sections=SECTIONS,
+                         components=["panel", "videosink"], root=EMPTY)
         self.assertIn("| Video Sink |  | [![#4", page)
         self.assertIn("| Panel |  | · | 0 |", page)
 
@@ -557,6 +558,18 @@ class MetadataPriority(unittest.TestCase):
         t = rh.classify(issue(7, labels=["component:motion_sensor", "component:thermal_sensor", "component:boot"]),
                         set(), "2026-11-03", None)
         self.assertEqual(t["components"], ["bootreason", "sensor"])
+
+    def test_a_listed_label_shows_only_with_an_open_ticket(self):
+        # Crypto is on the priority list but has no metadata.yaml: it ranks, and shows only with a ticket.
+        secs = [{"priority": "P3", "title": "P3 – Low", "about": None, "rows": [
+            {"name": "Panel", "row": "panel"}, {"name": "Crypto", "row": "crypto"},
+            {"name": "General documentation", "row": "(documentation)"}]}]
+        page = rh.render([], [], "now", sections=secs, components=["panel"], root=EMPTY)
+        self.assertNotIn("| Crypto |", page)
+        self.assertIn("| General documentation |", page)
+        t = rh.classify(issue(9, labels=["component:crypto"], milestone="0.24.0"), set(), "2026-11-03", None)
+        page = rh.render([t], [{"title": "0.24.0", "due": None}], "now", sections=secs, components=["panel"], root=EMPTY)
+        self.assertIn("| Crypto |  | [![#9", page.split("## P3")[1])
 
     def test_priority_list_agrees_with_metadata(self):
         # The list names a component's priority for people; its metadata.yaml sets it for the

@@ -711,13 +711,16 @@ def flow(items, alone):
 
 
 def sectioned(tickets, sections, components, root=ROOT):
-    """The page's sections: each priority's rows, then every other row under Not yet prioritised."""
+    """The page's sections: each priority's rows, then every other row under Not yet prioritised.
+    A priority row is shown when it is a component, has an open ticket, or is a repo-wide row: a
+    listed label with neither, such as Crypto with no open ticket, still ranks but is not shown."""
     rank = rank_of(sections)
-    placed = set(rank)
-    rest = sorted((set(components) | {row_of(t, rank) for t in tickets}) - placed,
-                  key=lambda c: (c.startswith("("), device_order(c, root), c))
+    shown = set(components) | {row_of(t, rank) for t in tickets}
+    rest = sorted(shown - set(rank), key=lambda c: (c.startswith("("), device_order(c, root), c))
+    kept = [dict(s, rows=[r for r in s["rows"] if r["row"] in shown or r["row"].startswith("(")])
+            for s in sections]
     other = dict(UNPRIORITISED, rows=[{"name": None, "row": r} for r in rest])
-    return [s for s in sections] + ([other] if rest else []), rank
+    return [s for s in kept if s["rows"]] + ([other] if rest else []), rank
 
 
 def render(tickets, milestones, generated, project_title="halif_aidl", resolved=(), release=None,
