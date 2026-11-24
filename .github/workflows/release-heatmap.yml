@@ -1,9 +1,11 @@
 name: "Release heatmap"
 
-# Regenerates the wiki's Release-Heatmap page when a ticket, milestone or
-# release changes. A board edit to Priority or Interface Effect sends no event
-# to a repository workflow (`projects_v2_item` is an organisation webhook):
-# run this workflow by hand, or the script, to pick one up.
+# Regenerates the wiki's Release-Heatmap page, and the Binder-Release-Heatmap
+# page for rdkcentral/linux_binder_idl that it links to, when a ticket,
+# milestone or release here changes. A board edit to Priority or Interface
+# Effect sends no event to a repository workflow (`projects_v2_item` is an
+# organisation webhook), and neither does a change in linux_binder_idl: run
+# this workflow by hand, or the script, to pick one up.
 
 # The job's own GITHUB_TOKEN reads the issues, PRs and the public halif_aidl
 # project's items, and pushes the wiki: no repository secret is needed (#986).
