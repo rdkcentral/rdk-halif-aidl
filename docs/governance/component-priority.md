@@ -1,6 +1,6 @@
 # Component Priority List
 
-The order in which HAL components are worked on, set by the core IP set-top-box delivery on Broadcom XI1. The [Release-Heatmap](https://github.com/rdkcentral/rdk-halif-aidl/wiki/Release-Heatmap) wiki page reads this file: one section per priority, one row per `Label`.
+The order in which HAL components are worked on. The [Release-Heatmap](https://github.com/rdkcentral/rdk-halif-aidl/wiki/Release-Heatmap) wiki page reads this file: one section per priority, one row per `Label`.
 
 ## Where the priority is kept
 
@@ -20,7 +20,7 @@ The order in which HAL components are worked on, set by the core IP set-top-box 
 
 ## P1 – Critical priority
 
-Components and changes needed for core IP set-top-box functionality, particularly Broadcom XI1.
+Worked on first.
 
 | Component | Label | Priority | Scope |
 | --- | --- | --- | --- |
@@ -44,23 +44,23 @@ Components and changes needed for core IP set-top-box functionality, particularl
 
 ## P2 – Medium priority
 
-Required work that can be deferred or delivered after higher-priority functionality.
+Worked on after P1.
 
 | Component | Label | Priority | Scope |
 | --- | --- | --- | --- |
 | Boot | `component:boot` | P2 | Few issues, none significant. |
-| Broadcast | `component:broadcast` | P2 | Deferred behind IP set-top-box work. Check the chosen XI1 variant supports the features. |
+| Broadcast | `component:broadcast` | P2 | Deferred behind P1 work. |
 | Deep Sleep | `component:deepsleep` | P2 | Small, likely straightforward. |
 | Device Info | `component:deviceinfo` | P2 | Limited-impact issues. |
 | Firmware Update | `component:firmwareupdate` | P2 | — |
-| VSI Abstract File System | `component:vsi/abstractfilesystem` | P2* | Architecturally important; not all of it is needed for XI1. |
+| VSI Abstract File System | `component:vsi/abstractfilesystem` | P2* | Architecturally important; not all of it is needed yet. |
 | HAL architecture documentation | — | P2/P3 | Better documentation and examples, not at the expense of critical implementation work. |
 
 \* VSI is P2 or P3, depending on how much of it the current delivery needs.
 
 ## P3 – Low priority
 
-Outside the current Broadcom IP set-top-box requirements, or the lowest priority.
+Worked on after P2.
 
 | Component | Label | Priority | Scope |
 | --- | --- | --- | --- |
@@ -70,7 +70,7 @@ Outside the current Broadcom IP set-top-box requirements, or the lowest priority
 | Panel | `component:panel` | P3 | Not needed for set-top-box delivery. |
 | RF4CE | `component:r4ce` | P3 | — |
 | Secure Storage | `component:securestorage` | P3 | — |
-| Video Capture | `component:videocapture` | P3 | Current XI1 limitations prevent it. |
+| Video Capture | `component:videocapture` | P3 | Current platform limitations prevent it. |
 | General documentation | `documentation` | P3 | The existing GStreamer and Polaris diagrams serve; improvements go in their own tickets. |
 | Repository infrastructure and CI/CD | `scope:infrastructure` | P3* | Below build tooling needed for development. |
 
