@@ -142,15 +142,17 @@ class Render(unittest.TestCase):
         self.assertEqual([l for l in page.splitlines() if l.startswith("#")],
                          ["# Release heatmap", "## P1 – Critical", "## P3 – Low", "## Not yet prioritised"])
 
-    def test_closed_milestone_is_flagged(self):
-        t = rh.classify(issue(1, labels=["component:panel"], milestone="0.22.0"), set(), "2026-11-03", None)
-        page = rh.render([t], [{"title": "0.24.0", "due": None}], "now")
-        self.assertIn("| Component | Devices | ⚠️ 0.22.0 closed<br>no date | Total |", page)
-        # A closed milestone is not fetched: its due date comes from the ticket.
-        t = rh.classify(issue(1, labels=["component:panel"], milestone="0.22.0", due="2026-07-22T00:00:00Z"),
+    def test_closed_milestone_has_no_column(self):
+        # A ticket left on a closed milestone shows under No milestone, and is named above the tables.
+        t = rh.classify(issue(1, labels=["component:panel"], milestone="0.23.0 - Next Release"),
                         set(), "2026-11-03", None)
-        page = rh.render([t], [{"title": "0.24.0", "due": None}], "now")
-        self.assertIn("| Component | Devices | ⚠️ 0.22.0 closed<br>due 2026-07-22 | Total |", page)
+        u = rh.classify(issue(2, labels=["component:panel"], milestone="0.24.0"), set(), "2026-11-03", None)
+        page = rh.render([t, u], [{"title": "0.24.0", "due": None}], "now")
+        self.assertIn("| Component | Devices | 0.24.0<br>no date | No milestone | Total |", page)
+        self.assertNotIn("0.23.0<br>", page)
+        self.assertIn("⚠️ Open on a closed milestone, so shown under No milestone: [#1](u1) (0.23.0 - Next Release).",
+                      page)
+        self.assertNotIn("⚠️", rh.render([u], [{"title": "0.24.0", "due": None}], "now"))
 
     def test_maintainer_takes_several_logins(self):
         a = rh.parse_args(["--maintainer", "alice", "bob", "--maintainer", "carol"])
@@ -410,6 +412,12 @@ def _meta(root, d, version):
         fh.write("component: %s\nversion: %s\nstatus: GREEN\n" % (d, version))
 
 
+def srow(name, steps, version, work, compat):
+    """A Settling row as rendered: the steps and Compatible-only as badges."""
+    return "| %s | %s | %s | %s | %s |" % (name, " | ".join(rh.step_badge(x) for x in steps), version, work,
+                                         rh.compat_badge(compat))
+
+
 class Settling(unittest.TestCase):
 
     HISTORY = {"tags": ["0.21.0", "0.22.0", "0.23.0"],
@@ -422,6 +430,14 @@ class Settling(unittest.TestCase):
         self.assertEqual(rh.step("0.2.0.0", "0.2.1.0"), "m")
         self.assertEqual(rh.step("0.2.0.0", "0.2.0.0"), "·")
         self.assertEqual((rh.step(None, "0.1.0.0"), rh.step(None, None)), ("new", ""))
+
+    def test_badges_use_the_heatmap_colours(self):
+        self.assertIn(rh.BADGE["Major"][1], rh.step_badge("**B**"))
+        self.assertIn(rh.BADGE["Minor"][1], rh.step_badge("m"))
+        self.assertEqual((rh.step_badge("·"), rh.step_badge("")), ("·", ""))
+        self.assertIn("1a7f37", rh.compat_badge("now"))
+        self.assertIn(rh.BADGE["Major"][1], rh.compat_badge("after 0.24.0"))
+        self.assertIn("6e7781", rh.compat_badge("not defined yet"))
 
     def test_compatible_from_follows_the_last_breaking_milestone(self):
         self.assertEqual(rh.compatible_from("0.3.0.0", {}), "now")
@@ -442,7 +458,7 @@ class Settling(unittest.TestCase):
         page = rh.render([wide], [{"title": "0.24.0 - Next", "due": None}], "now", sections=secs,
                          root=EMPTY, history=history)
         settling = page.split("## Settling")[1]
-        self.assertIn("| drm | · | 0.1.0.0 | · | now |", settling)
+        self.assertIn(srow("drm", ["·"], "0.1.0.0", "·", "now"), settling)
         self.assertNotIn("| flash |", settling)
         self.assertIn("Breaking work on no single component, so on every one it reaches: [#500](u500) (0.24.0).",
                       settling)
@@ -458,18 +474,32 @@ class Settling(unittest.TestCase):
         settling = page.split("## Settling")[1]
         self.assertIn("| Component | →0.22.0 | →0.23.0 | In 0.23.0 | Breaking work open | Compatible-only |",
                       settling)
-        self.assertIn("| DRM | · | **B** | 0.2.0.0 | · | now |", settling)
-        self.assertIn("| Video Sink | m | **B** | 0.3.0.0 | 0.24.0: [#5](u5) | after 0.24.0 |", settling)
-        self.assertIn("| Panel | new | · | 0.1.0.0 | 0.24.0: [#5](u5) | after 0.24.0 |", settling)
+        self.assertIn(srow("DRM", ["·", "**B**"], "0.2.0.0", "·", "now"), settling)
+        self.assertIn(srow("Video Sink", ["m", "**B**"], "0.3.0.0", "0.24.0: [#5](u5)", "after 0.24.0"), settling)
+        self.assertIn(srow("Panel", ["new", "·"], "0.1.0.0", "0.24.0: [#5](u5)", "after 0.24.0"), settling)
         self.assertNotIn("(documentation)", settling)
 
     def test_a_component_in_the_last_release_stays_listed(self):
         # Gone from develop, no label and no priority row: still in 0.23.0, so still shown.
         page = rh.render([], [], "now", sections=[], components=[], root=EMPTY, history=self.HISTORY)
-        self.assertIn("| panel | new | · | 0.1.0.0 | · | now |", page.split("## Settling")[1])
+        self.assertIn(srow("panel", ["new", "·"], "0.1.0.0", "·", "now"), page.split("## Settling")[1])
         self.assertIn("| panel |  | 0 |", page.split("## Not yet prioritised")[1])
         gone = dict(self.HISTORY, versions={"drm": {"0.21.0": "0.1.0.0"}})
         self.assertNotIn("| DRM |", rh.render([], [], "now", sections=[], root=EMPTY, history=gone).split("## Settling")[1])
+
+    def test_settling_chart_bars_end_at_the_last_breaking_due_date(self):
+        entries = [("P1", "Video Sink", {"0.24.0": [], "0.25.0": []}, "after 0.25.0"),
+                   ("P1", "DRM", {}, "now"),
+                   ("P2", "Boot: core", {rh.NO_MILESTONE: []}, "unknown: breaking work with no milestone"),
+                   ("P3", "ffv", {}, "not defined yet")]
+        due = {"0.24.0": "2026-11-30T00:00:00Z", "0.25.0": "2026-12-13T00:00:00Z"}
+        chart = "\n".join(rh.settling_chart(entries, "2026-11-25", due))
+        self.assertIn("```mermaid\ngantt", chart)
+        self.assertIn("    section P1\n    Video Sink : crit, 2026-11-25, 2026-12-13\n    DRM : milestone, 2026-11-25, 0d",
+                      chart)
+        self.assertNotIn("ffv", chart)
+        self.assertNotIn("section P2", chart)
+        self.assertIn("no due date: Boot: core.", chart)   # named in text, its colon kept
 
     def test_no_settling_section_without_release_history(self):
         self.assertNotIn("## Settling", rh.render([], [], "now", sections=SECTIONS, root=EMPTY))
