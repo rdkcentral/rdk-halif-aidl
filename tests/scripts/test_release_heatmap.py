@@ -37,7 +37,7 @@ spec.loader.exec_module(rh)
 
 
 def issue(number=1, labels=(), milestone=None, due=None, author="someone", priority=None,
-          effect=None, blocking=0, people=1, refs=0, prs=(), ref_prs=()):
+          effect=None, blocking=0, people=1, refs=0, prs=(), ref_prs=(), created=None, updated=None):
     values = []
     if priority:
         values.append({"name": priority, "field": {"name": "Priority"}})
@@ -45,7 +45,7 @@ def issue(number=1, labels=(), milestone=None, due=None, author="someone", prior
         values.append({"name": effect, "field": {"name": "Interface Effect"}})
     return {
         "number": number, "title": "T%d" % number, "url": "u%d" % number,
-        "author": {"login": author},
+        "author": {"login": author}, "createdAt": created, "updatedAt": updated,
         "milestone": {"title": milestone, "dueOn": due} if milestone else None,
         "labels": {"nodes": [{"name": l} for l in labels]},
         "participants": {"totalCount": people},
@@ -116,19 +116,35 @@ class Classify(unittest.TestCase):
 
 class Render(unittest.TestCase):
 
-    def test_cell_badges_each_ticket_by_class(self):
-        major = rh.classify(issue(1, labels=["Major Change", "component:panel"], milestone="0.24.0"), set(), "2026-11-03", None)
-        minor = rh.classify(issue(2, labels=["Minor Change", "component:panel"], milestone="0.24.0"), set(), "2026-11-03", None)
-        none = rh.classify(issue(3, labels=["component:panel"], milestone="0.24.0"), set(), "2026-11-03", None)
-        page = rh.render([major, minor, none], [{"title": "0.24.0", "due": None}], "now")
-        self.assertIn("[![#1 Major](https://img.shields.io/badge/%231-M-d73a4a)](u1)", page)
-        self.assertIn("[![#2 Minor](https://img.shields.io/badge/%232-m-0969da)](u2)", page)
-        self.assertIn("[![#3 (no change class)](https://img.shields.io/badge/%233-%3F-d0d7de)](u3)", page)
-        self.assertNotIn("## Checks", page)
+    def test_ticket_badges_show_age_and_prs_show_class(self):
+        young = rh.classify(issue(1, labels=["component:panel"], milestone="0.24.0", created="2026-10-20T00:00:00Z",
+                                  prs=[{"number": 9, "state": "OPEN", "createdAt": "2026-11-01T00:00:00Z",
+                                        "labels": {"nodes": [{"name": "Major Change"}]}}]), set(), "2026-11-03", None)
+        old = rh.classify(issue(2, labels=["Major Change", "component:panel"], milestone="0.24.0",
+                                created="2026-08-01T00:00:00Z"), set(), "2026-11-03", None)
+        page = rh.render([young, old], [{"title": "0.24.0", "due": None}], "now")
+        # The ticket badge is its age, coloured by age; the issue's own class label is not shown.
+        self.assertIn("[![#1 2w old](https://img.shields.io/badge/%231-2w-1a7f37)](u1)", page)
+        self.assertIn("[![#2 13w old](https://img.shields.io/badge/%232-13w-d73a4a)](u2)", page)
+        # The PR carries the class letter and review state.
+        self.assertIn("[![PR 9 M open, 2d old](https://img.shields.io/badge/%E2%86%B39-M%20open-1a7f37)](p9)", page)
+        self.assertIn("| 🟧<br>", page)   # a Major PR makes the cell amber
 
-    def test_unknown_class_badge_shows_its_name(self):
-        t = rh.classify(issue(5, effect="Spike"), set(), "2026-11-03", None)
-        self.assertEqual(rh.badge(t), "[![#5 Spike](https://img.shields.io/badge/%235-Spike-57606a)](u5)")
+    def test_age_colours(self):
+        self.assertEqual([rh.age_colour(d) for d in (0, 29, 30, 59, 60, None)],
+                         ["1a7f37", "1a7f37", "bf8700", "bf8700", "d73a4a", "6e7781"])
+        self.assertEqual([rh.age_text(d) for d in (3, 20, 400, 365)], ["3d", "2w", "1y+", "1y"])
+        self.assertEqual(rh.age_days("2026-10-03T10:00:00Z", "2026-11-03"), 31)
+
+    def test_cell_colour_comes_from_the_prs(self):
+        def t(*effects):
+            return {"open_prs": [{"effect": e} for e in effects]}
+        self.assertEqual(rh.cell_colour([t("Minor"), t("BugFix", "New Interface")]), "🟩")
+        self.assertEqual(rh.cell_colour([t("Minor"), t("CR-Major")]), "🟧")
+        self.assertEqual(rh.cell_colour([t(), t()]), "")
+
+    def test_unknown_class_letter_shows_its_name(self):
+        self.assertEqual((rh.class_letter("Spike"), rh.class_letter(None), rh.class_letter("Major")), ("Spike", "?", "M"))
 
     def test_shield_escapes_dashes_and_spaces(self):
         self.assertEqual(rh.shield("CR", "CR-Major", "8b0000"),
@@ -148,9 +164,9 @@ class Render(unittest.TestCase):
                         set(), "2026-11-03", None)
         u = rh.classify(issue(2, labels=["component:panel"], milestone="0.24.0"), set(), "2026-11-03", None)
         page = rh.render([t, u], [{"title": "0.24.0", "due": None}], "now")
-        self.assertIn("| Component | Devices | 0.24.0<br>no date | No milestone | Total |", page)
+        self.assertIn("| Component | Devices | 0.24.0<br>no date | Triage required | Total |", page)
         self.assertNotIn("0.23.0<br>", page)
-        self.assertIn("⚠️ Open on a closed milestone, so shown under No milestone: [#1](u1) (0.23.0 - Next Release).",
+        self.assertIn("⚠️ Open on a closed milestone, so shown under Triage required: [#1](u1) (0.23.0 - Next Release).",
                       page)
         self.assertNotIn("⚠️", rh.render([u], [{"title": "0.24.0", "due": None}], "now"))
 
@@ -217,18 +233,6 @@ class Render(unittest.TestCase):
                                       {"number": 4, "state": "OPEN", "repository": {"isPrivate": False}}]))
         self.assertEqual([p["number"] for p in prs], [4])
 
-    def test_release_lookup_fails_loudly(self):
-        import subprocess
-        real = subprocess.run
-        try:
-            subprocess.run = lambda *a, **k: subprocess.CompletedProcess(a, 1, "", "gh: Not Found (HTTP 404)")
-            self.assertIsNone(rh.fetch_last_release())
-            subprocess.run = lambda *a, **k: subprocess.CompletedProcess(a, 1, "", "gh: HTTP 502")
-            with self.assertRaises(RuntimeError):
-                rh.fetch_last_release()
-        finally:
-            subprocess.run = real
-
     def test_gh_json_retries_a_transient_5xx(self):
         import subprocess
         real = subprocess.run
@@ -263,18 +267,7 @@ class Render(unittest.TestCase):
         t = rh.classify(issue(1, labels=["Minor Change", "component:panel"], milestone="0.24.0",
                               prs=[{"number": 9, "state": "OPEN"}]), set(), "2026-11-03", None)
         page = rh.render([t], [{"title": "0.24.0", "due": None}], "now")
-        self.assertIn("(u1)<br>[![PR 9 open](https://img.shields.io/badge/%E2%86%B39-open-bf8700)](p9)", page)
-
-    def test_resolved_shows_only_prs_merged_into_develop(self):
-        t = rh.classify(issue(2, labels=["bug", "component:panel"], milestone="0.24.0",
-                              prs=[{"number": 11, "state": "MERGED"},
-                                   {"number": 12, "state": "MERGED", "baseRefName": "main"}]),
-                        set(), "2026-11-03", None)
-        release = {"tag": "0.23.0", "url": "r", "at": "2026-10-26T23:10:03Z"}
-        section = rh.render([], [], "now", resolved=[t], release=release).split("## Resolved since 0.23.0")[1]
-        self.assertIn("%E2%86%B311-merged", section)
-        self.assertNotIn("%E2%86%B312", section)
-        self.assertIn("| **Tickets** | | **1** |", section)
+        self.assertIn("(u1)<br>[![PR 9 ? open, ? old](https://img.shields.io/badge/%E2%86%B39-%3F%20open-6e7781)](p9)", page)
 
     def test_a_ticket_on_several_components_is_in_its_first_row(self):
         one = rh.classify(issue(1, labels=["component:panel"], milestone="0.24.0"), set(), "2026-11-03", None)
@@ -288,11 +281,6 @@ class Render(unittest.TestCase):
         totals = [int(l.rsplit("|", 2)[1]) for l in page.splitlines()
                   if l.startswith("| ") and not l.startswith(("| Component", "| ---", "| **"))]
         self.assertEqual(sum(totals), 2)
-
-    def test_resolved_section_needs_a_release(self):
-        self.assertNotIn("## Resolved", rh.render([], [], "now"))
-        release = {"tag": "0.23.0", "url": "r", "at": "2026-10-26T23:10:03Z"}
-        self.assertIn("Nothing yet.", rh.render([], [], "now", resolved=[], release=release))
 
     def test_ticket_with_a_pr_gets_its_own_line(self):
         self.assertEqual(rh.flow(["a", "b", "c", "d"], [False, True, False, False]), "a<br>b<br>c d")
@@ -418,6 +406,25 @@ def srow(name, steps, version, work, compat):
                                          rh.compat_badge(compat))
 
 
+class Backlog(unittest.TestCase):
+
+    def test_lists_only_issues_older_than_the_limit_oldest_first(self):
+        mk = lambda n, created, ms=None: rh.classify(issue(n, labels=["component:panel"], milestone=ms, created=created,
+                                                          updated="2026-10-01T00:00:00Z"), set(), "2026-11-25", None)
+        ts = [mk(1, "2025-11-01T00:00:00Z", "0.24.0"), mk(2, "2024-06-01T00:00:00Z"), mk(3, "2026-11-01T00:00:00Z")]
+        page = rh.render_backlog(ts, "now")
+        rows = [l for l in page.splitlines() if l.startswith("| [")]
+        self.assertEqual([r.split("](u")[1][0] for r in rows], ["2", "1"])
+        self.assertIn("| T2 | panel | Triage required | 2y+ | 2026-10-01 |", page)
+        self.assertIn("2 open issues have been open for 365 days or more", page)
+        self.assertIn("None.", rh.render_backlog([ts[2]], "now"))
+
+    def test_heatmap_links_the_backlog_page(self):
+        page = rh.render([], [], "now", backlog_page=rh.BACKLOG_PAGE)
+        self.assertIn("](%s)" % rh.BACKLOG_PAGE, page)
+        self.assertNotIn(rh.BACKLOG_PAGE, rh.render([], [], "now"))
+
+
 class Settling(unittest.TestCase):
 
     HISTORY = {"tags": ["0.21.0", "0.22.0", "0.23.0"],
@@ -443,7 +450,7 @@ class Settling(unittest.TestCase):
         self.assertEqual(rh.compatible_from("0.3.0.0", {}), "now")
         self.assertEqual(rh.compatible_from("0.3.0.0", {"0.25.0": [], "0.24.0": []}), "after 0.25.0")
         self.assertEqual(rh.compatible_from("0.3.0.0", {rh.NO_MILESTONE: []}),
-                         "unknown: breaking work with no milestone")
+                         "unknown: breaking work awaiting triage")
         self.assertEqual(rh.compatible_from("0.0.0.1", {}), "not defined yet")
         self.assertEqual(rh.compatible_from(None, {}), "not released yet")
 
@@ -490,7 +497,7 @@ class Settling(unittest.TestCase):
     def test_settling_chart_bars_end_at_the_last_breaking_due_date(self):
         entries = [("P1", "Video Sink", {"0.24.0": [], "0.25.0": []}, "after 0.25.0"),
                    ("P1", "DRM", {}, "now"),
-                   ("P2", "Boot: core", {rh.NO_MILESTONE: []}, "unknown: breaking work with no milestone"),
+                   ("P2", "Boot: core", {rh.NO_MILESTONE: []}, "unknown: breaking work awaiting triage"),
                    ("P3", "ffv", {}, "not defined yet")]
         due = {"0.24.0": "2026-11-30T00:00:00Z", "0.25.0": "2026-12-13T00:00:00Z"}
         chart = "\n".join(rh.settling_chart(entries, "2026-11-25", due))

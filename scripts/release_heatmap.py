@@ -28,10 +28,12 @@ its version, priority, devices (stb, tv) and, where they are not
 component:<directory>, the labels that point tickets at it. Repo-wide work has
 its scope:infrastructure, scope:overview or documentation row. Every component
 is listed, whether or not it has tickets; each milestone heading carries its due
-date. Each cell lists its tickets, most urgent first, as badges coloured by
-change class, each followed by a badge for each of its open PRs. Then the
-Settling table, and the tickets resolved since the last release, with the PRs
-that took them into develop.
+date, and a ticket with no milestone is under Triage required. Each cell lists
+its tickets, most urgent first, each badge coloured by age, with its open PRs
+below it, each showing its change class and review state. A cell is amber when
+any of its PRs is breaking, green when they are all compatible. Then the
+Settling table and chart. A second page, Backlog-Review, lists the issues open
+longer than a year, for review by hand (#1061).
 
 --set-priority writes each open ticket's and PR's component priority into the
 project's Priority field; see component-priority.md for the rules.
@@ -39,7 +41,8 @@ project's Priority field; see component-priority.md for the rules.
 Usage:
     scripts/release_heatmap.py                 # print the page
     scripts/release_heatmap.py -o page.md      # write it to a file
-    scripts/release_heatmap.py --publish       # push it to the wiki page
+    scripts/release_heatmap.py --publish       # push both pages to the wiki
+    [--backlog-output page.md]                 # also write the backlog review page
     [--maintainer LOGIN ...]                   # raised by anyone else scores 2
     scripts/release_heatmap.py --set-priority [--dry-run]
 
@@ -80,6 +83,7 @@ _spec.loader.exec_module(pie)
 BREAKING = {"Major", "CR-Major"}
 PRIORITY_POINTS = {"P0": 5, "P1": 3, "P2": 1, "P3": 0}
 NO_MILESTONE = "No milestone"
+TRIAGE = "Triage required"   # the heading of the no-milestone column: untriaged work
 UNCLASSIFIED = "(no change class)"
 # Change class -> badge letter and colour; the order is the legend's.
 BADGE = {"Major": ("M", "d73a4a"), "CR-Major": ("CR", "8b0000"), "New Interface": ("NI", "8250df"),
@@ -126,7 +130,8 @@ def graphql(query, **variables):
     return gh_json(args)["data"]
 
 
-PR_NODE = "number url state isDraft reviewDecision baseRefName repository{ isPrivate nameWithOwner }"
+PR_NODE = ("number url state isDraft reviewDecision baseRefName createdAt labels(first:30){ nodes{ name } } "
+           "repository{ isPrivate nameWithOwner }")
 
 PR_FIELDS = """
           pageInfo{ hasNextPage endCursor }
@@ -140,7 +145,7 @@ REF_FIELDS = """
 """ % PR_NODE
 
 ISSUE_FIELDS = """
-        number title url closedAt stateReason
+        number title url closedAt stateReason createdAt updatedAt
         closedByPullRequestsReferences(first:20,includeClosedPrs:true){ %s }
         author{ login }
         milestone{ title dueOn }
@@ -195,17 +200,6 @@ query($owner:String!,$name:String!,$cursor:String){
 }
 """ % ISSUE_FIELDS
 
-# Closed issues touched since a date; the caller keeps those closed after it.
-CLOSED = """
-query($owner:String!,$name:String!,$cursor:String,$since:DateTime){
-  repository(owner:$owner,name:$name){
-    issues(first:50,after:$cursor,states:[CLOSED],filterBy:{since:$since}){
-      pageInfo{ hasNextPage endCursor }
-      nodes{ %s }
-    }
-  }
-}
-""" % ISSUE_FIELDS
 
 
 def fetch_issues(query=ISSUES, repo=REPO, **extra):
@@ -231,25 +225,6 @@ def complete_prs(issue, repo=REPO):
             page = more["data"]["repository"]["issue"][key]
             conn["nodes"] += page["nodes"]
             conn["pageInfo"] = page["pageInfo"]
-
-
-def fetch_last_release(repo=REPO):
-    """The latest published release, or None before the first one."""
-    r = subprocess.run(["gh", "api", "repos/%s/releases/latest" % repo], capture_output=True, text=True)
-    if r.returncode:
-        # Only "no release yet" is an answer; any other failure stops the run, so a
-        # page without its resolved table is never published.
-        if "HTTP 404" in r.stderr:
-            return None
-        raise RuntimeError("releases/latest: " + r.stderr.strip())
-    rel = json.loads(r.stdout)
-    return {"tag": rel["tag_name"], "url": rel["html_url"], "at": rel["published_at"]}
-
-
-def fetch_resolved(since, repo=REPO):
-    """Issues closed as completed after `since`."""
-    return [i for i in fetch_issues(CLOSED, repo, since=since)
-            if i["closedAt"] > since and i["stateReason"] == "COMPLETED"]
 
 
 def version_key(title):
@@ -446,6 +421,34 @@ def project_fields(issue):
     return issue.get("projectFields") or {}
 
 
+# Age, in days, at which an issue's or PR's badge turns amber, then red.
+AGE_AMBER, AGE_RED = 30, 60
+
+
+def age_days(created, today):
+    """Whole days from an ISO timestamp to today (YYYY-MM-DD), or None without both."""
+    if not created or not today:
+        return None
+    try:
+        return (datetime.date.fromisoformat(today[:10]) - datetime.date.fromisoformat(created[:10])).days
+    except ValueError:
+        return None
+
+
+def age_colour(days):
+    """Green under a month, amber from one month, red from two."""
+    if days is None:
+        return "6e7781"
+    return "d73a4a" if days >= AGE_RED else "bf8700" if days >= AGE_AMBER else "1a7f37"
+
+
+def age_text(days):
+    if days is None:
+        return "?"
+    return "%dd" % days if days < 14 else "%dw" % (days // 7) if days < 365 else "%dy%s" % (
+        days // 365, "+" if days % 365 >= 30 else "")
+
+
 def classify(issue, maintainers, today, next_due, repo=REPO, dirs=None):
     labels = [l["name"] for l in issue["labels"]["nodes"]]
     fields = project_fields(issue)
@@ -486,7 +489,9 @@ def classify(issue, maintainers, today, next_due, repo=REPO, dirs=None):
         "number": issue["number"], "title": issue["title"], "url": issue["url"],
         "milestone": ms["title"] if ms else NO_MILESTONE, "due": due, "components": comps,
         "effect": effect, "label_class": label_class, "field": fields.get("Interface Effect"),
-        "priority": priority, "score": score, "why": why, "prs": pr_states(issue), "open_prs": open_prs(issue, repo),
+        "priority": priority, "score": score, "why": why, "prs": pr_states(issue),
+        "open_prs": [dict(p, age=age_days(p.get("created"), today)) for p in open_prs(issue, repo)],
+        "age": age_days(issue.get("createdAt"), today), "updated": (issue.get("updatedAt") or "")[:10],
     }
 
 
@@ -519,7 +524,9 @@ def pr_entries(nodes):
         # and merged are final, so they win over an earlier or later open one.
         if (out.get(p["url"]) or {}).get("state") in ("closed", "merged"):
             continue
-        out[p["url"]] = {"number": p["number"], "url": p["url"], "state": k, "base": p.get("baseRefName")}
+        labels = [l["name"] for l in ((p.get("labels") or {}).get("nodes") or [])]
+        out[p["url"]] = {"number": p["number"], "url": p["url"], "state": k, "base": p.get("baseRefName"),
+                         "effect": pie.class_of(labels), "created": p.get("createdAt")}
     return sorted((e for e in out.values() if e["state"] != "closed"), key=lambda p: (-p["number"], p["url"]))
 
 
@@ -633,7 +640,7 @@ def compatible_from(released, breaking):
     if not breaking:
         return "now"
     if NO_MILESTONE in breaking:
-        return "unknown: breaking work with no milestone"
+        return "unknown: breaking work awaiting triage"
     return "after %s" % max(breaking, key=version_key).split(" ")[0]
 
 
@@ -714,6 +721,30 @@ def render_settling(tickets, history, groups, root=ROOT, today=None, due=None):
     return lines
 
 
+BACKLOG_PAGE = "Backlog-Review"
+BACKLOG_DAYS = 365   # an issue open this long is listed for review (#1061)
+
+
+def render_backlog(tickets, generated, days=BACKLOG_DAYS):
+    """Every open issue older than `days`, oldest first, for review by hand: nothing is closed here."""
+    old = sorted((t for t in tickets if (t.get("age") or 0) >= days), key=lambda t: (-t["age"], t["number"]))
+    lines = ["# Backlog review", "",
+             "_Generated %s by [`scripts/release_heatmap.py`](https://github.com/%s/blob/develop/"
+             "scripts/release_heatmap.py). Do not edit it by hand._" % (generated, REPO), "",
+             "%d open issues have been open for %d days or more. An issue open that long is probably "
+             "not important: review each one, then close it or give it a milestone. Nothing here is "
+             "closed automatically. The open work by component is on [Release heatmap](%s)." % (
+                 len(old), days, WIKI_PAGE), ""]
+    if not old:
+        return "\n".join(lines + ["None."]) + "\n"
+    lines += [md_row(["Issue", "Title", "Component", "Milestone", "Age", "Last activity"]), md_row(["---"] * 6)]
+    for t in old:
+        lines.append(md_row([badge(t), t["title"].replace("|", "\\|"), ", ".join(t["components"]),
+                             TRIAGE if t["milestone"] == NO_MILESTONE else t["milestone"],
+                             age_text(t["age"]), t.get("updated") or "?"]))
+    return "\n".join(lines) + "\n"
+
+
 def md_row(cells):
     """One markdown table row: as many cells as the header, whatever their content."""
     return "| " + " | ".join(cells) + " |"
@@ -726,17 +757,24 @@ def shield(label, message, colour):
 
 
 def badge(t):
-    """The ticket as a badge: its number and change-class letter, coloured by class."""
-    # A project option added after this table shows its full name, in grey.
-    letter, colour = BADGE.get(t["effect"] or UNCLASSIFIED, (t["effect"], "57606a"))
-    return "[![#%d %s](%s)](%s)" % (t["number"], t["effect"] or UNCLASSIFIED,
-                                   shield("#%d" % t["number"], letter, colour), t["url"])
+    """The ticket as a badge: its number and its age, coloured by age. The change class is on its PRs."""
+    age = t.get("age")
+    return "[![#%d %s old](%s)](%s)" % (t["number"], age_text(age),
+                                       shield("#%d" % t["number"], age_text(age), age_colour(age)), t["url"])
+
+
+def class_letter(effect):
+    """A change class's letter; a class added to the project after BADGE shows its full name."""
+    return BADGE.get(effect or UNCLASSIFIED, (effect, None))[0]
 
 
 def pr_badge(p):
-    text, colour = PR_STATE[p["state"]]
+    """The PR as a badge: its number, change-class letter and review state, coloured by age."""
+    text = "%s %s" % (class_letter(p.get("effect")), PR_STATE[p["state"]][0])
+    age = p.get("age")
     # The arrow is inside the badge, so it cannot wrap away from it; short, to fit a narrow column.
-    return "[![PR %d %s](%s)](%s)" % (p["number"], text, shield("↳%d" % p["number"], text, colour), p["url"])
+    return "[![PR %d %s, %s old](%s)](%s)" % (p["number"], text, age_text(age),
+                                             shield("↳%d" % p["number"], text, age_colour(age)), p["url"])
 
 
 def ticket(t):
@@ -750,12 +788,22 @@ def under(ticket_badge, pr_badges):
 
 
 def legend():
-    return " ".join("![%s](%s)" % (cls, shield(letter, cls, colour))
-                    for cls, (letter, colour) in BADGE.items())
+    """The page's key: cell colours, age colours and the change-class letters on PRs."""
+    ages = " ".join("![%s](%s)" % (text, shield("#n", text, colour)) for text, colour in (
+        ("under a month", "1a7f37"), ("a month", "bf8700"), ("two months or more", "d73a4a")))
+    letters = ", ".join("**%s** %s" % (letter, cls) for cls, (letter, _) in BADGE.items())
+    return ("🟧 a Major or CR-Major PR in the cell · 🟩 only compatible PRs (Minor, BugFix, New Interface, "
+            "Documentation and the like) · no colour: no PR yet.\n\nAge, on issues and PRs: " + ages +
+            "\n\nEach PR shows its change class and review state (%s): %s." % (
+                ", ".join(PR_STATE[k][0] for k in OPEN), letters))
 
 
-def pr_legend():
-    return " ".join("![PR %s](%s)" % (PR_STATE[k][0], shield("↳PR", *PR_STATE[k])) for k in OPEN)
+def cell_colour(tickets):
+    """🟧 when any open PR in the cell is breaking, 🟩 when its PRs are all compatible, "" with none."""
+    effects = [p.get("effect") for t in tickets for p in t["open_prs"]]
+    if not effects:
+        return ""
+    return "🟧" if any(e in BREAKING for e in effects) else "🟩"
 
 
 def cell(tickets):
@@ -763,7 +811,9 @@ def cell(tickets):
     if not tickets:
         return "·"
     ranked = sorted(tickets, key=lambda t: (-t["score"], t["number"]))
-    return flow([ticket(t) for t in ranked], [bool(t["open_prs"]) for t in ranked])
+    body = flow([ticket(t) for t in ranked], [bool(t["open_prs"]) for t in ranked])
+    colour = cell_colour(tickets)
+    return "%s<br>%s" % (colour, body) if colour else body
 
 
 def flow(items, alone):
@@ -799,7 +849,7 @@ def milestone_columns(tickets, milestones):
     used = {t["milestone"] for t in tickets}
     due = {m["title"]: m["due"] for m in milestones}
     cols = [m["title"] for m in milestones if m["title"] in used] + ([NO_MILESTONE] if NO_MILESTONE in used else [])
-    short = {c: (c if c == NO_MILESTONE else column_heading(c.split(" ")[0], due.get(c))) for c in cols}
+    short = {c: (TRIAGE if c == NO_MILESTONE else column_heading(c.split(" ")[0], due.get(c))) for c in cols}
     return cols, short
 
 
@@ -819,8 +869,8 @@ def generated_note(generated, project_title, what):
             "hand._" % (generated, REPO, what, project_title, OWNER, PROJECT_NUMBER))
 
 
-def render(tickets, milestones, generated, project_title="halif_aidl", resolved=(), release=None,
-           sections=(), components=(), root=ROOT, history=None):
+def render(tickets, milestones, generated, project_title="halif_aidl", sections=(), components=(), root=ROOT,
+           history=None, backlog_page=None):
     tickets, stray = on_open_milestones(tickets, milestones)
     cols, short = milestone_columns(tickets, milestones)
     if history:
@@ -829,19 +879,21 @@ def render(tickets, milestones, generated, project_title="halif_aidl", resolved=
         components = set(components) | {r for r, v in history["versions"].items() if last in v}
     groups, rank = sectioned(tickets, list(sections), components, root)
     lines = ["# Release heatmap", "", generated_note(generated, project_title, "the open issues"), ""]
+    if backlog_page:
+        lines += ["Issues open longer than a year are listed for review on [%s](%s)." % (
+            backlog_page.replace("-", " "), backlog_page), ""]
     lines += [
         "%d open issues, each shown once: a ticket on several components is in the "
         "row of its highest-priority component, so the row totals add up to the open issues. "
         "Every component is listed, with its version, whether or not it has tickets. "
         "Priority and devices come from each component's metadata.yaml; within a priority, "
         "components used on both STB and TV come first, then STB only, then TV only. "
-        "Each cell lists its tickets, most urgent "
-        "first, as a badge coloured by its change class; each of its open PRs is "
-        "on the line below it, marked ↳:" % len(tickets), "", legend(), "", "PR: " + pr_legend() + " (open: "
-        "review needed)",
+        "Each cell lists its tickets, most urgent first, each with its open PRs on the line "
+        "below it, marked ↳. A ticket with no milestone is under Triage required." % len(tickets), "",
+        legend(),
     ]
     if stray:
-        lines += ["", "⚠️ Open on a closed milestone, so shown under No milestone: " + ", ".join(
+        lines += ["", "⚠️ Open on a closed milestone, so shown under Triage required: " + ", ".join(
             "[#%d](%s) (%s)" % (t["number"], t["url"], t["milestone"]) for t in sorted(stray, key=lambda t: t["number"]))
             + ". Move each to an open milestone, or close it."]
     for sec in groups:
@@ -862,28 +914,7 @@ def render(tickets, milestones, generated, project_title="halif_aidl", resolved=
         due = {t["milestone"]: t.get("due") for t in tickets if t.get("due")}
         due.update({m["title"]: m["due"] for m in milestones if m["due"]})
         lines += render_settling(tickets, history, groups, root, today, due)
-    if release:
-        names = {r["row"]: r["name"] for sec in groups for r in sec["rows"]}
-        lines += render_resolved(resolved, release, rank, names, root)
     return "\n".join(lines) + "\n"
-
-
-def render_resolved(tickets, release, rank=None, names=None, root=ROOT):
-    """What has landed since the last release: completed tickets, and the PRs that took them into develop."""
-    lines = ["", "## Resolved since %s" % release["tag"], "",
-             "Tickets closed as completed since the [%s release](%s) on %s, with the PRs that "
-             "took them into develop." % (release["tag"], release["url"], release["at"][:10]), ""]
-    if not tickets:
-        return lines + ["Nothing yet."]
-    lines += ["| Component | Resolved | Total |", "| --- | --- | --- |"]
-    for comp in rows(tickets, rank):
-        row = sorted((t for t in tickets if row_of(t, rank) == comp), key=lambda t: t["number"])
-        merged = [[p for p in t["prs"] if p["state"] == "merged" and p["base"] == "develop"] for t in row]
-        lines.append("| %s | %s | %d |" % (row_heading(comp, (names or {}).get(comp), root), flow(
-            [under(badge(t), [pr_badge(p) for p in m]) for t, m in zip(row, merged)],
-            [bool(m) for m in merged]), len(row)))
-    lines.append("| **Tickets** | | **%d** |" % len(tickets))
-    return lines
 
 
 # Every open item on the project, issues and PRs alike, with its Priority.
@@ -995,6 +1026,7 @@ def publish(pages):
 def parse_args(argv):
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("-o", "--output")
+    ap.add_argument("--backlog-output", metavar="PATH", help="also write the backlog review page here")
     ap.add_argument("--publish", action="store_true")
     ap.add_argument("--maintainer", action="extend", nargs="+", default=[], metavar="LOGIN")
     ap.add_argument("--set-priority", action="store_true",
@@ -1019,22 +1051,23 @@ def main(argv):
     fields = fetch_project_fields()
     with_fields = lambda issues: [dict(i, projectFields=fields.get(i["number"], {})) for i in issues]
     tickets = [classify(i, set(a.maintainer), today, next_due) for i in with_fields(fetch_issues())]
-    release = fetch_last_release()
-    resolved = ([classify(i, set(a.maintainer), today, next_due) for i in with_fields(fetch_resolved(release["at"]))]
-                if release else [])
     project = fetch_project()
     generated = now.strftime("%Y-%m-%d %H:%M UTC")
     title = project["title"] or "project %d" % PROJECT_NUMBER
-    page = render(tickets, milestones, generated, title, resolved, release, sections, components,
-                  history=release_history())
+    page = render(tickets, milestones, generated, title, sections, components,
+                  history=release_history(), backlog_page=BACKLOG_PAGE)
+    backlog = render_backlog(tickets, generated)
 
     if a.output:
         with open(a.output, "w") as fh:
             fh.write(page)
+    if a.backlog_output:
+        with open(a.backlog_output, "w") as fh:
+            fh.write(backlog)
     if a.publish:
         if not project["public"]:
             sys.exit("project %d is not public: its fields cannot go on the public wiki" % PROJECT_NUMBER)
-        publish({WIKI_PAGE: page})
+        publish({WIKI_PAGE: page, BACKLOG_PAGE: backlog})
     if not a.output and not a.publish:
         sys.stdout.write(page)
     return 0
