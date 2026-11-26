@@ -47,14 +47,6 @@ import com.rdk.hal.hdmioutput.PlatformCapabilities;
 @VintfStability
 interface IHDMIOutputManager {
     /**
-     * The systemd/Binder service name for this HAL service.
-     *
-     * Returned by the implementation via `getServiceName()` and used for
-     * registration and discovery in the AIDL Binder service manager.
-     */
-    const @utf8InCpp String serviceName = "hdmioutput";
-
-    /**
      * Gets the static platform capabilities for HDMI outputs.
      *
      * This describes global support across all HDMI ports, such as max resolution,

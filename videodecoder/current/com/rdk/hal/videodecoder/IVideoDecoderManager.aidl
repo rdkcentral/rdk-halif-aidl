@@ -36,9 +36,6 @@ import com.rdk.hal.videodecoder.IVideoDecoder;
 
 @VintfStability
 interface IVideoDecoderManager {
-    /** The service name to publish. To be returned by getServiceName() in the derived class. */
-    const @utf8InCpp String serviceName = "VideoDecoderManager";
-
     /**
      * Gets the platform list of Video Decoder IDs.
      *

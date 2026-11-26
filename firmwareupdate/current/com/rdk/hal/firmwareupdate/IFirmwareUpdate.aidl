@@ -43,9 +43,6 @@ import com.rdk.hal.firmwareupdate.IFirmwareUpdateListener;
 
 @VintfStability
 interface IFirmwareUpdate {
-    /** The service name to publish. To be returned by getServiceName() in the derived class. */
-    const @utf8InCpp String serviceName = "firmwareupdate";
-
     /**
      * Updates a firmware image file onto the device.
      *

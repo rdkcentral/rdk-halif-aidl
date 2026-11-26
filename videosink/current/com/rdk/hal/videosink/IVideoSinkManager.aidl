@@ -36,9 +36,6 @@ import com.rdk.hal.videosink.IVideoSink;
 
 @VintfStability
 interface IVideoSinkManager {
-    /** The service name to publish. To be returned by getServiceName() in the derived class. */
-    const @utf8InCpp String serviceName = "VideoSinkManager";
-
     /**
      * Gets the list of platform Video Sink IDs.
      *

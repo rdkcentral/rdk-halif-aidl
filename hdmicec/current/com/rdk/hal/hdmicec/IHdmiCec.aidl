@@ -40,9 +40,6 @@ import com.rdk.hal.hdmicec.State;
 
 @VintfStability
 interface IHdmiCec {
-    /** The service name to publish. To be returned by getServiceName() in the derived class. */
-    const @utf8InCpp String serviceName = "HdmiCec";
-
     /**
      * @brief Gets the current state of the HDMI CEC interface.
      *

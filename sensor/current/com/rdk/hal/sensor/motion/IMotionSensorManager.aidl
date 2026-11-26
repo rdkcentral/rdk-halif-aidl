@@ -23,7 +23,8 @@
  *
  * The manager enumerates available motion sensors and returns interfaces
  * to them.  A typical implementation is a singleton service registered under
- * {@link #serviceName}.
+ * the interface descriptor with instance "default":
+ * "com.rdk.hal.sensor.motion.IMotionSensorManager/default".
  */
 package com.rdk.hal.sensor.motion;
 
@@ -35,13 +36,6 @@ import com.rdk.hal.sensor.motion.IMotionSensor;
  */
 @VintfStability
 interface IMotionSensorManager {
-    /**
-     * @brief Binder service registration name.
-     *
-     * Vendors should publish the service with this name at system startup.
-     */
-    const @utf8InCpp String serviceName = "sensor.motion";
-
     /**
      * @brief Enumerate all platform-specific motion sensor identifiers.
      * @returns Array of available motion sensor IDs.

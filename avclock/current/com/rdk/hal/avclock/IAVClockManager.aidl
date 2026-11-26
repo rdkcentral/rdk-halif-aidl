@@ -36,9 +36,6 @@ import com.rdk.hal.avclock.IAVClock;
 
 @VintfStability
 interface IAVClockManager {
-    /** The service name to publish. To be returned by getServiceName() in the derived class. */
-    const @utf8InCpp String serviceName = "AVClockManager";
-
     /**
      * Gets the list of platform AV Clock IDs.
      *

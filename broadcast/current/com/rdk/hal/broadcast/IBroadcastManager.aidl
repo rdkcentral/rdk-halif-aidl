@@ -29,13 +29,6 @@ import com.rdk.hal.broadcast.frontend.IFrontend;
 @VintfStability
 interface IBroadcastManager {
     /**
-     * The service name to publish.
-     *
-     * To be returned by getServiceName() in the derived class.
-     */
-    const @utf8InCpp String serviceName = "BroadcastManager";
-
-    /**
      * @brief Gets the service implementation version.
      *
      * This is not the same as the interface version, which is defined for the AIDL interface itself. The same
