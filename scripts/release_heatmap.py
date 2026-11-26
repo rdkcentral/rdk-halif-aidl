@@ -608,12 +608,14 @@ BACKLOG_DAYS = 365   # an issue open this long is listed for review (#1061)
 
 
 def render_backlog(tickets, generated, days=BACKLOG_DAYS):
-    """Every open issue older than `days`, oldest first, for review by hand: nothing is closed here."""
-    old = sorted((t for t in tickets if (t.get("age") or 0) >= days), key=lambda t: (-t["age"], t["number"]))
+    """Every open issue older than `days` with no PR, oldest first, for review by hand: nothing is
+    closed here. An issue with a PR, open or merged, has work on it and is not backlog."""
+    old = sorted((t for t in tickets if (t.get("age") or 0) >= days and not t["prs"] and not t["open_prs"]),
+                 key=lambda t: (-t["age"], t["number"]))
     lines = ["# Backlog review", "",
              "_Generated %s by [`scripts/release_heatmap.py`](https://github.com/%s/blob/develop/"
              "scripts/release_heatmap.py). Do not edit it by hand._" % (generated, REPO), "",
-             "%d open issues have been open for %d days or more. An issue open that long is probably "
+             "%d open issues with no PR have been open for %d days or more. An issue open that long is probably "
              "not important: review each one, then close it or give it a milestone. Nothing here is "
              "closed automatically. The open work by component is on [Release heatmap](%s)." % (
                  len(old), days, WIKI_PAGE), ""]

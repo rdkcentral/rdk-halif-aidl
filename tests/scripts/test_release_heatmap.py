@@ -449,8 +449,17 @@ class Backlog(unittest.TestCase):
         rows = [l for l in page.splitlines() if l.startswith("| [")]
         self.assertEqual([r.split("](u")[1][0] for r in rows], ["2", "1"])
         self.assertIn("| T2 | panel | Triage required | 2y+ | 2026-10-01 |", page)
-        self.assertIn("2 open issues have been open for 365 days or more", page)
+        self.assertIn("2 open issues with no PR have been open for 365 days or more", page)
         self.assertIn("None.", rh.render_backlog([ts[2]], "now"))
+
+    def test_an_issue_with_a_pr_is_not_backlog(self):
+        mk = lambda n, prs=(), refs=(): rh.classify(issue(n, labels=["component:panel"], created="2024-06-01T00:00:00Z",
+                                                          prs=prs, ref_prs=refs), set(), "2026-11-25", None)
+        ts = [mk(1), mk(2, prs=[{"number": 9, "state": "OPEN"}]), mk(3, prs=[{"number": 8, "state": "MERGED"}]),
+              mk(4, refs=[{"number": 7, "state": "OPEN"}]), mk(5, prs=[{"number": 6, "state": "CLOSED"}])]
+        rows = [l for l in rh.render_backlog(ts, "now").splitlines() if l.startswith("| [")]
+        # Only #1 (no PR) and #5 (its one PR closed unmerged) are backlog.
+        self.assertEqual([r.split("](u")[1][0] for r in rows], ["1", "5"])
 
     def test_heatmap_links_the_backlog_page(self):
         page = rh.render([], [], "now", backlog_page=rh.BACKLOG_PAGE)
