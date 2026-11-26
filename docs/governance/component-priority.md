@@ -29,16 +29,21 @@ Worked on first.
 | Audio Sink | `component:audiosink` | P1 | Audio output rendering for HDMI output. |
 | AV Buffer | `component:avbuffer` | P1 | — |
 | AV Clock (Audio Sync, Video Sync) | `component:avclock` | P1 | Audio and video synchronisation. |
+| Boot | `component:boot` | P1 | Few issues, none significant. |
 | Common | `component:common` | P1 | Structural changes, including dissolving Common, because they can affect every HAL. |
+| Device Info | `component:deviceinfo` | P1 | Limited-impact issues. |
 | DRM | `component:drm` | P1 | Needs further technical discussion. |
-| HDMI-CEC | `component:hdmicec` | P1 | — |
+| Firmware Update | `component:firmwareupdate` | P1 | — |
 | HDMI Output | `component:hdmioutput` | P1 | Every open ticket, as soon as possible: needed for platform qualification. |
+| HDMI-CEC | `component:hdmicec` | P1 | — |
 | Indicator | `component:indicator` | P1 | — |
 | Plane Control | `component:planecontrol` | P1 | Graphics and video plane composition for HDMI output. |
 | Ring Buffer | `component:ringbuffer` | P1 | — |
 | Sensor (Motion, Thermal) | `component:motion_sensor` `component:thermal_sensor` | P1 | — |
 | Video Decoder | `component:videodecoder` | P1* | Important to the core delivery. |
 | Video Sink | `component:videosink` | P1 | Video output rendering for HDMI output. |
+| General documentation | `documentation` | P1 | Documentation the delivery depends on. |
+| Repository infrastructure and CI/CD | `scope:infrastructure` | P1 | Build tooling and CI the delivery depends on. |
 
 \* Video Decoder is P1 for its importance to the core delivery; its prioritisation is not yet complete.
 
@@ -48,15 +53,9 @@ Worked on after P1.
 
 | Component | Label | Priority | Scope |
 | --- | --- | --- | --- |
-| Boot | `component:boot` | P2 | Few issues, none significant. |
 | Broadcast | `component:broadcast` | P2 | Deferred behind P1 work. |
 | Deep Sleep | `component:deepsleep` | P2 | Small, likely straightforward. |
-| Device Info | `component:deviceinfo` | P2 | Limited-impact issues. |
-| Firmware Update | `component:firmwareupdate` | P2 | — |
-| VSI Abstract File System | `component:vsi/abstractfilesystem` | P2* | Architecturally important; not all of it is needed yet. |
 | HAL architecture documentation | — | P2/P3 | Better documentation and examples, not at the expense of critical implementation work. |
-
-\* VSI is P2 or P3, depending on how much of it the current delivery needs.
 
 ## P3 – Low priority
 
@@ -65,13 +64,11 @@ Worked on after P2.
 | Component | Label | Priority | Scope |
 | --- | --- | --- | --- |
 | Composite Input | `component:compositeinput` | P3 | Excluded from the immediate focus. |
-| Crypto | `component:crypto` | P3* | Nothing in it is needed for the immediate work. |
+| Crypto | `component:crypto` | P3 | Nothing in it is needed for the immediate work. |
 | HDMI Input | `component:hdmiinput` | P3 | Not needed for IP set-top-box. |
 | Panel | `component:panel` | P3 | Not needed for set-top-box delivery. |
 | RF4CE | `component:r4ce` | P3 | — |
 | Secure Storage | `component:securestorage` | P3 | — |
 | Video Capture | `component:videocapture` | P3 | Current platform limitations prevent it. |
-| General documentation | `documentation` | P3 | The existing GStreamer and Polaris diagrams serve; improvements go in their own tickets. |
-| Repository infrastructure and CI/CD | `scope:infrastructure` | P3* | Below build tooling needed for development. |
+| VSI Abstract File System | `component:vsi/abstractfilesystem` | P3 | Architecturally important; not all of it is needed yet. |
 
-\* Deprioritised for now. Build tooling that development depends on is raised to P1 or P2 on its own ticket.

@@ -31,7 +31,7 @@ version: 0.2.0.0
 status: GREEN
 description: "Device information and platform capability reporting"
 type: OEM
-priority: P2
+priority: P1
 devices: [stb, tv]
 
 # lifecycle - 14+5 review cycle dates                                    [pr_cycle.sh]

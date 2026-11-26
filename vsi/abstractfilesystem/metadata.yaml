@@ -31,7 +31,7 @@ version: 0.0.0.1
 status: AMBER
 description: "Abstract file system interface and storage abstraction"
 type: OEM
-priority: P2
+priority: P3
 devices: [stb, tv]
 
 # lifecycle - 14+5 review cycle dates                                    [pr_cycle.sh]

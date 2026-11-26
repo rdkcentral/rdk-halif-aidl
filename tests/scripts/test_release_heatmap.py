@@ -319,8 +319,8 @@ class Priorities(unittest.TestCase):
         self.assertEqual([s["priority"] for s in secs], ["P1", "P2", "P3"])
         rank = rh.rank_of(secs)
         self.assertEqual((rank["drm"], rank["avclock"], rank["hdmioutput"]), (1, 1, 1))
-        self.assertEqual((rank["bootreason"], rank["vsi/abstractfilesystem"], rank["sensor"]), (2, 2, 1))
-        self.assertEqual((rank["panel"], rank["(documentation)"], rank["(infrastructure)"]), (3, 3, 3))
+        self.assertEqual((rank["bootreason"], rank["vsi/abstractfilesystem"], rank["sensor"]), (1, 3, 1))
+        self.assertEqual((rank["panel"], rank["(documentation)"], rank["(infrastructure)"], rank["deviceinfo"]), (3, 1, 1, 1))
         self.assertTrue(all(s["about"] for s in secs))
         # The HAL architecture documentation row has no label, so it is no heatmap row.
         self.assertNotIn("HAL architecture documentation", [r["name"] for s in secs for r in s["rows"]])
