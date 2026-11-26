@@ -138,6 +138,22 @@ class Render(unittest.TestCase):
         self.assertIn("**How to read it.**", page)
         self.assertNotIn("open issues, each shown once", page)
 
+    def test_component_cell_states_its_whole_row(self):
+        def t(n, *effects, ms="0.24.0"):
+            return {"number": n, "open_prs": [{"effect": e} for e in effects], "milestone": ms}
+        self.assertEqual(rh.row_marker([t(1, "Minor"), t(2, "Major", ms="0.25.0")]), "🟧 ")
+        self.assertEqual(rh.row_marker([t(1, "Minor"), t(2, "BugFix")]), "🟩 ")
+        self.assertEqual(rh.row_marker([t(1), t(2)]), "")
+        one = rh.classify(issue(1, labels=["component:panel"], milestone="0.24.0",
+                                prs=[{"number": 9, "state": "OPEN",
+                                      "labels": {"nodes": [{"name": "Major Change"}]}}]), set(), "2026-11-03", None)
+        two = rh.classify(issue(2, labels=["component:panel"], milestone="0.25.0",
+                                prs=[{"number": 8, "state": "OPEN",
+                                      "labels": {"nodes": [{"name": "Minor Change"}]}}]), set(), "2026-11-03", None)
+        page = rh.render([one, two], [{"title": "0.24.0", "due": "2026-11-30T00:00:00Z"},
+                                      {"title": "0.25.0", "due": "2026-12-31T00:00:00Z"}], "now", root=EMPTY)
+        self.assertIn("| 🟧 panel |", page)   # one Major PR anywhere in the row makes the component amber
+
     def test_age_text_for_the_backlog_page(self):
         self.assertEqual([rh.age_text(d) for d in (3, 20, 400, 365)], ["3d", "2w", "1y+", "1y"])
         self.assertEqual(rh.age_days("2026-10-03T10:00:00Z", "2026-11-03"), 31)

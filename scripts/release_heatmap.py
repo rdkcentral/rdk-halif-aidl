@@ -683,7 +683,15 @@ def legend():
     classes = " ".join("![%s](%s)" % (cls, shield(letter, cls, colour)) for cls, (letter, colour) in BADGE.items())
     states = " ".join("![PR %s](%s)" % (PR_STATE[k][0], shield("↳PR", *PR_STATE[k])) for k in OPEN)
     return ("Change class: " + classes + "\n\nPR review state: " + states +
-            "\n\n🟧 a Major or CR-Major PR in the cell · 🟩 only compatible PRs · no marker: no PR yet.")
+            "\n\n🟧 a Major or CR-Major PR is open · 🟩 only compatible PRs are open · no marker: no PR yet. "
+            "On a component it covers the whole row, on a cell just that due date.")
+
+
+def row_marker(tickets):
+    """The component's own marker, from every open PR in its row: 🟧 a major change is coming,
+    🟩 only compatible changes are, nothing when no PR is open."""
+    colour = cell_colour(tickets)
+    return colour + " " if colour else ""
 
 
 def cell_colour(tickets):
@@ -800,7 +808,7 @@ def render(tickets, milestones, generated, project_title="halif_aidl", sections=
         for r in sec["rows"]:
             row = [t for t in tickets if row_of(t, rank) == r["row"]]
             in_sec += row
-            lines.append(md_row([row_heading(r["row"], r["name"], root), devices_of(r["row"], root)] + [
+            lines.append(md_row([row_marker(row) + row_heading(r["row"], r["name"], root), devices_of(r["row"], root)] + [
                 cell([t for t in row if column_of(t, due) == c]) for c in cols] + [str(len(row))]))
         lines.append(md_row(["**Tickets**", ""] + ["**%d**" % sum(1 for t in in_sec if column_of(t, due) == c)
                                                   for c in cols] + ["**%d**" % len(in_sec)]))
