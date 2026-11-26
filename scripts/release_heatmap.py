@@ -34,9 +34,9 @@ milestone has no due date is under No date, and a ticket with no milestone is
 under Triage required. Each cell lists
 its tickets, most urgent first, each badge coloured by age, with its open PRs
 below it, each showing its change class and review state. A cell is amber when
-any of its PRs is breaking, green when they are all compatible. Then the
-Settling table and chart. A second page, Backlog-Review, lists the issues open
-longer than a year, for review by hand (#1061).
+any of its PRs is breaking, green when they are all compatible. A second
+page, Backlog-Review, lists the issues open longer than a year, for review by
+hand (#1061).
 
 --set-priority writes each open ticket's and PR's component priority into the
 project's Priority field; see component-priority.md for the rules.
@@ -605,128 +605,6 @@ def release_history(root=ROOT, count=4):
     return {"tags": tags, "versions": versions}
 
 
-def step(old, new):
-    """What a release did to a version: B a generation bump (an ABI break), m a minor or patch
-    bump, · nothing, new the first release with the component, blank before it."""
-    if not new:
-        return ""
-    if not old:
-        return "new"
-    if old.split(".")[1] != new.split(".")[1]:
-        return "**B**"
-    return "m" if old != new else "·"
-
-
-# What a release did to a version, as a badge in the heatmap's colours; "·" and "" stay text.
-STEP_BADGE = {"**B**": ("B", "Major", BADGE["Major"][1]), "m": ("m", "Minor", BADGE["Minor"][1]),
-              "new": ("new", "New Interface", BADGE["New Interface"][1])}
-
-
-def step_badge(text):
-    if text not in STEP_BADGE:
-        return text
-    letter, alt, colour = STEP_BADGE[text]
-    return "![%s](%s)" % (alt, shield(letter, alt.lower(), colour))
-
-
-def compat_badge(text):
-    """Compatible-only as a badge: green now, red after a milestone, amber unknown, grey not yet."""
-    colour = ("1a7f37" if text == "now" else BADGE["Major"][1] if text.startswith("after ")
-              else "bf8700" if text.startswith("unknown") else "6e7781")
-    return "![%s](%s)" % (text, shield("compatible", text, colour))
-
-
-def compatible_from(released, breaking):
-    """When a component takes only backwards-compatible changes: after the last milestone that
-    holds breaking work, now when none does."""
-    if not released:
-        return "not released yet"
-    if released.startswith("0.0."):
-        return "not defined yet"
-    if not breaking:
-        return "now"
-    if NO_MILESTONE in breaking:
-        return "unknown: breaking work awaiting triage"
-    return "after %s" % max(breaking, key=version_key).split(" ")[0]
-
-
-def settling_chart(entries, today, due):
-    """A Mermaid Gantt chart of when each component settles: a red bar from today to the due date
-    of its last milestone with breaking work, a diamond today for one that can take only compatible
-    changes now. Components not defined or released yet, and breaking work with no due date, are
-    left out and named below the chart."""
-    clean = lambda n: re.sub(r"[:#;]", " ", n).strip()
-    lines = ["", "```mermaid", "gantt", "    title When each component takes only compatible changes",
-             "    dateFormat YYYY-MM-DD", "    axisFormat %d %b"]
-    undated, section = [], None
-    for sec, name, breaking, compat in entries:
-        if compat in ("not defined yet", "not released yet"):
-            continue
-        if compat == "now":
-            bar = "    %s : milestone, %s, 0d" % (clean(name), today)
-        else:
-            dates = [(due.get(m) or "")[:10] for m in breaking]
-            if NO_MILESTONE in breaking or not all(dates):
-                undated.append(name)
-                continue
-            end = max(dates)
-            bar = "    %s : crit, %s, %s" % (clean(name), min(today, end), max(today, end))
-        if sec != section:
-            lines.append("    section %s" % clean(sec))
-            section = sec
-        lines.append(bar)
-    lines.append("```")
-    if undated:
-        lines += ["", "Not in the chart, because their breaking work has no due date: %s." % ", ".join(undated)]
-    return lines
-
-
-def render_settling(tickets, history, groups, root=ROOT, today=None, due=None):
-    """Per component, in priority order: what each recent release did to its version, the
-    version in the last release, its open breaking tickets and when it can take only
-    backwards-compatible changes."""
-    tags, versions = history["tags"], history["versions"]
-    last = tags[-1]
-    lines = ["", "## Settling", "",
-             "What each release did to a component's version: %s a generation bump (an ABI "
-             "break), %s a minor or patch bump, %s the first release with it, · nothing. Breaking work is every open Major or "
-             "CR-Major ticket on the component, whichever row it is shown in above. A component "
-             "takes only backwards-compatible changes once its last breaking milestone has shipped." % (
-                 step_badge("**B**"), step_badge("m"), step_badge("new")), "",
-             "| Component | " + " | ".join("→" + t for t in tags[1:]) + " | In %s | Breaking work open | "
-             "Compatible-only |" % last,
-             "| --- |" + " --- |" * (len(tags) + 2)]
-    entries = []
-    for sec in groups:
-        for r in sec["rows"]:
-            row = r["row"]
-            have = versions.get(row, {})
-            # A component gone from both the last release and develop is no longer one.
-            if row.startswith("(") or not (have.get(last) or version_of(row, root)):
-                continue
-            breaking = {}
-            for t in tickets:
-                if t["effect"] in BREAKING and row in t["components"]:
-                    breaking.setdefault(t["milestone"], []).append(t)
-            work = "<br>".join("%s: %s" % (m.split(" ")[0], " ".join(
-                "[#%d](%s)" % (t["number"], t["url"]) for t in sorted(ts, key=lambda t: t["number"])))
-                for m, ts in sorted(breaking.items(), key=lambda kv: version_key(kv[0]))) or "·"
-            lines.append("| %s | %s | %s | %s | %s |" % (
-                r["name"] or row,
-                " | ".join(step_badge(step(have.get(a), have.get(b))) for a, b in zip(tags, tags[1:])),
-                have.get(last, "—"), work, compat_badge(compatible_from(have.get(last), breaking))))
-            entries.append((sec.get("priority") or sec["title"], r["name"] or row, breaking,
-                            compatible_from(have.get(last), breaking)))
-    if today:
-        lines += settling_chart(entries, today, due or {})
-    wide = sorted((t for t in tickets if t["effect"] in BREAKING
-                   and all(c.startswith("(") for c in t["components"])), key=lambda t: t["number"])
-    if wide:
-        lines += ["", "Breaking work on no single component, so on every one it reaches: " + ", ".join(
-            "[#%d](%s) (%s)" % (t["number"], t["url"], t["milestone"].split(" ")[0]) for t in wide) + "."]
-    return lines
-
-
 BACKLOG_PAGE = "Backlog-Review"
 BACKLOG_DAYS = 365   # an issue open this long is listed for review (#1061)
 
@@ -931,8 +809,6 @@ def render(tickets, milestones, generated, project_title="halif_aidl", sections=
         lines.append(md_row(["**Tickets**", ""] + ["**%d**" % sum(1 for t in in_sec if column_of(t, due) == c)
                                                   for c in cols] + ["**%d**" % len(in_sec)]))
 
-    if history:
-        lines += render_settling(tickets, history, groups, root, today, due)
     return "\n".join(lines) + "\n"
 
 

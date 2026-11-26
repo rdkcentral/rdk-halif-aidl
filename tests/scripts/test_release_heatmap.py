@@ -406,12 +406,6 @@ def _meta(root, d, version):
         fh.write("component: %s\nversion: %s\nstatus: GREEN\n" % (d, version))
 
 
-def srow(name, steps, version, work, compat):
-    """A Settling row as rendered: the steps and Compatible-only as badges."""
-    return "| %s | %s | %s | %s | %s |" % (name, " | ".join(rh.step_badge(x) for x in steps), version, work,
-                                         rh.compat_badge(compat))
-
-
 class Backlog(unittest.TestCase):
 
     def test_lists_only_issues_older_than_the_limit_oldest_first(self):
@@ -431,91 +425,20 @@ class Backlog(unittest.TestCase):
         self.assertNotIn(rh.BACKLOG_PAGE, rh.render([], [], "now"))
 
 
-class Settling(unittest.TestCase):
+class History(unittest.TestCase):
 
     HISTORY = {"tags": ["0.21.0", "0.22.0", "0.23.0"],
                "versions": {"drm": {"0.21.0": "0.1.0.0", "0.22.0": "0.1.0.0", "0.23.0": "0.2.0.0"},
                             "videosink": {"0.21.0": "0.2.0.0", "0.22.0": "0.2.1.0", "0.23.0": "0.3.0.0"},
                             "panel": {"0.22.0": "0.1.0.0", "0.23.0": "0.1.0.0"}}}
 
-    def test_step_reads_a_generation_bump_as_breaking(self):
-        self.assertEqual(rh.step("0.2.0.0", "0.3.0.0"), "**B**")
-        self.assertEqual(rh.step("0.2.0.0", "0.2.1.0"), "m")
-        self.assertEqual(rh.step("0.2.0.0", "0.2.0.0"), "·")
-        self.assertEqual((rh.step(None, "0.1.0.0"), rh.step(None, None)), ("new", ""))
-
-    def test_badges_use_the_heatmap_colours(self):
-        self.assertIn(rh.BADGE["Major"][1], rh.step_badge("**B**"))
-        self.assertIn(rh.BADGE["Minor"][1], rh.step_badge("m"))
-        self.assertEqual((rh.step_badge("·"), rh.step_badge("")), ("·", ""))
-        self.assertIn("1a7f37", rh.compat_badge("now"))
-        self.assertIn(rh.BADGE["Major"][1], rh.compat_badge("after 0.24.0"))
-        self.assertIn("6e7781", rh.compat_badge("not defined yet"))
-
-    def test_compatible_from_follows_the_last_breaking_milestone(self):
-        self.assertEqual(rh.compatible_from("0.3.0.0", {}), "now")
-        self.assertEqual(rh.compatible_from("0.3.0.0", {"0.25.0": [], "0.24.0": []}), "after 0.25.0")
-        self.assertEqual(rh.compatible_from("0.3.0.0", {rh.NO_MILESTONE: []}),
-                         "unknown: breaking work awaiting triage")
-        self.assertEqual(rh.compatible_from("0.0.0.1", {}), "not defined yet")
-        self.assertEqual(rh.compatible_from(None, {}), "not released yet")
-
-    def test_settling_leaves_out_removed_components_and_lists_repo_wide_breaks(self):
-        history = {"tags": ["0.21.0", "0.22.0"],
-                   "versions": {"drm": {"0.21.0": "0.1.0.0", "0.22.0": "0.1.0.0"},
-                                "flash": {"0.21.0": "0.1.0.0"}}}
-        wide = rh.classify(issue(500, labels=["scope:overview"], milestone="0.24.0 - Next", effect="Major"),
-                           set(), "2026-11-03", None)
-        secs = [{"priority": "P1", "title": "P1", "about": "", "rows": [
-            {"name": None, "row": "drm"}, {"name": None, "row": "flash"}]}]
-        page = rh.render([wide], [{"title": "0.24.0 - Next", "due": None}], "now", sections=secs,
-                         root=EMPTY, history=history)
-        settling = page.split("## Settling")[1]
-        self.assertIn(srow("drm", ["·"], "0.1.0.0", "·", "now"), settling)
-        self.assertNotIn("| flash |", settling)
-        self.assertIn("Breaking work on no single component, so on every one it reaches: [#500](u500) (0.24.0).",
-                      settling)
-
-    def test_settling_counts_breaking_work_on_every_component_of_a_ticket(self):
-        # #5 is shown in the Video Sink row, but it is breaking work for Panel too.
-        t = rh.classify(issue(5, labels=["component:panel", "component:videosink"], milestone="0.24.0",
-                              effect="Major"), set(), "2026-11-03", None)
-        minor = rh.classify(issue(6, labels=["component:drm"], milestone="0.25.0", effect="Minor"),
-                            set(), "2026-11-03", None)
-        page = rh.render([t, minor], [{"title": "0.24.0", "due": None}, {"title": "0.25.0", "due": None}],
-                         "now", sections=SECTIONS, root=EMPTY, history=self.HISTORY)
-        settling = page.split("## Settling")[1]
-        self.assertIn("| Component | →0.22.0 | →0.23.0 | In 0.23.0 | Breaking work open | Compatible-only |",
-                      settling)
-        self.assertIn(srow("DRM", ["·", "**B**"], "0.2.0.0", "·", "now"), settling)
-        self.assertIn(srow("Video Sink", ["m", "**B**"], "0.3.0.0", "0.24.0: [#5](u5)", "after 0.24.0"), settling)
-        self.assertIn(srow("Panel", ["new", "·"], "0.1.0.0", "0.24.0: [#5](u5)", "after 0.24.0"), settling)
-        self.assertNotIn("(documentation)", settling)
-
     def test_a_component_in_the_last_release_stays_listed(self):
         # Gone from develop, no label and no priority row: still in 0.23.0, so still shown.
         page = rh.render([], [], "now", sections=[], components=[], root=EMPTY, history=self.HISTORY)
-        self.assertIn(srow("panel", ["new", "·"], "0.1.0.0", "·", "now"), page.split("## Settling")[1])
+        self.assertNotIn("## Settling", page)
         self.assertIn("| panel |  | 0 |", page.split("## Not yet prioritised")[1])
         gone = dict(self.HISTORY, versions={"drm": {"0.21.0": "0.1.0.0"}})
-        self.assertNotIn("| DRM |", rh.render([], [], "now", sections=[], root=EMPTY, history=gone).split("## Settling")[1])
-
-    def test_settling_chart_bars_end_at_the_last_breaking_due_date(self):
-        entries = [("P1", "Video Sink", {"0.24.0": [], "0.25.0": []}, "after 0.25.0"),
-                   ("P1", "DRM", {}, "now"),
-                   ("P2", "Boot: core", {rh.NO_MILESTONE: []}, "unknown: breaking work awaiting triage"),
-                   ("P3", "ffv", {}, "not defined yet")]
-        due = {"0.24.0": "2026-11-30T00:00:00Z", "0.25.0": "2026-12-13T00:00:00Z"}
-        chart = "\n".join(rh.settling_chart(entries, "2026-11-25", due))
-        self.assertIn("```mermaid\ngantt", chart)
-        self.assertIn("    section P1\n    Video Sink : crit, 2026-11-25, 2026-12-13\n    DRM : milestone, 2026-11-25, 0d",
-                      chart)
-        self.assertNotIn("ffv", chart)
-        self.assertNotIn("section P2", chart)
-        self.assertIn("no due date: Boot: core.", chart)   # named in text, its colon kept
-
-    def test_no_settling_section_without_release_history(self):
-        self.assertNotIn("## Settling", rh.render([], [], "now", sections=SECTIONS, root=EMPTY))
+        self.assertNotIn("| DRM |", rh.render([], [], "now", sections=[], root=EMPTY, history=gone))
 
     def test_release_history_reads_each_tag(self):
         root = tmpdir()
