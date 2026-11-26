@@ -45,7 +45,7 @@
  *
  * Header-only: no library to link beyond the binder libraries every HAL
  * client already uses. Works with any generated RDK HAL interface via its
- * `serviceName()`, `VERSION`, `getInterfaceVersion()` and
+ * `descriptor`, `VERSION`, `getInterfaceVersion()` and
  * `getInterfaceHash()` surface.
  *
  * Typical client:
@@ -136,15 +136,18 @@ static_assert(!isCompatible(1000, 1), "unfrozen dev server rejected");
 } // namespace detail
 
 /**
- * Looks up interface I via the service manager using its published
- * `serviceName` and returns the typed proxy, or nullptr if absent.
+ * Looks up interface I via the service manager under
+ * `<descriptor>/<instance>` (instance "default" for singletons and
+ * managers) and returns the typed proxy, or nullptr if absent.
  */
 template <typename I>
-inline android::sp<I> getService()
+inline android::sp<I> getService(const char* instance = "default")
 {
+    android::String16 name(I::descriptor);
+    name.append(android::String16("/"));
+    name.append(android::String16(instance));
     return android::interface_cast<I>(
-        android::defaultServiceManager()->checkService(
-            android::String16(I::serviceName().c_str())));
+        android::defaultServiceManager()->checkService(name));
 }
 
 /**
