@@ -639,10 +639,20 @@ def shield(label, message, colour):
     return "https://img.shields.io/badge/%s-%s-%s" % (q(label), q(message), colour)
 
 
+def ticket_class(t):
+    """The ticket's change class: the strongest of its open PRs' (only a PR sets the class, #1053),
+    else what its labels or the board say."""
+    classes = [p["effect"] for p in t.get("open_prs") or [] if p.get("effect") in pie.PRECEDENCE]
+    return min(classes, key=pie.PRECEDENCE.index) if classes else t.get("effect")
+
+
 def badge(t):
-    """The ticket as a badge: its number. The change class is on its PRs."""
-    return "[![#%d](https://img.shields.io/badge/%s-6e7781)](%s)" % (
-        t["number"], urllib.parse.quote("#%d" % t["number"], safe=""), t["url"])
+    """The ticket as a badge: its number and change-class letter, coloured by class."""
+    effect = ticket_class(t)
+    # A project option added after BADGE shows its full name, in grey.
+    letter, colour = BADGE.get(effect or UNCLASSIFIED, (effect, "57606a"))
+    return "[![#%d %s](%s)](%s)" % (t["number"], effect or UNCLASSIFIED,
+                                   shield("#%d" % t["number"], letter, colour), t["url"])
 
 
 def class_letter(effect):
@@ -669,13 +679,11 @@ def under(ticket_badge, pr_badges):
 
 
 def legend():
-    """The page's key: cell colours, review-state colours and the change-class letters on PRs."""
-    states = " ".join("![%s](%s)" % (PR_STATE[k][0], shield("↳PR", PR_STATE[k][0], PR_STATE[k][1])) for k in OPEN)
-    letters = ", ".join("**%s** %s" % (letter, cls) for cls, (letter, _) in BADGE.items())
-    return ("🟧 a Major or CR-Major PR in the cell · 🟩 only compatible PRs (Minor, BugFix, New Interface, "
-            "Documentation and the like) · no colour: no PR yet.\n\nPR review state: " + states +
-            "\n\nEach PR shows its change class and review state (%s): %s." % (
-                ", ".join(PR_STATE[k][0] for k in OPEN), letters))
+    """The page's key: the change-class colours, the PR review states and the cell markers."""
+    classes = " ".join("![%s](%s)" % (cls, shield(letter, cls, colour)) for cls, (letter, colour) in BADGE.items())
+    states = " ".join("![PR %s](%s)" % (PR_STATE[k][0], shield("↳PR", *PR_STATE[k])) for k in OPEN)
+    return ("Change class: " + classes + "\n\nPR review state: " + states +
+            "\n\n🟧 a Major or CR-Major PR in the cell · 🟩 only compatible PRs · no marker: no PR yet.")
 
 
 def cell_colour(tickets):
@@ -773,19 +781,11 @@ def render(tickets, milestones, generated, project_title="halif_aidl", sections=
         components = set(components) | {r for r, v in history["versions"].items() if last in v}
     groups, rank = sectioned(tickets, list(sections), components, root)
     lines = ["# Release heatmap", "", generated_note(generated, project_title, "the open issues"), ""]
-    if backlog_page:
-        lines += ["Issues open longer than a year are listed for review on [%s](%s)." % (
-            backlog_page.replace("-", " "), backlog_page), ""]
     lines += [
-        "%d open issues, each shown once: a ticket on several components is in the "
-        "row of its highest-priority component, so the row totals add up to the open issues. "
-        "Every component is listed, with its version, whether or not it has tickets. "
-        "Priority and devices come from each component's metadata.yaml; within a priority, "
-        "components used on both STB and TV come first, then STB only, then TV only. "
-        "Each cell lists its tickets, most urgent first, each with its open PRs on the line "
-        "below it, marked ↳. Each column is a due date, earliest first, taken from the ticket's "
-        "milestone; a date already past is marked overdue. A ticket whose milestone has no due date "
-        "is under No date, and one with no milestone is under Triage required." % len(tickets), "",
+        "**How to read it.** A row is a component, grouped by priority. A column is a due date; "
+        "**No date** is a milestone without one, **Triage required** is no milestone. A cell lists "
+        "its tickets, most urgent first, each badge coloured by change class, with the ticket's "
+        "open PRs below it, marked ↳.", "",
         legend(),
     ]
     if stray:
@@ -805,6 +805,8 @@ def render(tickets, milestones, generated, project_title="halif_aidl", sections=
         lines.append(md_row(["**Tickets**", ""] + ["**%d**" % sum(1 for t in in_sec if column_of(t, due) == c)
                                                   for c in cols] + ["**%d**" % len(in_sec)]))
 
+    if backlog_page:
+        lines += ["", "Issues open longer than a year: [%s](%s)." % (backlog_page.replace("-", " "), backlog_page)]
     return "\n".join(lines) + "\n"
 
 

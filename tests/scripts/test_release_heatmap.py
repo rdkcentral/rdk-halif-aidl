@@ -116,20 +116,27 @@ class Classify(unittest.TestCase):
 
 class Render(unittest.TestCase):
 
-    def test_ticket_badges_show_the_number_and_prs_show_class(self):
-        young = rh.classify(issue(1, labels=["component:panel"], milestone="0.24.0", created="2026-10-20T00:00:00Z",
-                                  prs=[{"number": 9, "state": "OPEN", "createdAt": "2026-11-01T00:00:00Z",
-                                        "labels": {"nodes": [{"name": "Major Change"}]}}]), set(), "2026-11-03", None)
-        old = rh.classify(issue(2, labels=["Major Change", "component:panel"], milestone="0.24.0",
-                                created="2026-08-01T00:00:00Z"), set(), "2026-11-03", None)
-        page = rh.render([young, old], [{"title": "0.24.0", "due": None}], "now")
-        # The ticket badge is its number alone: no age, and the issue's own class label is not shown.
-        self.assertIn("[![#1](https://img.shields.io/badge/%231-6e7781)](u1)", page)
-        self.assertIn("[![#2](https://img.shields.io/badge/%232-6e7781)](u2)", page)
-        self.assertNotIn(" old]", page)
+    def test_ticket_badge_is_coloured_by_class_and_the_pr_sets_it(self):
+        # The issue says Minor, but only the PR sets the class (#1053): its Major PR wins.
+        t1 = rh.classify(issue(1, labels=["Minor Change", "component:panel"], milestone="0.24.0",
+                               prs=[{"number": 9, "state": "OPEN",
+                                     "labels": {"nodes": [{"name": "Major Change"}]}}]), set(), "2026-11-03", None)
+        # No PR: the issue's own class shows; Interface Change alone is no class.
+        t2 = rh.classify(issue(2, labels=["documentation", "component:panel"], milestone="0.24.0"),
+                         set(), "2026-11-03", None)
+        t3 = rh.classify(issue(3, labels=["Interface Change", "component:panel"], milestone="0.24.0"),
+                         set(), "2026-11-03", None)
+        page = rh.render([t1, t2, t3], [{"title": "0.24.0", "due": None}], "now")
+        self.assertIn("[![#1 Major](https://img.shields.io/badge/%231-M-d73a4a)](u1)", page)
+        self.assertIn("[![#2 Documentation](https://img.shields.io/badge/%232-D-6e7781)](u2)", page)
+        self.assertIn("[![#3 (no change class)](https://img.shields.io/badge/%233-%3F-d0d7de)](u3)", page)
         # The PR carries the class letter and review state, coloured by review state.
         self.assertIn("[![PR 9 M open](https://img.shields.io/badge/%E2%86%B39-M%20open-bf8700)](p9)", page)
         self.assertIn("| 🟧<br>", page)   # a Major PR makes the cell amber
+        # The key is the colour chart, and the intro is how to read the page.
+        self.assertIn("Change class: ![Major](https://img.shields.io/badge/M-Major-d73a4a)", page)
+        self.assertIn("**How to read it.**", page)
+        self.assertNotIn("open issues, each shown once", page)
 
     def test_age_text_for_the_backlog_page(self):
         self.assertEqual([rh.age_text(d) for d in (3, 20, 400, 365)], ["3d", "2w", "1y+", "1y"])
