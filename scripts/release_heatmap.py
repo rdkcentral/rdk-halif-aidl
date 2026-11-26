@@ -629,6 +629,28 @@ def render_backlog(tickets, generated, days=BACKLOG_DAYS):
     return "\n".join(lines) + "\n"
 
 
+# Aged tickets, oldest band first: (heading, from days, to days). Under a month is not aged.
+AGE_BANDS = [("1 year or more", 365, None), ("9 to 12 months", 270, 365), ("6 to 9 months", 180, 270),
+             ("3 to 6 months", 90, 180), ("1 to 3 months", 30, 90)]
+
+
+def render_aged(tickets, due):
+    """The open issues a month old or more, in age bands, oldest band first and oldest first in each."""
+    lines = ["", "## Aged tickets", "",
+             "Every open issue a month old or more, by how long it has been open, oldest first.", ""]
+    for heading, lo, hi in AGE_BANDS:
+        band = sorted((t for t in tickets if t.get("age") is not None and t["age"] >= lo
+                       and (hi is None or t["age"] < hi)), key=lambda t: (-t["age"], t["number"]))
+        lines += ["### %s (%d)" % (heading, len(band)), ""]
+        if not band:
+            lines += ["None.", ""]
+            continue
+        lines += [md_row(["Issue", "Title", "Component", "Due", "Age"]), md_row(["---"] * 5)]
+        lines += [md_row([badge(t), t["title"].replace("|", "\\|"), ", ".join(t["components"]),
+                          column_of(t, due), age_text(t["age"])]) for t in band] + [""]
+    return lines[:-1] if lines[-1] == "" else lines
+
+
 def md_row(cells):
     """One markdown table row: as many cells as the header, whatever their content."""
     return "| " + " | ".join(cells) + " |"
@@ -809,6 +831,7 @@ def render(tickets, milestones, generated, project_title="halif_aidl", sections=
         lines.append(md_row(["**Tickets**", ""] + ["**%d**" % sum(1 for t in in_sec if column_of(t, due) == c)
                                                   for c in cols] + ["**%d**" % len(in_sec)]))
 
+    lines += render_aged(tickets, due)
     return "\n".join(lines) + "\n"
 
 

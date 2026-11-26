@@ -155,8 +155,29 @@ class Render(unittest.TestCase):
     def test_page_is_only_the_heatmap(self):
         t = rh.classify(issue(1, labels=["Minor Change"], milestone="0.24.0"), set(), "2026-11-03", None)
         page = rh.render([t], [{"title": "0.24.0", "due": None}], "now", sections=SECTIONS, components=["drm"])
-        self.assertEqual([l for l in page.splitlines() if l.startswith("#")],
-                         ["# Release heatmap", "## P1 – Critical", "## P3 – Low", "## Not yet prioritised"])
+        self.assertEqual([l for l in page.splitlines() if l.startswith("# ") or l.startswith("## ")],
+                         ["# Release heatmap", "## P1 – Critical", "## P3 – Low", "## Not yet prioritised",
+                          "## Aged tickets"])
+
+    def test_aged_tickets_are_banded_oldest_first(self):
+        today = "2026-11-26"
+        old = lambda n, days: rh.classify(issue(n, labels=["component:panel"], milestone="0.24.0", created=(
+            rh.datetime.date(2026, 11, 26) - rh.datetime.timedelta(days=days)).isoformat() + "T00:00:00Z"),
+            set(), today, None)
+        ts = [old(1, 10), old(2, 40), old(3, 89), old(4, 90), old(5, 200), old(6, 300), old(7, 400), old(8, 800)]
+        page = rh.render(ts, [{"title": "0.24.0", "due": "2026-11-30T00:00:00Z"}], today + " 09:00 UTC",
+                         sections=SECTIONS, root=EMPTY)
+        aged = page.split("## Aged tickets")[1]
+        heads = [l for l in aged.splitlines() if l.startswith("### ")]
+        self.assertEqual(heads, ["### 1 year or more (2)", "### 9 to 12 months (1)", "### 6 to 9 months (1)",
+                                 "### 3 to 6 months (1)", "### 1 to 3 months (2)"])
+        order = [int(l.split("](u")[1].split(")")[0]) for l in aged.splitlines() if l.startswith("| [")]
+        self.assertEqual(order, [8, 7, 6, 5, 4, 3, 2])   # #1, ten days old, is not aged
+        self.assertIn("| panel | 2026-11-30 | 2y+ |", aged)
+
+    def test_an_empty_age_band_says_none(self):
+        page = rh.render([], [], "now", sections=SECTIONS, root=EMPTY)
+        self.assertIn("### 1 year or more (0)\n\nNone.", page)
 
     def test_closed_milestone_has_no_column(self):
         # A ticket left on a closed milestone shows under No milestone, and is named above the tables.
