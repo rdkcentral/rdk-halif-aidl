@@ -164,8 +164,8 @@ class Render(unittest.TestCase):
                         set(), "2026-11-03", None)
         u = rh.classify(issue(2, labels=["component:panel"], milestone="0.24.0"), set(), "2026-11-03", None)
         page = rh.render([t, u], [{"title": "0.24.0", "due": None}], "now")
-        self.assertIn("| Component | Devices | 0.24.0<br>no date | Triage required | Total |", page)
-        self.assertNotIn("0.23.0<br>", page)
+        self.assertIn("| Component | Devices | No date | Triage required | Total |", page)
+        self.assertNotIn("0.23.0", page.split("| Component")[1])
         self.assertIn("⚠️ Open on a closed milestone, so shown under Triage required: [#1](u1) (0.23.0 - Next Release).",
                       page)
         self.assertNotIn("⚠️", rh.render([u], [{"title": "0.24.0", "due": None}], "now"))
@@ -348,12 +348,18 @@ class Priorities(unittest.TestCase):
         self.assertEqual(rh.all_components(root, ["component:crypto", "component:boot", "bug"]),
                          ["bootreason", "drm"])
 
-    def test_column_heading_has_the_due_date(self):
-        t = rh.classify(issue(1, labels=["component:drm"], milestone="0.23.1"), set(), "2026-11-03", None)
-        u = rh.classify(issue(2, labels=["component:drm"], milestone="0.24.0 - Next"), set(), "2026-11-03", None)
-        page = rh.render([t, u], [{"title": "0.23.1", "due": "2026-11-28T08:00:00Z"},
-                                  {"title": "0.24.0 - Next", "due": None}], "now", sections=SECTIONS, root=EMPTY)
-        self.assertIn("| Component | Devices | 0.23.1<br>due 2026-11-28 | 0.24.0<br>no date | Total |", page)
+    def test_columns_are_due_dates_not_milestones(self):
+        mk = lambda n, m: rh.classify(issue(n, labels=["component:drm"], milestone=m), set(), "2026-11-26", None)
+        ts = [mk(1, "0.25.0"), mk(2, "0.24.0"), mk(3, "0.24.1 - Infrastructure"), mk(4, "0.26.0"), mk(5, None),
+              mk(6, "0.23.1")]
+        ms = [{"title": "0.23.1", "due": "2026-11-22T08:00:00Z"}, {"title": "0.24.0", "due": "2026-12-13T08:00:00Z"},
+              {"title": "0.24.1 - Infrastructure", "due": "2026-12-13T08:00:00Z"},
+              {"title": "0.25.0", "due": "2027-01-31T08:00:00Z"}, {"title": "0.26.0", "due": None}]
+        page = rh.render(ts, ms, "2026-11-26 09:00 UTC", sections=SECTIONS, root=EMPTY)
+        self.assertIn("| Component | Devices | ⚠️ 2026-11-22<br>overdue | 2026-12-13 | 2027-01-31 | No date "
+                      "| Triage required | Total |", page)
+        self.assertIn("| **Tickets** |  | **1** | **2** | **1** | **1** | **1** | **6** |", page)
+        self.assertNotIn("0.24.0", page.split("| Component")[1])
 
     def test_wanted_priority(self):
         w = lambda labels, cur=None: rh.wanted_priority(labels, cur, SECTIONS)

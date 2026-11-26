@@ -18,17 +18,20 @@
 # * SPDX-License-Identifier: Apache-2.0
 # */
 
-"""release_heatmap.py - the open work by component and milestone, from GitHub.
+"""release_heatmap.py - the open work by component and due date, from GitHub.
 
 Run at any time. It reads the open issues, their labels and milestones, and
 the Priority and Interface Effect fields of project 41, and writes one markdown
-page, the heatmap: components against the open milestones, in one section per
+page, the heatmap: components against the due dates of their open milestones,
+earliest first, in one section per
 priority (#1053). A component is a directory with a metadata.yaml, which holds
 its version, priority, devices (stb, tv) and, where they are not
 component:<directory>, the labels that point tickets at it. Repo-wide work has
 its scope:infrastructure, scope:overview or documentation row. Every component
-is listed, whether or not it has tickets; each milestone heading carries its due
-date, and a ticket with no milestone is under Triage required. Each cell lists
+is listed, whether or not it has tickets. Milestones that share a due date
+share a column, a date already past is flagged overdue, a ticket whose
+milestone has no due date is under No date, and a ticket with no milestone is
+under Triage required. Each cell lists
 its tickets, most urgent first, each badge coloured by age, with its open PRs
 below it, each showing its change class and review state. A cell is amber when
 any of its PRs is breaking, green when they are all compatible. Then the
@@ -84,6 +87,7 @@ BREAKING = {"Major", "CR-Major"}
 PRIORITY_POINTS = {"P0": 5, "P1": 3, "P2": 1, "P3": 0}
 NO_MILESTONE = "No milestone"
 TRIAGE = "Triage required"   # the heading of the no-milestone column: untriaged work
+NO_DATE = "No date"          # the heading of the column for milestones with no due date
 UNCLASSIFIED = "(no change class)"
 # Change class -> badge letter and colour; the order is the legend's.
 BADGE = {"Major": ("M", "d73a4a"), "CR-Major": ("CR", "8b0000"), "New Interface": ("NI", "8250df"),
@@ -565,9 +569,11 @@ def row_heading(row, name=None, root=ROOT):
     return "%s %s" % (name or row, v) if v else (name or row)
 
 
-def column_heading(title, due):
-    """The milestone's version, and its due date below it."""
-    return "%s<br>%s" % (title, "due %s" % due[:10] if due else "no date")
+def column_heading(col, today=None):
+    """A due date, flagged when it has already passed; the two catch-all columns as they are."""
+    if col in (NO_DATE, TRIAGE) or not today or col >= today:
+        return col
+    return "⚠️ %s<br>overdue" % col
 
 
 RELEASE_TAG = re.compile(r"^\d+\.\d+\.\d+$")
@@ -843,14 +849,26 @@ def sectioned(tickets, sections, components, root=ROOT):
 
 
 
-def milestone_columns(tickets, milestones):
-    """The open milestones the tickets use, in version order, then No milestone, and each one's
-    heading. Tickets on a closed milestone are expected under No milestone (see on_open_milestones)."""
-    used = {t["milestone"] for t in tickets}
-    due = {m["title"]: m["due"] for m in milestones}
-    cols = [m["title"] for m in milestones if m["title"] in used] + ([NO_MILESTONE] if NO_MILESTONE in used else [])
-    short = {c: (TRIAGE if c == NO_MILESTONE else column_heading(c.split(" ")[0], due.get(c))) for c in cols}
-    return cols, short
+def due_dates(tickets, milestones):
+    """Each milestone's due date, YYYY-MM-DD: the open milestones' own, else the date a ticket carries."""
+    due = {t["milestone"]: t["due"][:10] for t in tickets if t.get("due")}
+    due.update({m["title"]: m["due"][:10] for m in milestones if m["due"]})
+    return due
+
+
+def column_of(t, due):
+    """The ticket's column: its milestone's due date, No date, or Triage required with no milestone."""
+    if t["milestone"] == NO_MILESTONE:
+        return TRIAGE
+    return due.get(t["milestone"]) or NO_DATE
+
+
+def date_columns(tickets, due, today=None):
+    """The due dates the tickets use, earliest first, then No date, then Triage required, and each
+    one's heading. Tickets on a closed milestone are expected under Triage required (see on_open_milestones)."""
+    used = {column_of(t, due) for t in tickets}
+    cols = sorted(used - {NO_DATE, TRIAGE}) + [c for c in (NO_DATE, TRIAGE) if c in used]
+    return cols, {c: column_heading(c, today) for c in cols}
 
 
 def on_open_milestones(tickets, milestones):
@@ -872,7 +890,9 @@ def generated_note(generated, project_title, what):
 def render(tickets, milestones, generated, project_title="halif_aidl", sections=(), components=(), root=ROOT,
            history=None, backlog_page=None):
     tickets, stray = on_open_milestones(tickets, milestones)
-    cols, short = milestone_columns(tickets, milestones)
+    today = generated[:10] if re.match(r"\d{4}-\d\d-\d\d", generated) else None
+    due = due_dates(tickets, milestones)
+    cols, short = date_columns(tickets, due, today)
     if history:
         # A component in the last release stays on the page until a release without it.
         last = history["tags"][-1]
@@ -889,7 +909,9 @@ def render(tickets, milestones, generated, project_title="halif_aidl", sections=
         "Priority and devices come from each component's metadata.yaml; within a priority, "
         "components used on both STB and TV come first, then STB only, then TV only. "
         "Each cell lists its tickets, most urgent first, each with its open PRs on the line "
-        "below it, marked ↳. A ticket with no milestone is under Triage required." % len(tickets), "",
+        "below it, marked ↳. Each column is a due date, earliest first, taken from the ticket's "
+        "milestone; a date already past is marked overdue. A ticket whose milestone has no due date "
+        "is under No date, and one with no milestone is under Triage required." % len(tickets), "",
         legend(),
     ]
     if stray:
@@ -905,14 +927,11 @@ def render(tickets, milestones, generated, project_title="halif_aidl", sections=
             row = [t for t in tickets if row_of(t, rank) == r["row"]]
             in_sec += row
             lines.append(md_row([row_heading(r["row"], r["name"], root), devices_of(r["row"], root)] + [
-                cell([t for t in row if t["milestone"] == c]) for c in cols] + [str(len(row))]))
-        lines.append(md_row(["**Tickets**", ""] + ["**%d**" % sum(1 for t in in_sec if t["milestone"] == c)
+                cell([t for t in row if column_of(t, due) == c]) for c in cols] + [str(len(row))]))
+        lines.append(md_row(["**Tickets**", ""] + ["**%d**" % sum(1 for t in in_sec if column_of(t, due) == c)
                                                   for c in cols] + ["**%d**" % len(in_sec)]))
 
     if history:
-        today = generated[:10] if re.match(r"\d{4}-\d\d-\d\d", generated) else None
-        due = {t["milestone"]: t.get("due") for t in tickets if t.get("due")}
-        due.update({m["title"]: m["due"] for m in milestones if m["due"]})
         lines += render_settling(tickets, history, groups, root, today, due)
     return "\n".join(lines) + "\n"
 
