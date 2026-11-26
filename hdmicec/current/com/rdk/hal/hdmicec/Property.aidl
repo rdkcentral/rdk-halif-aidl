@@ -40,24 +40,6 @@ enum Property {
     HAL_CEC_VERSION = 0,
 
     /**
-     * Returns the primary CEC device type configured for the physical device.
-     * The value is one of the DeviceType enum values.
-     *
-     * Type: Int - 32-bit integer value.
-     * Access: Read-only.
-     */
-    PRIMARY_DEVICE_TYPE = 1,
-
-    /**
-     * Returns the secondary CEC device type configured for the physical device,
-     * or DeviceType::NONE when no secondary type is configured.
-     *
-     * Type: Int - 32-bit integer value.
-     * Access: Read-only.
-     */
-    SECONDARY_DEVICE_TYPE = 2,
-
-    /**
      * Returns the total number of Directed CEC messages sent since open.
      * -1 means this metric is not yet implemented by the vendor.
      *
@@ -116,5 +98,18 @@ enum Property {
      * Access: Read-only.
      *
      */
-    METRIC_ARBITRATION_FAILURES = 1004
+    METRIC_ARBITRATION_FAILURES = 1004,
+
+    /**
+     * The maximum number of logical addresses that can be added with
+     * IHdmiCecController.addLogicalAddresses(), set by MAX_LOGICAL_ADDRESSES in the HFP.
+     *
+     * The value 2 covers every combination of two device types in one physical device allowed
+     * by HDMI Specification 2-0, Section 11.3.2, Table 11-8. Which combination is used is the
+     * client's choice; the HAL only enforces the number.
+     *
+     * Type: Int - 32-bit integer value.
+     * Access: Read-only.
+     */
+    MAX_LOGICAL_ADDRESSES = 3
 }
