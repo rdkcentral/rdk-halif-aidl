@@ -37,7 +37,7 @@ The interface is intentionally **stateless**: each call is independent, with no 
 
 | #            | Requirement                                                                  | Comments                           |
 |--------------|-------------------------------------------------------------------------------|------------------------------------|
-| HAL.BootReason.1   | The service shall expose a binder interface named `BootReason`.                    | Defined via `serviceName` constant in `IBootReason.aidl`. |
+| HAL.BootReason.1   | The service shall expose a binder interface named `com.rdk.hal.bootreason.IBootReason/default`. | Interface descriptor plus `/default`; see [Service Naming](../../../docs/key_concepts/hal/hal_naming_conventions.md#service-naming). |
 | HAL.BootReason.2   | The service shall support the boot causes listed in `supportedBootCauses`. | Validated via `getCapabilities()`. |
 | HAL.BootReason.3   | The service shall support the reset types listed in `supportedResetTypes`.   | Validated via `getCapabilities()`. |
 | HAL.BootReason.4   | The service shall report the power source using `getPowerSource()`.  | Enum values from `PowerSource.aidl`. |
@@ -64,7 +64,7 @@ The Boot HAL service is registered at system boot via a systemd unit, typically 
 At startup:
 
 1. The service process is launched by systemd.
-2. The `IBootReason` implementation registers itself with the AIDL Service Manager under the service name `BootReason` (matching `serviceName`).
+2. The `IBootReason` implementation registers itself with the AIDL Service Manager under the service name `com.rdk.hal.bootreason.IBootReason/default` (its interface descriptor plus `/default`).
 3. Implementation-specific initialization may occur, such as:
    - Reading hardware registers or firmware-provided values to determine the last boot reason.
    - Initializing access to SoC or platform-specific reset and power control mechanisms.

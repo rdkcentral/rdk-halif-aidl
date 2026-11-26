@@ -69,7 +69,7 @@ The [systemd](../vsi/systemd/current/systemd.md) `hal-audios_sink_manager.servic
 
 The Audio Sink Manager service depends on the [Service Manager](../key_concepts/hal/hal_session_state_management.md) to register itself as a service.
 
-Upon starting, the service shall register the `IAudioSinkManager` interface with the [Service Manager](../vsi/service_manager/current/service_manager.md) using the string `IAudioSinkManager.serviceName` and immediately become operational.
+Upon starting, the service shall register the `IAudioSinkManager` interface with the [Service Manager](../vsi/service_manager/current/service_manager.md) using the name `com.rdk.hal.audiosink.IAudioSinkManager/default` (see [Service Naming](../../../docs/key_concepts/hal/hal_naming_conventions.md#service-naming)) and immediately become operational.
 
 ## Product Customization
 

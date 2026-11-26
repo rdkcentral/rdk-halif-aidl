@@ -85,7 +85,7 @@ The [systemd](../vsi/systemd/current/systemd.md) `hal-audio_decoder_manager.serv
 
 The Audio Decoder Manager service depends on the [Service Manager](../vsi/service_manager/current/service_manager.md) to register itself as a service.
 
-Upon starting, the service shall register the `IAudioDecoderManager` interface with the [Service Manager](../vsi/service_manager/current/service_manager.md) using the String `IAudioDecoderManager.serviceName` and immediately become operational.
+Upon starting, the service shall register the `IAudioDecoderManager` interface with the [Service Manager](../vsi/service_manager/current/service_manager.md) using the name `com.rdk.hal.audiodecoder.IAudioDecoderManager/default` (see [Service Naming](../../../docs/key_concepts/hal/hal_naming_conventions.md#service-naming)) and immediately become operational.
 
 ## Product Customization
 

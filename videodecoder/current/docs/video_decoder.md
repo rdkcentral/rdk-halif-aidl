@@ -79,7 +79,7 @@ The [systemd](../vsi/systemd/current/systemd.md) `hal-video_decoder_manager.serv
 
 The Video Decoder Manager service depends on the Service Manager to register itself as a service.
 
-Upon starting, the service shall register the `IVideoDecoderManager` interface with the Service Manager using the String `IVideoDecoderManager.serviceName` and immediately become operational.
+Upon starting, the service shall register the `IVideoDecoderManager` interface with the Service Manager using the name `com.rdk.hal.videodecoder.IVideoDecoderManager/default` (see [Service Naming](../../../docs/key_concepts/hal/hal_naming_conventions.md#service-naming)) and immediately become operational.
 
 ## Product Customization
 

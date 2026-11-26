@@ -31,8 +31,8 @@ Three interfaces make up the API. `IRingBuffer` owns the buffer and its configur
 producer endpoint and `IRingBufferSource` is the consumer endpoint. Each endpoint has a matching listener interface,
 implemented by the client, through which the implementation delivers notifications.
 
-`IRingBuffer` is implementation-internal by design. It is never registered with the service manager, has no
-`serviceName` constant, and is never returned to a producer or a consumer. Only the owning HAL component holds one, so
+`IRingBuffer` is implementation-internal by design. It is never registered with the service manager under any
+name, and is never returned to a producer or a consumer. Only the owning HAL component holds one, so
 buffer size and overflow behaviour are decided by that component rather than negotiated by its clients. This is why
 `setSize()` and `setOverflowing()` have no client-facing equivalent.
 
@@ -151,8 +151,8 @@ the region may already belong to a replacement. Unmap and close as part of unreg
 ### Control Belongs to the Owning Component
 
 `IRingBuffer` is not part of the client-facing surface. It is held only by the HAL component that creates the buffer,
-is never registered with the service manager, and is never returned to a producer or a consumer. Its absence of a
-`serviceName` constant is deliberate, not an oversight.
+is never registered with the service manager, and is never returned to a producer or a consumer. That it has no
+Service Manager name is deliberate, not an oversight.
 
 This is why there is no client-facing way to set a size or an overflow policy. A client asks the owning HAL for a
 stream of bytes; how much buffering that takes, and what happens when it fills, are properties of the component

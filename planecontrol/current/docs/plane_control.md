@@ -61,7 +61,7 @@ The [systemd](../vsi/systemd/current/systemd.md) `hal-plane_control.service` uni
 
 The Plane Control service depends on the Service Manager to register itself as a service.
 
-Upon starting, the service shall register the `IPlaneControl` interface with the Service Manager using the String `IPlaneControl.serviceName` and immediately become operational.
+Upon starting, the service shall register the `IPlaneControl` interface with the Service Manager using the name `com.rdk.hal.planecontrol.IPlaneControl/default` (see [Service Naming](../../../docs/key_concepts/hal/hal_naming_conventions.md#service-naming)) and immediately become operational.
 
 ## Product Customization
 

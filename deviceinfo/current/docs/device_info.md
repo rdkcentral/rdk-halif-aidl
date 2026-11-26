@@ -39,7 +39,7 @@ All property accesses are string-based, and property keys are pre-defined by the
 
 | #                | Requirement                                                              | Comments                           |
 | ---------------- | ------------------------------------------------------------------------ | ---------------------------------- |
-| **HAL.DeviceInfo.1** | The service shall expose a binder interface named `"DeviceInfo"`         | Defined via `serviceName` constant |
+| **HAL.DeviceInfo.1** | The service shall expose a binder interface named `"com.rdk.hal.deviceinfo.IDeviceInfo/default"` | Interface descriptor plus `/default`; see [Service Naming](../../../docs/key_concepts/hal/hal_naming_conventions.md#service-naming) |
 | **HAL.DeviceInfo.2** | The service shall support the properties listed in `supportedProperties` | Validated via `getCapabilities()`  |
 | **HAL.DeviceInfo.3** | All properties are read-only; formatting is enforced according to PropertyType and Property definitions. | Enforced via [`PropertyType`](https://github.com/rdkcentral/rdk-halif-aidl/blob/develop/deviceinfo/current/com/rdk/hal/deviceinfo/PropertyType.aidl) and [`Property`](https://github.com/rdkcentral/rdk-halif-aidl/blob/develop/deviceinfo/current/com/rdk/hal/deviceinfo/Property.aidl) |
 | **HAL.DeviceInfo.4** | ISO3166 and ISO639 codes are 2 bytes and not zero-terminated            | Enforced in `Property`            |

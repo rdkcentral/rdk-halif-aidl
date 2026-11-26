@@ -66,7 +66,7 @@ Each sensor type has different characteristics (range, field-of-view, sensitivit
 | **HAL.MOTION.7** | If deep-sleep autonomy is supported, `setAutonomousDuringDeepSleep()` shall require `State==STOPPED`; when unsupported it shall return `false`. | |
 | **HAL.MOTION.8** | Active time windows shall only suppress events outside configured periods; motion detection continues but notifications are deferred or cancelled. | See `IMotionSensorController.setActiveWindows()`. |
 | **HAL.MOTION.9** | When active windows are configured, events shall only fire during the union of all configured windows. Empty array or windows with both times = 0 enables 24-hour monitoring. | |
-| **HAL.MOTION.10** | Shall register the service under the name `"sensor.motion"` and become operational at startup. | Matches `IMotionSensorManager.serviceName`. |
+| **HAL.MOTION.10** | Shall register the service under the name `"com.rdk.hal.sensor.motion.IMotionSensorManager/default"` and become operational at startup. | Interface descriptor plus `/default`; see [Service Naming](../../../../docs/key_concepts/hal/hal_naming_conventions.md#service-naming). |
 | **HAL.MOTION.11** | `IMotionSensorControllerListener.onStateChanged()` shall fire for every lifecycle state transition. | Matches the pattern used by all other HAL modules. |
 | **HAL.MOTION.12** | If the controller-owning client crashes, the HAL shall implicitly call `stop()` and `close()` to release the sensor. | Binder death cleanup. |
 
@@ -93,7 +93,7 @@ Each sensor type has different characteristics (range, field-of-view, sensitivit
 ## Initialization
 
 Vendors shall provide a `hal-sensor-motion.service` systemd unit to launch the Motion HAL.  
-The service shall register `IMotionSensorManager` with the Service Manager using `serviceName = "MotionSensorManager"`.
+The service shall register `IMotionSensorManager` with the Service Manager under the name `com.rdk.hal.sensor.motion.IMotionSensorManager/default`.
 
 Dependencies on drivers or low-level services must be expressed using systemd `Requires=` or `Wants=`.
 

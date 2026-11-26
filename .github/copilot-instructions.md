@@ -20,8 +20,7 @@ This codebase defines **RDK Hardware Abstraction Layer interfaces using Android 
 - Use UK English spelling in comments and documentation
 - Validate compatibility before committing AIDL changes (`./build_interfaces.sh <module>`)
 - Commit both AIDL source and generated C++ code in `stable/` directory
-- Include `serviceName` constant in main AIDL interfaces
-- Use lowercase with dots for service names (`"boot"`, `"sensor.motion"`)
+- Register each service as `<interface-descriptor>/default` (e.g. `"com.rdk.hal.bootreason.IBootReason/default"`); never add a name constant to the AIDL
 
 ## Quick Reference Commands
 
@@ -60,7 +59,7 @@ cmake --install build
 - **HAL Modules**: Each directory (`boot/`, `videodecoder/`, `audiosink/`, etc.) contains one HAL component
 - **Versioning**: All modules use `current/` directory for the active interface version. New versions are added as new subdirectories (e.g., `current/`, `2/`)
 - **Package Structure**: All AIDL interfaces use `com.rdk.hal.*` package namespace
-- **Service Registration**: Each HAL registers with AIDL Service Manager using predefined `serviceName` constants
+- **Service Registration**: Each HAL registers with AIDL Service Manager under its interface descriptor and instance name (`<descriptor>/default`)
 - **@VintfStability**: All AIDL interfaces MUST be annotated with `@VintfStability` for vendor interface stability
 
 ### Service Boundaries
@@ -101,7 +100,7 @@ stable/
 
 ### AIDL Interface Design
 
-- **Main Interface**: `I{Module}.aidl` with `serviceName` constant for binder registration
+- **Main Interface**: `I{Module}.aidl`, registered as `<descriptor>/default` (no name constant)
 - **Manager Pattern**: Complex modules may use `I{Module}Manager.aidl` to manage multiple resource instances
 - **Stateless**: Simple interfaces have no open/close lifecycle - each call is independent
 - **Capabilities Pattern**: `getCapabilities()` method returns supported features at runtime
@@ -110,31 +109,19 @@ stable/
 
 ### Service Names & Packages
 
-**Service Naming Convention:**
-- Format: `{module}` or `{category}.{module}` (typically lowercase with dot separators)
-- Simple modules: `"boot"`, `"cec"`, `"panel"` (some modules may use `"Boot"` - check existing implementation)
-- Categorized modules: `"sensor.motion"`, `"sensor.thermal"`, `"broadcast.tuner"`
-- Use the module directory path with dots instead of slashes
-- **Important**: Match the existing convention in the module you're working with
+**Service Naming Convention** (see `docs/key_concepts/hal/hal_naming_conventions.md`, "Service Naming"):
+- Format: `<interface-descriptor>/<instance>`; the descriptor is the fully qualified AIDL name (package + interface)
+- Singletons and managers use the `default` instance: `"com.rdk.hal.bootreason.IBootReason/default"`, `"com.rdk.hal.sensor.motion.IMotionSensorManager/default"`
+- Several instances of one interface use their own instance names: `"com.rdk.hal.drm.IDrmFactory/widevine"`
+- Do not declare a name constant in the AIDL; the descriptor is generated from the interface
 
-```aidl
-// Standard pattern in main interfaces
-package com.rdk.hal.bootreason;
+```cpp
+// Server (NDK): register under descriptor + "/default"
+const std::string name = std::string(IBootReason::descriptor) + "/default";
+AServiceManager_addService(service->asBinder().get(), name.c_str());
 
-@VintfStability
-interface IBootReason {
-    const @utf8InCpp String serviceName = "BootReason";  // Note: Check module's existing convention
-    // ...
-}
-
-// Categorized module example
-package com.rdk.hal.sensor.motion;
-
-@VintfStability
-interface IMotionSensorManager {
-    const @utf8InCpp String serviceName = "sensor.motion";
-    // ...
-}
+// Client (cpp backend): halcompat resolves I::descriptor + "/default"
+auto bootReason = halcompat::getService<com::rdk::hal::bootreason::IBootReason>();
 ```
 
 ### HAL Feature Profile (HFP)
@@ -437,7 +424,7 @@ State getState();
 - **Naming**:
   - Use lowercase with underscores for docs/files (`audio_decoder`)
   - PascalCase for AIDL interfaces (`IAudioDecoder`)
-  - Lowercase with dots for service names (`"boot"`, `"sensor.motion"`)
+  - Service names are `<interface-descriptor>/<instance>` (`"com.rdk.hal.bootreason.IBootReason/default"`)
   - Systemd services follow `hal-{module}.service` pattern
 - **Documentation**: All build and interface docs are in `docs/` and linked from the main `README.md`
 - **UK English**: Use British English spelling in all documentation and comments
@@ -445,7 +432,7 @@ State getState();
 
 ## Common Pitfalls
 
-- **Service Names**: Must match exactly between `serviceName` constant and registration (check existing module convention - some use lowercase, some use PascalCase)
+- **Service Names**: Server and client must both use `<descriptor>/default`; a bare name such as `"BootReason"` will not be found
 - **Package Paths**: AIDL package must align with file directory structure
 - **Dependencies**: Module CMakeLists.txt must declare version variables for imported modules
 - **Versioning**: Always use "current" for active development until interface stabilizes
@@ -613,7 +600,7 @@ which aidl  # Should be in PATH after build_binder.sh
 | `aidl: command not found` | Binder SDK not built | Run `./build_binder.sh` |
 | `Pre-validation FAILED: incompatible changes` | Breaking AIDL changes | Only add methods/fields at end, don't remove/reorder |
 | `Package path mismatch` | AIDL package doesn't match directory | Ensure `package com.rdk.hal.X` matches `com/rdk/hal/X/` path |
-| `serviceName not found` | Missing service name constant | Add `const @utf8InCpp String serviceName = "module"` to main interface |
+| Service not found by `getService()` | Registered under a name other than `<descriptor>/default` | Register as `std::string(I{Module}::descriptor) + "/default"`; look up with `halcompat::getService<I{Module}>()` |
 | `@VintfStability missing` | Annotation missing | Add `@VintfStability` above interface declaration |
 | Binder SDK ARM build: "uses VFP register arguments" linker error | Yocto toolchain file conflicts with CFLAGS | Ensure CMAKE_TOOLCHAIN_FILE is unset or compatible with manual CFLAGS/LDFLAGS |
 | Binder SDK build: "No shared libraries found" | CMake configure or build failed | Check CMake output for compilation/linking errors; script now fails loudly |

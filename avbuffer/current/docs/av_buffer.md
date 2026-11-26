@@ -60,7 +60,7 @@ The [systemd](../vsi/systemd/current/systemd.md) `hal-av_buffer.service` unit fi
 
 The AV Buffer service depends on the [Service Manager](../vsi/service_manager/current/service_manager.md) to register itself as a service.
 
-Upon starting, the service shall register the IAVBuffer interface with the Service Manager using the String `IAVBuffer.serviceName` and immediately become operational.
+Upon starting, the service shall register the IAVBuffer interface with the Service Manager using the name `com.rdk.hal.avbuffer.IAVBuffer/default` (see [Service Naming](../../../docs/key_concepts/hal/hal_naming_conventions.md#service-naming)) and immediately become operational.
 
 ## Product Customization
 
@@ -226,7 +226,7 @@ sequenceDiagram
         participant sm as Service Manager
     end
 
-    c1 ->> sm: getService(IAVBuffer.serviceName)
+    c1 ->> sm: getService(com.rdk.hal.avbuffer.IAVBuffer/default)
 
     Note over c1: AppSource in media pipeline<br/>creates non-secure pools for <br/>encrypted A/V data frames.
 

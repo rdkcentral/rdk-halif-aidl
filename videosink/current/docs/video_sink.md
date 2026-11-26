@@ -59,7 +59,7 @@ The [systemd](../vsi/systemd/current/systemd.md) `hal-video_sink_manager.service
 
 The Video Sink Manager service depends on the Service Manager to register itself as a service.
 
-Upon starting, the service shall register the `IVideoSinkManager` interface with the Service Manager using the String `IVideoSinkManager.serviceName` and immediately become operational.
+Upon starting, the service shall register the `IVideoSinkManager` interface with the Service Manager using the name `com.rdk.hal.videosink.IVideoSinkManager/default` (see [Service Naming](../../../docs/key_concepts/hal/hal_naming_conventions.md#service-naming)) and immediately become operational.
 
 ## Product Customization
 
