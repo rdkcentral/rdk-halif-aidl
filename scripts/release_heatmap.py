@@ -552,10 +552,19 @@ def rows(tickets, rank=None):
     return sorted({row_of(t, rank) for t in tickets}, key=lambda c: (c.startswith("("), c))
 
 
+VERSION_COLOUR = "0969da"   # the version badge in a row heading, apart from the ticket badges' grey
+
+
+def version_badge(v):
+    """The component version as a badge: the wiki strips text colour, so colour comes from an image."""
+    return "![%s](https://img.shields.io/badge/%s-%s)" % (
+        v, urllib.parse.quote(v.replace("-", "--").replace("_", "__"), safe=""), VERSION_COLOUR)
+
+
 def row_heading(row, name=None, root=ROOT):
-    """The row's name, then its component version where it has one."""
+    """The row's name, then its component version, as a badge, where it has one."""
     v = version_of(row, root)
-    return "%s %s" % (name or row, v) if v else (name or row)
+    return "%s %s" % (name or row, version_badge(v)) if v else (name or row)
 
 
 def column_heading(col, today=None):

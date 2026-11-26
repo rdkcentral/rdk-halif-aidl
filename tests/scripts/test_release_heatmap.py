@@ -341,8 +341,8 @@ class Priorities(unittest.TestCase):
             os.makedirs(os.path.join(root, d))
             with open(os.path.join(root, d, "metadata.yaml"), "w") as fh:
                 fh.write("component: %s\nversion: %s\nstatus: GREEN\n" % (d, v))
-        self.assertEqual(rh.row_heading("drm", "DRM", root), "DRM 0.2.0.0")
-        self.assertEqual(rh.row_heading("bootreason", "Boot", root), "Boot 0.2.1.0")
+        self.assertEqual(rh.row_heading("drm", "DRM", root), "DRM ![0.2.0.0](https://img.shields.io/badge/0.2.0.0-0969da)")
+        self.assertEqual(rh.row_heading("bootreason", "Boot", root), "Boot ![0.2.1.0](https://img.shields.io/badge/0.2.1.0-0969da)")
         self.assertEqual(rh.row_heading("crypto", "Crypto", root), "Crypto")
         self.assertEqual(rh.row_heading("(documentation)", "General documentation", root), "General documentation")
         # With metadata.yaml in the repo, a label is not a component on its own.
@@ -504,8 +504,8 @@ class MetadataPriority(unittest.TestCase):
         self.assertEqual([r["row"] for r in secs[2]["rows"]], ["(documentation)"])
         self.assertEqual([r["row"] for r in SECTIONS[1]["rows"]], ["panel", "(documentation)"])  # not changed
         page = rh.render([], [], "now", sections=secs, components=rh.all_components(root), root=root)
-        self.assertIn("| DRM 0.2.0.0 | STB, TV | 0 |", page)
-        self.assertIn("| hdmiinput 0.2.0.0 | TV | 0 |", page)
+        self.assertIn("| DRM ![0.2.0.0](https://img.shields.io/badge/0.2.0.0-0969da) | STB, TV | 0 |", page)
+        self.assertIn("| hdmiinput ![0.2.0.0](https://img.shields.io/badge/0.2.0.0-0969da) | TV | 0 |", page)
 
     def test_retired_names_are_not_rows(self):
         # cdm became drm, flash shipped as firmwareupdate, factory was dropped; metrics is label-only.
