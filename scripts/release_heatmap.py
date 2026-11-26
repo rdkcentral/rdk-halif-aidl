@@ -32,8 +32,8 @@ is listed, whether or not it has tickets. Milestones that share a due date
 share a column, a date already past is flagged overdue, a ticket whose
 milestone has no due date is under No date, and a ticket with no milestone is
 under Triage required. Each cell lists
-its tickets, most urgent first, each badge coloured by age, with its open PRs
-below it, each showing its change class and review state. A cell is amber when
+its tickets, most urgent first, with its open PRs below it, each showing
+its change class and review state. A cell is amber when
 any of its PRs is breaking, green when they are all compatible. A second
 page, Backlog-Review, lists the issues open longer than a year, for review by
 hand (#1061).
@@ -425,10 +425,6 @@ def project_fields(issue):
     return issue.get("projectFields") or {}
 
 
-# Age, in days, at which an issue's or PR's badge turns amber, then red.
-AGE_AMBER, AGE_RED = 30, 60
-
-
 def age_days(created, today):
     """Whole days from an ISO timestamp to today (YYYY-MM-DD), or None without both."""
     if not created or not today:
@@ -437,13 +433,6 @@ def age_days(created, today):
         return (datetime.date.fromisoformat(today[:10]) - datetime.date.fromisoformat(created[:10])).days
     except ValueError:
         return None
-
-
-def age_colour(days):
-    """Green under a month, amber from one month, red from two."""
-    if days is None:
-        return "6e7781"
-    return "d73a4a" if days >= AGE_RED else "bf8700" if days >= AGE_AMBER else "1a7f37"
 
 
 def age_text(days):
@@ -494,7 +483,7 @@ def classify(issue, maintainers, today, next_due, repo=REPO, dirs=None):
         "milestone": ms["title"] if ms else NO_MILESTONE, "due": due, "components": comps,
         "effect": effect, "label_class": label_class, "field": fields.get("Interface Effect"),
         "priority": priority, "score": score, "why": why, "prs": pr_states(issue),
-        "open_prs": [dict(p, age=age_days(p.get("created"), today)) for p in open_prs(issue, repo)],
+        "open_prs": open_prs(issue, repo),
         "age": age_days(issue.get("createdAt"), today), "updated": (issue.get("updatedAt") or "")[:10],
     }
 
@@ -629,27 +618,6 @@ def render_backlog(tickets, generated, days=BACKLOG_DAYS):
     return "\n".join(lines) + "\n"
 
 
-# Aged tickets, oldest band first: (heading, from days, to days). Under a month is not aged.
-AGE_BANDS = [("1 year or more", 365, None), ("9 to 12 months", 270, 365), ("6 to 9 months", 180, 270),
-             ("3 to 6 months", 90, 180), ("1 to 3 months", 30, 90)]
-
-
-def render_aged(tickets, due):
-    """The open issues a month old or more, in age bands, oldest band first and oldest first in each."""
-    lines = ["", "## Aged tickets", "",
-             "Every open issue a month old or more, by how long it has been open, oldest first.", ""]
-    for heading, lo, hi in AGE_BANDS:
-        band = sorted((t for t in tickets if t.get("age") is not None and t["age"] >= lo
-                       and (hi is None or t["age"] < hi)), key=lambda t: (-t["age"], t["number"]))
-        lines += ["### %s (%d)" % (heading, len(band)), ""]
-        if not band:
-            lines += ["None.", ""]
-            continue
-        lines += [md_row(["Issue", "Title", "Component", "Due", "Age"]), md_row(["---"] * 5)]
-        lines += [md_row([badge(t), t["title"].replace("|", "\\|"), ", ".join(t["components"]),
-                          column_of(t, due), age_text(t["age"])]) for t in band] + [""]
-    return lines[:-1] if lines[-1] == "" else lines
-
 
 def md_row(cells):
     """One markdown table row: as many cells as the header, whatever their content."""
@@ -663,10 +631,9 @@ def shield(label, message, colour):
 
 
 def badge(t):
-    """The ticket as a badge: its number and its age, coloured by age. The change class is on its PRs."""
-    age = t.get("age")
-    return "[![#%d %s old](%s)](%s)" % (t["number"], age_text(age),
-                                       shield("#%d" % t["number"], age_text(age), age_colour(age)), t["url"])
+    """The ticket as a badge: its number. The change class is on its PRs."""
+    return "[![#%d](https://img.shields.io/badge/%s-6e7781)](%s)" % (
+        t["number"], urllib.parse.quote("#%d" % t["number"], safe=""), t["url"])
 
 
 def class_letter(effect):
@@ -675,12 +642,11 @@ def class_letter(effect):
 
 
 def pr_badge(p):
-    """The PR as a badge: its number, change-class letter and review state, coloured by age."""
-    text = "%s %s" % (class_letter(p.get("effect")), PR_STATE[p["state"]][0])
-    age = p.get("age")
+    """The PR as a badge: its number, change-class letter and review state, coloured by review state."""
+    word, colour = PR_STATE[p["state"]]
+    text = "%s %s" % (class_letter(p.get("effect")), word)
     # The arrow is inside the badge, so it cannot wrap away from it; short, to fit a narrow column.
-    return "[![PR %d %s, %s old](%s)](%s)" % (p["number"], text, age_text(age),
-                                             shield("↳%d" % p["number"], text, age_colour(age)), p["url"])
+    return "[![PR %d %s](%s)](%s)" % (p["number"], text, shield("↳%d" % p["number"], text, colour), p["url"])
 
 
 def ticket(t):
@@ -694,12 +660,11 @@ def under(ticket_badge, pr_badges):
 
 
 def legend():
-    """The page's key: cell colours, age colours and the change-class letters on PRs."""
-    ages = " ".join("![%s](%s)" % (text, shield("#n", text, colour)) for text, colour in (
-        ("under a month", "1a7f37"), ("a month", "bf8700"), ("two months or more", "d73a4a")))
+    """The page's key: cell colours, review-state colours and the change-class letters on PRs."""
+    states = " ".join("![%s](%s)" % (PR_STATE[k][0], shield("↳PR", PR_STATE[k][0], PR_STATE[k][1])) for k in OPEN)
     letters = ", ".join("**%s** %s" % (letter, cls) for cls, (letter, _) in BADGE.items())
     return ("🟧 a Major or CR-Major PR in the cell · 🟩 only compatible PRs (Minor, BugFix, New Interface, "
-            "Documentation and the like) · no colour: no PR yet.\n\nAge, on issues and PRs: " + ages +
+            "Documentation and the like) · no colour: no PR yet.\n\nPR review state: " + states +
             "\n\nEach PR shows its change class and review state (%s): %s." % (
                 ", ".join(PR_STATE[k][0] for k in OPEN), letters))
 
@@ -831,7 +796,6 @@ def render(tickets, milestones, generated, project_title="halif_aidl", sections=
         lines.append(md_row(["**Tickets**", ""] + ["**%d**" % sum(1 for t in in_sec if column_of(t, due) == c)
                                                   for c in cols] + ["**%d**" % len(in_sec)]))
 
-    lines += render_aged(tickets, due)
     return "\n".join(lines) + "\n"
 
 

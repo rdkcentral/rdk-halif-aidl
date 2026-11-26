@@ -116,23 +116,22 @@ class Classify(unittest.TestCase):
 
 class Render(unittest.TestCase):
 
-    def test_ticket_badges_show_age_and_prs_show_class(self):
+    def test_ticket_badges_show_the_number_and_prs_show_class(self):
         young = rh.classify(issue(1, labels=["component:panel"], milestone="0.24.0", created="2026-10-20T00:00:00Z",
                                   prs=[{"number": 9, "state": "OPEN", "createdAt": "2026-11-01T00:00:00Z",
                                         "labels": {"nodes": [{"name": "Major Change"}]}}]), set(), "2026-11-03", None)
         old = rh.classify(issue(2, labels=["Major Change", "component:panel"], milestone="0.24.0",
                                 created="2026-08-01T00:00:00Z"), set(), "2026-11-03", None)
         page = rh.render([young, old], [{"title": "0.24.0", "due": None}], "now")
-        # The ticket badge is its age, coloured by age; the issue's own class label is not shown.
-        self.assertIn("[![#1 2w old](https://img.shields.io/badge/%231-2w-1a7f37)](u1)", page)
-        self.assertIn("[![#2 13w old](https://img.shields.io/badge/%232-13w-d73a4a)](u2)", page)
-        # The PR carries the class letter and review state.
-        self.assertIn("[![PR 9 M open, 2d old](https://img.shields.io/badge/%E2%86%B39-M%20open-1a7f37)](p9)", page)
+        # The ticket badge is its number alone: no age, and the issue's own class label is not shown.
+        self.assertIn("[![#1](https://img.shields.io/badge/%231-6e7781)](u1)", page)
+        self.assertIn("[![#2](https://img.shields.io/badge/%232-6e7781)](u2)", page)
+        self.assertNotIn(" old]", page)
+        # The PR carries the class letter and review state, coloured by review state.
+        self.assertIn("[![PR 9 M open](https://img.shields.io/badge/%E2%86%B39-M%20open-bf8700)](p9)", page)
         self.assertIn("| 🟧<br>", page)   # a Major PR makes the cell amber
 
-    def test_age_colours(self):
-        self.assertEqual([rh.age_colour(d) for d in (0, 29, 30, 59, 60, None)],
-                         ["1a7f37", "1a7f37", "bf8700", "bf8700", "d73a4a", "6e7781"])
+    def test_age_text_for_the_backlog_page(self):
         self.assertEqual([rh.age_text(d) for d in (3, 20, 400, 365)], ["3d", "2w", "1y+", "1y"])
         self.assertEqual(rh.age_days("2026-10-03T10:00:00Z", "2026-11-03"), 31)
 
@@ -156,28 +155,9 @@ class Render(unittest.TestCase):
         t = rh.classify(issue(1, labels=["Minor Change"], milestone="0.24.0"), set(), "2026-11-03", None)
         page = rh.render([t], [{"title": "0.24.0", "due": None}], "now", sections=SECTIONS, components=["drm"])
         self.assertEqual([l for l in page.splitlines() if l.startswith("# ") or l.startswith("## ")],
-                         ["# Release heatmap", "## P1 – Critical", "## P3 – Low", "## Not yet prioritised",
-                          "## Aged tickets"])
+                         ["# Release heatmap", "## P1 – Critical", "## P3 – Low", "## Not yet prioritised"])
+        self.assertNotIn("Aged tickets", page)
 
-    def test_aged_tickets_are_banded_oldest_first(self):
-        today = "2026-11-26"
-        old = lambda n, days: rh.classify(issue(n, labels=["component:panel"], milestone="0.24.0", created=(
-            rh.datetime.date(2026, 11, 26) - rh.datetime.timedelta(days=days)).isoformat() + "T00:00:00Z"),
-            set(), today, None)
-        ts = [old(1, 10), old(2, 40), old(3, 89), old(4, 90), old(5, 200), old(6, 300), old(7, 400), old(8, 800)]
-        page = rh.render(ts, [{"title": "0.24.0", "due": "2026-11-30T00:00:00Z"}], today + " 09:00 UTC",
-                         sections=SECTIONS, root=EMPTY)
-        aged = page.split("## Aged tickets")[1]
-        heads = [l for l in aged.splitlines() if l.startswith("### ")]
-        self.assertEqual(heads, ["### 1 year or more (2)", "### 9 to 12 months (1)", "### 6 to 9 months (1)",
-                                 "### 3 to 6 months (1)", "### 1 to 3 months (2)"])
-        order = [int(l.split("](u")[1].split(")")[0]) for l in aged.splitlines() if l.startswith("| [")]
-        self.assertEqual(order, [8, 7, 6, 5, 4, 3, 2])   # #1, ten days old, is not aged
-        self.assertIn("| panel | 2026-11-30 | 2y+ |", aged)
-
-    def test_an_empty_age_band_says_none(self):
-        page = rh.render([], [], "now", sections=SECTIONS, root=EMPTY)
-        self.assertIn("### 1 year or more (0)\n\nNone.", page)
 
     def test_closed_milestone_has_no_column(self):
         # A ticket left on a closed milestone shows under No milestone, and is named above the tables.
@@ -288,7 +268,7 @@ class Render(unittest.TestCase):
         t = rh.classify(issue(1, labels=["Minor Change", "component:panel"], milestone="0.24.0",
                               prs=[{"number": 9, "state": "OPEN"}]), set(), "2026-11-03", None)
         page = rh.render([t], [{"title": "0.24.0", "due": None}], "now")
-        self.assertIn("(u1)<br>[![PR 9 ? open, ? old](https://img.shields.io/badge/%E2%86%B39-%3F%20open-6e7781)](p9)", page)
+        self.assertIn("(u1)<br>[![PR 9 ? open](https://img.shields.io/badge/%E2%86%B39-%3F%20open-bf8700)](p9)", page)
 
     def test_a_ticket_on_several_components_is_in_its_first_row(self):
         one = rh.classify(issue(1, labels=["component:panel"], milestone="0.24.0"), set(), "2026-11-03", None)
