@@ -134,7 +134,8 @@ class Render(unittest.TestCase):
         self.assertIn("[![PR 9 M open](https://img.shields.io/badge/%E2%86%B39-M%20open-bf8700)](p9)", page)
         self.assertIn("| 🟧<br>", page)   # a Major PR makes the cell amber
         # The key is the colour chart, and the intro is how to read the page.
-        self.assertIn("Change class: ![Major](https://img.shields.io/badge/M-Major-d73a4a)", page)
+        self.assertIn("\n\n![Major](https://img.shields.io/badge/M-Major-d73a4a)", page)
+        self.assertIn("(open: review needed)", page)
         self.assertIn("**How to read it.**", page)
         self.assertNotIn("open issues, each shown once", page)
 
@@ -153,6 +154,14 @@ class Render(unittest.TestCase):
         page = rh.render([one, two], [{"title": "0.24.0", "due": "2026-11-30T00:00:00Z"},
                                       {"title": "0.25.0", "due": "2026-12-31T00:00:00Z"}], "now", root=EMPTY)
         self.assertIn("| 🟧 panel |", page)   # one Major PR anywhere in the row makes the component amber
+
+    def test_a_pr_closing_several_tickets_shows_once_per_cell(self):
+        pr = {"number": 387, "state": "OPEN", "labels": {"nodes": [{"name": "New Interface"}]}}
+        ts = [rh.classify(issue(n, labels=["component:crypto"], milestone="0.25.0", prs=[dict(pr, url="p387")]),
+                          set(), "2026-11-03", None) for n in (385, 636, 637)]
+        c = rh.cell(ts)
+        self.assertEqual(c.count("](p387)"), 1)
+        self.assertEqual(sum(c.count("](u%d)" % n) for n in (385, 636, 637)), 3)
 
     def test_age_text_for_the_backlog_page(self):
         self.assertEqual([rh.age_text(d) for d in (3, 20, 400, 365)], ["3d", "2w", "1y+", "1y"])

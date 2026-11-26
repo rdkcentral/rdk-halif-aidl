@@ -668,9 +668,13 @@ def pr_badge(p):
     return "[![PR %d %s](%s)](%s)" % (p["number"], text, shield("↳%d" % p["number"], text, colour), p["url"])
 
 
-def ticket(t):
-    """The ticket's class badge, then each of its open PRs on the line below, marked ↳."""
-    return under(badge(t), [pr_badge(p) for p in t["open_prs"]])
+def ticket(t, shown=None):
+    """The ticket's class badge, then each of its open PRs on the line below, marked ↳.
+    A PR already shown in the cell, under another ticket it closes, is not repeated."""
+    shown = set() if shown is None else shown
+    prs = [p for p in t["open_prs"] if p["url"] not in shown]
+    shown.update(p["url"] for p in prs)
+    return under(badge(t), [pr_badge(p) for p in prs])
 
 
 def under(ticket_badge, pr_badges):
@@ -682,7 +686,7 @@ def legend():
     """The page's key: the change-class colours, the PR review states and the cell markers."""
     classes = " ".join("![%s](%s)" % (cls, shield(letter, cls, colour)) for cls, (letter, colour) in BADGE.items())
     states = " ".join("![PR %s](%s)" % (PR_STATE[k][0], shield("↳PR", *PR_STATE[k])) for k in OPEN)
-    return ("Change class: " + classes + "\n\nPR review state: " + states +
+    return (classes + "\n\nPR: " + states + " (open: review needed)" +
             "\n\n🟧 a Major or CR-Major PR is open · 🟩 only compatible PRs are open · no marker: no PR yet. "
             "On a component it covers the whole row, on a cell just that due date.")
 
@@ -707,7 +711,9 @@ def cell(tickets):
     if not tickets:
         return "·"
     ranked = sorted(tickets, key=lambda t: (-t["score"], t["number"]))
-    body = flow([ticket(t) for t in ranked], [bool(t["open_prs"]) for t in ranked])
+    shown = set()
+    items = [ticket(t, shown) for t in ranked]
+    body = flow(items, ["<br>" in i for i in items])
     colour = cell_colour(tickets)
     return "%s<br>%s" % (colour, body) if colour else body
 
