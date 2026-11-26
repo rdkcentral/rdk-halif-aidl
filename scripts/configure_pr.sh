@@ -343,7 +343,7 @@ else: print("    ")
 }
 
 # Interface Effect follows the labels just set: the PR's field, its linked
-# issues' labels and fields, and their milestones (#970). There is no
+# issues' fields (never their labels, #1053), and their milestones (#970). There is no
 # PROJECTS_TOKEN for a workflow to do this, so it runs here, as the caller.
 sync_interface_effect() {
     local pr="$1"

@@ -34,8 +34,13 @@ can be edited, so the sync has to work out which one moved rather than assuming.
     - Only the labels moved      -> the field is rewritten.
     - Only the field moved       -> the label is applied to the ticket.
     - Both moved                 -> the labels win; the divergence is reported.
-    - PR vs its linked issue     -> the PR wins, because the PR is the change.
-                                    A PR with no class inherits the issue's.
+    - PR vs its linked issue     -> only the PR carries a change class (#1053).
+                                    An issue is labelled `Interface Change` or
+                                    `documentation`; its field shows the
+                                    strongest class of the PRs that close it,
+                                    and no class label is ever written to it.
+                                    A PR with no class inherits nothing: the
+                                    change-class check asks for one.
     - CR                         -> a governance marker, not a change class. It
                                     is written *with* `Major Change`, never
                                     instead of it: docs/governance/versioning-sop.md
@@ -552,6 +557,10 @@ def sync_ticket(project, ticket, dry_run, report, prefer=None):
         report.append(f"#{number}: board value {field_class!r} is not in the mapping")
         return None
 
+    # Only a PR fetches its closing references: anything else here is an issue.
+    if "closingIssuesReferences" not in ticket:
+        return sync_issue(project, ticket, item, labels_class, field_class, synced, dry_run, report, prefer)
+
     winner, reason = pr_wins(*resolve(labels_class, field_class, synced), prefer)
 
     if winner is None:
@@ -641,6 +650,34 @@ def sync_ticket(project, ticket, dry_run, report, prefer=None):
     return None
 
 
+def issue_class(labels_class, field_class, synced, prefer):
+    """(class, reason) for an issue's field: the strongest class of the PRs that close it, else
+    whatever its labels or the board last said. None leaves the field as it is."""
+    if prefer:
+        return prefer, "from its PRs"
+    return resolve(labels_class, field_class, synced)
+
+
+def sync_issue(project, ticket, item, labels_class, field_class, synced, dry_run, report, prefer):
+    """Set an issue's field; never its labels (#1053). The change class is the PR's: an issue
+    says only Interface Change or documentation, and its field shows its PRs' class."""
+    winner, reason = issue_class(labels_class, field_class, synced, prefer)
+    if winner is None or (winner == field_class and winner == synced):
+        return None
+    if not dry_run:
+        if moved_since_read(project, item, field_class, synced):
+            report.append(f"#{ticket['number']}: skipped, the item moved while the sweep ran")
+            return "skipped"
+        if winner != field_class:
+            set_effect(project, item["id"], winner)
+        set_state(project, item["id"], winner)
+        item["effect"], item["synced"] = {"name": winner}, {"text": winner}
+    if winner == field_class:
+        return None
+    report.append(f"#{ticket['number']}: field->{winner} ({reason})")
+    return "changed"
+
+
 def set_milestone(node_id, milestone_id, is_pr):
     mutation = (
         "mutation($id:ID!,$m:ID){updatePullRequest(input:{pullRequestId:$id,"
@@ -694,69 +731,18 @@ def mirror_milestone(pr, linked, dry_run, report):
 
 
 def propagate_pr_to_issues(pr, dry_run, report):
-    """The PR is the change: its class overwrites a linked issue that differs.
+    """Mirror the PR's milestone onto its linked issues.
 
-    A PR with no class inherits from its linked issue instead, so a classified
-    ticket still reaches the board through its PR.
+    The change class goes no further than the PR (#1053): an issue's field is
+    set from its PRs' classes by sync_issue, and no class label is written to
+    the issue, nor inherited from it by a PR with none. Returns the linked
+    issues, whose fields the caller brings up to the PR's class.
     """
     linked = same_repo_links(pr)
     if not linked:
         return []
     mirror_milestone(pr, linked, dry_run, report)
-    pr_labels = [n["name"] for n in pr["labels"]["nodes"]]
-    pr_class = class_of(pr_labels)
-    touched = []
-
-    if pr_class is None:
-        # Take the strongest class across every linked issue rather than
-        # whichever the API returned first, then fall through so the remaining
-        # linked issues are brought up to it as well.
-        candidates = [
-            class_of([n["name"] for n in issue["labels"]["nodes"]]) for issue in linked
-        ]
-        candidates = [c for c in candidates if c]
-        if not candidates:
-            return []
-        inherited = min(candidates, key=PRECEDENCE.index)
-        if not dry_run:
-            if labels_moved(pr["id"], pr_labels):
-                report.append(f"PR #{pr['number']}: skipped, its labels moved while the sweep ran")
-                return []
-            if not apply_labels(pr["id"], inherited, pr_labels):
-                # The write failed, so the PR still has no class. Leave the
-                # local object alone and let the next sweep retry.
-                return []
-            # Reflect the write locally so the caller syncs this PR's item with
-            # the class it now has, not the one it had.
-            pr["labels"]["nodes"] = [
-                {"name": name}
-                for name in sorted(set(pr_labels) | set(WRITEBACK_LABELS[inherited]))
-            ]
-        report.append(f"PR #{pr['number']}: inherited {inherited} from its linked issues")
-        pr_class = inherited
-        pr_labels = [n["name"] for n in pr["labels"]["nodes"]]
-
-    for issue in linked:
-        issue_labels = [n["name"] for n in issue["labels"]["nodes"]]
-        # Not only a differing class: an issue carrying just `CR` already reads
-        # as CR-Major, so comparing classes alone would leave it without the
-        # `Major Change` that actually carries the bump.
-        absent = [
-            name for name in WRITEBACK_LABELS[pr_class] if name not in issue_labels
-        ]
-        if class_of(issue_labels) != pr_class or absent:
-            if not dry_run and labels_moved(issue["id"], issue_labels):
-                report.append(f"#{issue['number']}: skipped, its labels moved while the sweep ran")
-                continue
-            if not dry_run and not apply_labels(issue["id"], pr_class, issue_labels):
-                # The write failed. Leave it for the next sweep rather than
-                # reporting a change that did not happen.
-                continue
-            report.append(
-                f"#{issue['number']}: {pr_class} from PR #{pr['number']} (PR wins)"
-            )
-            touched.append(issue["id"])
-    return touched
+    return [issue["id"] for issue in linked]
 
 
 TICKET_QUERY = """

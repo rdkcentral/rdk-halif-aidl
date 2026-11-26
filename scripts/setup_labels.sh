@@ -152,6 +152,11 @@ create_label "Minor Change"         "a2eeef" "Additive, backwards-compatible int
 create_label "documentation"        "0075ca" "Surface untouched (docs, comments, metadata): bumps bugfix; auto-applied when every file is doc-like"
 create_label "Breaking Change"      "d4c5f9" "RETIRED (#712): alias of Major Change accepted during transition — do not apply to new PRs"
 
+# An issue says only what kind of work it is: `Interface Change` or
+# `documentation`. The change class above is the pull request's to set (#1053).
+echo "Issue labels:"
+create_label "Interface Change"     "c5def5" "Issue: changes an interface; its PR sets the change class (Major, Minor, New Interface)"
+
 echo ""
 
 # ---------------------------------------------------------------------------

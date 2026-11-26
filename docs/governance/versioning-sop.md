@@ -825,9 +825,15 @@ Idempotent — safe to re-run.
 | `Major Change` | ABI-breaking interface change of any size, not a measure of volume (see [What "Major" Means](#what-major-means)) — bumps major |
 | `Minor Change` | Additive, backwards-compatible interface change — bumps minor (the default for real work) |
 | `documentation` | Doc-only / metadata-only / comment-only change — bumps bugfix |
+| `Interface Change` | On an issue only: the work changes an interface. Its PR sets the change class |
 | `CR` | Change Request — ABI change needing wider review sign-off + separate release scheduling (independent of change-class; no bump effect) |
 | `scope:infrastructure` | Repo tooling, CI/CD, governance |
 | `scope:overview` | Tracking ticket spanning multiple components |
+
+An issue carries `Interface Change` or `documentation`, never a change class.
+Only the PR sets the change class. The project's Interface Effect field on
+the issue shows its PRs' class, and the `pr-change-class` check fails a PR
+that changes a component's `current/` without one.
 
 Every PR carries **exactly one** of `Major Change` / `Minor Change` /
 `documentation`. The label is the bump signal; `release.sh` applies the bump

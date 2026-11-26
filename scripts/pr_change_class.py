@@ -29,7 +29,9 @@ label stands against the compiler (#1016); the compiler's finding is still shown
 
 Labels map as release.sh reads them: "Major Change" (or the retired "Breaking
 Change") is major, "Minor Change" minor, "documentation" bugfix, and no class
-label is release.sh's default, minor.
+label is release.sh's default, minor. Only the pull request carries a change
+class; its issue says Interface Change or documentation (#1053). So a pull
+request that changes a component's current/ with no class label fails.
 
 Usage: pr_change_class.py --aidl <aidl> --base <base checkout> --base-ref <sha>
                           --labels <comma-separated> [--summary <file>]
@@ -53,6 +55,16 @@ LABEL = {"major": "Major Change", "minor": "Minor Change", "bugfix": "documentat
 OVERRIDE = "Change Class Override"
 HERE = os.path.dirname(os.path.abspath(__file__))
 REPO = os.path.dirname(HERE)
+
+
+NO_LABEL = ("❌ No change-class label. Label this pull request **Major Change**, "
+            "**Minor Change**, **New Interface** or **documentation**.")
+
+
+def unlabelled(rows, explicit, new_iface):
+    """True when the pull request changes a component's current/ and carries no class: the class
+    is the pull request's to set, and its issue no longer passes one down (#1053)."""
+    return bool(rows) and not explicit and not new_iface
 
 
 def label_class(labels):
@@ -150,6 +162,8 @@ def main(argv):
     lines += ["| `%s` | %s | %s |" % (c, k, e.replace("|", "\\|")) for c, k, e in rows]
     lines.append("")
     failed, line = verdict(have, need, override)
+    if unlabelled(rows, explicit, new_iface):
+        failed, line = True, NO_LABEL
     lines.append(line if rows else "No component's `current/` changed.")
     if override and rows and RANK[need] <= RANK[have]:
         lines.append("")
