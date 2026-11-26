@@ -55,6 +55,7 @@ Worked on after P1.
 | --- | --- | --- | --- |
 | Broadcast | `component:broadcast` | P2 | Deferred behind P1 work. |
 | Deep Sleep | `component:deepsleep` | P2 | Small, likely straightforward. |
+| Video Capture | `component:videocapture` | P2 | Current platform limitations prevent it. |
 | HAL architecture documentation | — | P2/P3 | Better documentation and examples, not at the expense of critical implementation work. |
 
 ## P3 – Low priority
@@ -69,6 +70,5 @@ Worked on after P2.
 | Panel | `component:panel` | P3 | Not needed for set-top-box delivery. |
 | RF4CE | `component:r4ce` | P3 | — |
 | Secure Storage | `component:securestorage` | P3 | — |
-| Video Capture | `component:videocapture` | P3 | Current platform limitations prevent it. |
 | VSI Abstract File System | `component:vsi/abstractfilesystem` | P3 | Architecturally important; not all of it is needed yet. |
 
