@@ -106,13 +106,7 @@ component and run the cohort release. Components with no changes don't
 bump and don't get a new snapshot, so the effect is the same as a
 single-component release would have been.
 
-```bash
-./release.sh                 # dry-run: auto-detects next release version
-                             # from the latest tag, prints the --apply line
-./release.sh --apply         # apply the release (writes metadata.yaml,
-                             # creates snapshots, updates mkdocs nav,
-                             # branch + tag)
-```
+Follow the [Release Runbook](docs/governance/release-runbook.md) step by step: it starts by cutting `release/X.Y.Z`, which the tool takes the release version from.
 
 ### Consuming the interfaces (build with CMake directly)
 
