@@ -656,6 +656,40 @@ _bump_class() {   # internal bump name -> major|minor|bugfix
         *)          echo "$1" ;;
     esac
 }
+# The confirmation recorded for <comp> at <version> in release notes <file>,
+# as "confirmed <class>: <reason>", or nothing. Reads the Component bumps
+# table (#1079) and the bullet list written up to 0.23.1:
+#   | `comp` | 0.3.0.0 | 0.3.1.0 | Minor (confirmed) | <reason> |
+#   - `comp` → 0.3.1.0 (confirmed minor: <reason>)
+_notes_confirmed() {
+    local comp="$1" ver="${2//./\\.}" file="$3" row
+    [[ -f "${file}" ]] || return 0
+    row="$(grep -hE "^\| \`${comp}\` \| [^|]* \| ${ver} \| (Major|Minor|Bugfix) \(confirmed\) \| " "${file}" | head -1)"
+    if [[ -n "${row}" ]]; then
+        sed -E 's/^\|[^|]*\|[^|]*\|[^|]*\| (Major|Minor|Bugfix) \(confirmed\) \| (.*) \|$/\1\t\2/' <<<"${row}" \
+            | awk -F'\t' '{ printf "confirmed %s: %s\n", tolower($1), $2 }' | sed 's/\\|/|/g'
+        return 0
+    fi
+    grep -hoE "^- \`${comp}\` → ${ver} \(confirmed (major|minor|bugfix): .*\)$" "${file}" 2>/dev/null \
+        | head -1 | sed -E 's/^[^(]*\((.*)\)$/\1/' || true
+}
+# One row of the Component bumps table: comp, released version (empty for a
+# first release), new version, the confirmed class (empty when none) and its
+# reason. _notes_confirmed reads the row back.
+_notes_bump_row() {
+    local comp="$1" from="$2" to="$3" confirmed="$4" reason="$5" cls why
+    if [[ -n "${confirmed}" ]]; then
+        cls="$(_bump_class "${confirmed}")"
+        cls="${cls^} (confirmed)"
+        why="${reason//|/\\|}"
+    elif [[ -z "${from}" ]]; then
+        cls="New"; why="First release"
+    else
+        cls="$(_bump_class "$(_version_bump "${from}" "${to}")")"
+        cls="${cls^}"; why="The compiler's class"
+    fi
+    echo "| \`${comp}\` | ${from:-—} | ${to} | ${cls} | ${why} |"
+}
 pins_load() {
     [[ -f "${PIN_FILE}" ]] || return 0
     local comp val base reason
@@ -3701,10 +3735,13 @@ generate_release_notes_skeleton() {
         echo ""
         echo "## Component bumps"
         echo ""
+        echo "| Component | From | To | Class | Why |"
+        echo "| --- | --- | --- | --- | --- |"
         for entry in "${BUMPED_COMPONENTS[@]}"; do
             local comp="${entry%%:*}"
             local version="${entry##*:}"
-            echo "- \`${comp}\` → ${version}${PIN_CLASS[$comp]:+ (confirmed $(_bump_class "${PIN_CLASS[$comp]}"): ${PIN_REASON[$comp]:-})}"
+            _notes_bump_row "${comp}" "$(discover_current_version "${comp}")" "${version}" \
+                "${PIN_CLASS[$comp]:-}" "${PIN_REASON[$comp]:-}"
         done
         echo ""
         echo "## Highlights"
@@ -4170,8 +4207,12 @@ run_structural_audit() {
             _pin_recovered=1
             _pin_note="staged at ${_pin} by an earlier stage run"
             local _confirmed
-            _confirmed="$(grep -hoE "^- \`${comp}\` → ${_pin//./\\.} \(confirmed (major|minor|bugfix): .*\)$" \
-                "${REPO_ROOT}"/docs/releases/*.md 2>/dev/null | head -1 | sed -E 's/^[^(]*\((.*)\)$/\1/' || true)"
+            local _nf
+            _confirmed=""
+            for _nf in "${REPO_ROOT}"/docs/releases/*.md; do
+                _confirmed="$(_notes_confirmed "${comp}" "${_pin}" "${_nf}")"
+                [[ -n "${_confirmed}" ]] && break
+            done
             if [[ -n "${_confirmed}" ]]; then
                 _pin_note="${_confirmed/:/ (${_pin}):}"
                 _pin_recovered=2
@@ -4432,9 +4473,8 @@ run_sync_labels() {
         for pr in ${prs}; do PR_TOUCHED[$pr]+="${comp} "; done
         reason="${PIN_REASON[$comp]:-}"
         if [[ -z "${reason}" ]]; then
-            reason="$(grep -hoE "^- \`${comp}\` → ${rel//./\\.} \(confirmed (major|minor|bugfix): .*\)$" \
-                "${REPO_ROOT}/docs/releases/${release_version}.md" 2>/dev/null | head -1 \
-                | sed -E 's/^[^:]*: (.*)\)$/\1/' || true)"
+            reason="$(_notes_confirmed "${comp}" "${rel}" "${REPO_ROOT}/docs/releases/${release_version}.md" \
+                | sed -E 's/^confirmed [a-z]+: //')"
         fi
         local owners=""
         if [[ -n "${reason}" ]]; then
