@@ -34,7 +34,7 @@ implemented by the client, through which the implementation delivers notificatio
 `IRingBuffer` is implementation-internal by design. It is never registered with the service manager, has no
 `serviceName` constant, and is never returned to a producer or a consumer. Only the owning HAL component holds one, so
 buffer size and overflow behaviour are decided by that component rather than negotiated by its clients. This is why
-`setSize()` and `setoverflowBehaviour()` have no client-facing equivalent.
+`setSize()` and `setOverflowBehaviour()` have no client-facing equivalent.
 
 In the consumers that exist today, the owning HAL creates and configures the buffer and publishes only the endpoint the
 client needs: `IDemuxSoftwareInput.openForWriting()` returns a sink, and `IMpeg2TsDataFilter.registerConsumer()`
@@ -168,7 +168,7 @@ A buffer has at most one registered producer and one registered consumer. Regist
 endpoint interface, and that endpoint is the client's claim on the role. The buffer does not multiplex: fan-out to
 several consumers is the responsibility of whoever owns the buffer, not of this interface.
 
-Size and overflow behaviour are fixed while either role is registered. Both `setSize()` and `setoverflowBehaviour()` throw
+Size and overflow behaviour are fixed while either role is registered. Both `setSize()` and `setOverflowBehaviour()` throw
 `EX_ILLEGAL_STATE` once a producer or consumer exists, so configuration belongs to the idle buffer, before any endpoint
 is handed out.
 
@@ -206,7 +206,7 @@ Once `release()` returns, the releasing side must not touch that region again. T
 
 ### Overflow Is a Per-Implementation Capability
 
-`setoverflowBehaviour()` selects what happens when the producer outruns the consumer:
+`setOverflowBehaviour()` selects what happens when the producer outruns the consumer:
 
 - **Overflowing.** The producer is never refused. `acquire()` succeeds even when the buffer is full, overwriting data
   the consumer has not yet read. The producer never stalls; data is lost instead.
