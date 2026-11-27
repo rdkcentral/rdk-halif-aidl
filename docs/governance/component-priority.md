@@ -43,6 +43,7 @@ Worked on first.
 | Sensor (Motion, Thermal) | `component:motion_sensor` `component:thermal_sensor` | P1 | — |
 | Video Decoder | `component:videodecoder` | P1* | Important to the core delivery. |
 | Video Sink | `component:videosink` | P1 | Video output rendering for HDMI output. |
+| VSI Linux Input | `component:vsi/linuxinput` | P1 | Committed to for this delivery. |
 | General documentation | `documentation` | P1 | Documentation the delivery depends on. |
 | Repository infrastructure and CI/CD | `scope:infrastructure` | P1 | Build tooling and CI the delivery depends on. |
 | HAL overview | `scope:overview` | P1 | Work across the whole HAL, with no one directory to change. |
@@ -69,9 +70,15 @@ Worked on after P2.
 | --- | --- | --- | --- |
 | Composite Input | `component:compositeinput` | P3 | Excluded from the immediate focus. |
 | Crypto | `component:crypto` | P3 | Nothing in it is needed for the immediate work. |
+| Far-Field Voice | `component:ffv` | P3 | — |
 | HDMI Input | `component:hdmiinput` | P3 | Not needed for IP set-top-box. |
 | Panel | `component:panel` | P3 | Not needed for set-top-box delivery. |
 | RF4CE | `component:r4ce` | P3 | — |
 | Secure Storage | `component:securestorage` | P3 | — |
 | VSI Abstract File System | `component:vsi/abstractfilesystem` | P3 | Architecturally important; not all of it is needed yet. |
+| VSI Bluetooth | `component:vsi/bluetooth` | P3 | Interface needs upgrading (status RED). |
+| VSI File System | `component:vsi/filesystem` | P3 | Interface needs upgrading (status RED). |
+| VSI Graphics | `component:vsi/graphics` | P3 | — |
+| VSI Kernel | `component:vsi/kernel` | P3 | Interface needs upgrading (status RED). |
+| VSI Wi-Fi | `component:vsi/wifi` | P3 | Interface needs upgrading (status RED). |
 

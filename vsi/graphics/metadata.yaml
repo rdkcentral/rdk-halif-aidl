@@ -31,7 +31,7 @@ version: 0.0.0.1
 status: AMBER
 description: "Graphics subsystem and display pipeline interface"
 type: SOC
-priority: ~
+priority: P3
 devices: [stb, tv]
 
 # lifecycle - 14+5 review cycle dates                                    [pr_cycle.sh]
