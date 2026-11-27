@@ -81,9 +81,10 @@ Regenerates the bindings, builds every snapshot and the documentation site, and 
 
 ```bash
 git diff --cached --stat
+./scripts/release.sh --check-metadata     # RAG_STATUS_REPORT.md matches the new versions
 ```
 
-Check the versions in each `metadata.yaml` and the `CHANGELOG.md` section.
+Check the versions in each `metadata.yaml`, and that the `CHANGELOG.md` section lists every merged PR.
 
 Then write the release notes in `docs/releases/X.Y.Z.md` and `git add` it. The tool fills in the component bumps; write the three sections it leaves as comments, following the previous release's notes:
 
