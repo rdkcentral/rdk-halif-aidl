@@ -3433,6 +3433,13 @@ create_release_branch() {
         (cd "${REPO_ROOT}" && git add "${_comp}/metadata.yaml") || \
             die "git add ${_comp}/metadata.yaml failed."
     done
+    # The RAG report is built from every metadata.yaml, so regenerate it now
+    # that the bumped versions are written (#1084); an earlier run reflects
+    # the previous release.
+    [[ -x "${REPO_ROOT}/scripts/generate_rag_report.sh" ]] \
+        || die "scripts/generate_rag_report.sh is missing or not executable; the release would commit a stale RAG_STATUS_REPORT.md."
+    "${REPO_ROOT}/scripts/generate_rag_report.sh" >/dev/null \
+        || die "generate_rag_report.sh failed; the release would commit a stale RAG_STATUS_REPORT.md."
     local rel_notes_file="docs/releases/${release_version}.md"
     for _f in mkdocs.yml versions_released.yaml CHANGELOG.md RAG_STATUS_REPORT.md "${rel_notes_file}"; do
         if [[ -f "${REPO_ROOT}/${_f}" ]]; then
