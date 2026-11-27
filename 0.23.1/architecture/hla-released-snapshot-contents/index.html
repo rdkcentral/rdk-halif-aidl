@@ -8016,7 +8016,7 @@ records the options assessed.</p>
 <tr>
 <td><strong>Release tooling</strong></td>
 <td>rdk-halif-aidl maintainers</td>
-<td><a href="https://github.com/rdkcentral/rdk-halif-aidl/blob/2a4494ef916a7eb6a59eeacef30bb713e93f74a9/scripts/release.sh"><code>release.sh</code></a> creates a snapshot and writes contract and bindings in one operation; <a href="https://github.com/rdkcentral/rdk-halif-aidl/blob/2a4494ef916a7eb6a59eeacef30bb713e93f74a9/scripts/refreeze_snapshots.sh"><code>refreeze_snapshots.sh</code></a> regenerates a snapshot's bindings in place for identity constants only</td>
+<td><a href="https://github.com/rdkcentral/rdk-halif-aidl/blob/37f9caccab74dc019efeb878c3af1f554bfbd7bb/scripts/release.sh"><code>release.sh</code></a> creates a snapshot and writes contract and bindings in one operation; <a href="https://github.com/rdkcentral/rdk-halif-aidl/blob/37f9caccab74dc019efeb878c3af1f554bfbd7bb/scripts/refreeze_snapshots.sh"><code>refreeze_snapshots.sh</code></a> regenerates a snapshot's bindings in place for identity constants only</td>
 </tr>
 <tr>
 <td><strong>Cohort manifest</strong></td>
@@ -8033,7 +8033,7 @@ records the options assessed.</p>
 <hr />
 <h2 id="high-level-design">High Level Design</h2>
 <h3 id="how-does-a-snapshot-come-to-exist-and-when-is-it-written-again">How does a snapshot come to exist, and when is it written again?</h3>
-<p><a href="https://github.com/rdkcentral/rdk-halif-aidl/blob/2a4494ef916a7eb6a59eeacef30bb713e93f74a9/scripts/release.sh"><code>release.sh</code></a> regenerates from the authored AIDL and
+<p><a href="https://github.com/rdkcentral/rdk-halif-aidl/blob/37f9caccab74dc019efeb878c3af1f554bfbd7bb/scripts/release.sh"><code>release.sh</code></a> regenerates from the authored AIDL and
 writes contract and bindings together, so the two cannot diverge through a
 manual step. When a dependency advances, the same tooling rewrites the
 dependency pins inside the other cohort snapshots.</p>
@@ -8196,7 +8196,7 @@ trips over it.</p>
 <tr>
 <td>5</td>
 <td>The layout in force: version selection, role mount points, and where the version sits</td>
-<td><a href="https://github.com/rdkcentral/rdk-halif-aidl/blob/2a4494ef916a7eb6a59eeacef30bb713e93f74a9/tests/yocto/meta-rdk-halif-aidl/recipes-halif/rdk-halif-aidl/rdk-halif-aidl.bb"><code>rdk-halif-aidl.bb</code></a></td>
+<td><a href="https://github.com/rdkcentral/rdk-halif-aidl/blob/37f9caccab74dc019efeb878c3af1f554bfbd7bb/tests/yocto/meta-rdk-halif-aidl/recipes-halif/rdk-halif-aidl/rdk-halif-aidl.bb"><code>rdk-halif-aidl.bb</code></a></td>
 </tr>
 <tr>
 <td>6</td>
