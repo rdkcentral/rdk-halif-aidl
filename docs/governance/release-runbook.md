@@ -83,7 +83,15 @@ Regenerates the bindings, builds every snapshot and the documentation site, and 
 git diff --cached --stat
 ```
 
-Check the versions in each `metadata.yaml`, the `CHANGELOG.md` section, and `docs/releases/X.Y.Z.md`. Edit the release notes' headline now.
+Check the versions in each `metadata.yaml` and the `CHANGELOG.md` section.
+
+Then write the release notes in `docs/releases/X.Y.Z.md` and `git add` it. The tool fills in the component bumps; write the three sections it leaves as comments, following the previous release's notes:
+
+- **Headline**: one paragraph on what the release changes.
+- **Highlights**: the interface changes as a table (component, change, PR), then behaviour, specification and tooling changes.
+- **Upgrade Guide**: numbered steps for HAL and client implementers.
+
+`CHANGELOG.md` lists every merged change; the release notes are what readers act on, and `--complete` publishes them as the GitHub release.
 
 ## 7. Commit and push the release branch
 
