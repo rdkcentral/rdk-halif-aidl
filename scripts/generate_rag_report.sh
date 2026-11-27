@@ -248,6 +248,8 @@ done
 # so release.sh stops instead of staging a partial report (#1084).
 FINAL_OUTPUT="$OUTPUT"
 OUTPUT="$(mktemp "${FINAL_OUTPUT}.XXXXXX")" || { echo "generate_rag_report.sh: cannot create a temporary file beside ${FINAL_OUTPUT}" >&2; exit 1; }
+# pipefail, so a failed stage inside a pipeline (e.g. sort before cut) also trips the trap.
+set -o pipefail
 trap 'echo "generate_rag_report.sh: writing ${FINAL_OUTPUT} failed" >&2; rm -f "$OUTPUT"; exit 1' ERR
 cat > "$OUTPUT" << HEADER
 # HAL Interface RAG Status Report
@@ -315,7 +317,7 @@ cat >> "$OUTPUT" << 'SECTION2'
 |---|-----------|---------|----------|--------|-----------------|-----------------|--------------|--------|
 SECTION2
 
-printf '%b' "$AMBER_SOC_ROWS" | grep -v '^$' | sort -t'|' -k5 -n >> "$OUTPUT"
+printf '%b' "$AMBER_SOC_ROWS" | sed '/^$/d' | sort -t'|' -k5 -n >> "$OUTPUT"
 echo "" >> "$OUTPUT"
 
 cat >> "$OUTPUT" << 'AMBER_OEM'
@@ -326,7 +328,7 @@ cat >> "$OUTPUT" << 'AMBER_OEM'
 |---|-----------|---------|----------|--------|-----------------|-----------------|--------------|--------|
 AMBER_OEM
 
-printf '%b' "$AMBER_OEM_ROWS" | grep -v '^$' | sort -t'|' -k5 -n >> "$OUTPUT"
+printf '%b' "$AMBER_OEM_ROWS" | sed '/^$/d' | sort -t'|' -k5 -n >> "$OUTPUT"
 echo "" >> "$OUTPUT"
 
 if [ -n "$AMBER_SHARED_ROWS" ]; then
@@ -337,7 +339,7 @@ cat >> "$OUTPUT" << 'AMBER_SHARED'
 | | Component | Current Version | Priority | Detail | Action Required | Review Deadline | Target GREEN | Owners |
 |---|-----------|---------|----------|--------|-----------------|-----------------|--------------|--------|
 AMBER_SHARED
-printf '%b' "$AMBER_SHARED_ROWS" | grep -v '^$' | sort -t'|' -k5 -n >> "$OUTPUT"
+printf '%b' "$AMBER_SHARED_ROWS" | sed '/^$/d' | sort -t'|' -k5 -n >> "$OUTPUT"
 echo "" >> "$OUTPUT"
 fi
 
@@ -353,7 +355,7 @@ cat >> "$OUTPUT" << 'SECTION3'
 |---|-----------|---------|----------|--------|-----------------|-----------------|--------------|--------|
 SECTION3
 
-printf '%b' "$RED_SOC_ROWS" | grep -v '^$' | sort -t'|' -k5 -n >> "$OUTPUT"
+printf '%b' "$RED_SOC_ROWS" | sed '/^$/d' | sort -t'|' -k5 -n >> "$OUTPUT"
 echo "" >> "$OUTPUT"
 
 cat >> "$OUTPUT" << 'RED_OEM'
@@ -364,7 +366,7 @@ cat >> "$OUTPUT" << 'RED_OEM'
 |---|-----------|---------|----------|--------|-----------------|-----------------|--------------|--------|
 RED_OEM
 
-printf '%b' "$RED_OEM_ROWS" | grep -v '^$' | sort -t'|' -k5 -n >> "$OUTPUT"
+printf '%b' "$RED_OEM_ROWS" | sed '/^$/d' | sort -t'|' -k5 -n >> "$OUTPUT"
 echo "" >> "$OUTPUT"
 
 if [ -n "$RED_SHARED_ROWS" ]; then
@@ -405,7 +407,7 @@ cat >> "$OUTPUT" << 'SOC_AMBER_REVIEW'
 SOC_AMBER_REVIEW
 
 echo "$REVIEW_HEADER" >> "$OUTPUT"
-printf '%b' "$AMBER_SOC_REVIEW_ROWS" | grep -v '^$' | sort -t$'\t' -k1 -n | cut -f2- >> "$OUTPUT"
+printf '%b' "$AMBER_SOC_REVIEW_ROWS" | sed '/^$/d' | sort -t$'\t' -k1 -n | cut -f2- >> "$OUTPUT"
 
 cat >> "$OUTPUT" << 'SOC_RED_REVIEW'
 
@@ -414,7 +416,7 @@ cat >> "$OUTPUT" << 'SOC_RED_REVIEW'
 SOC_RED_REVIEW
 
 echo "$REVIEW_HEADER" >> "$OUTPUT"
-printf '%b' "$RED_SOC_REVIEW_ROWS" | grep -v '^$' | sort -t$'\t' -k1 -n | cut -f2- >> "$OUTPUT"
+printf '%b' "$RED_SOC_REVIEW_ROWS" | sed '/^$/d' | sort -t$'\t' -k1 -n | cut -f2- >> "$OUTPUT"
 
 cat >> "$OUTPUT" << 'OEM_GREEN_REVIEW'
 
@@ -432,7 +434,7 @@ cat >> "$OUTPUT" << 'OEM_AMBER_REVIEW'
 OEM_AMBER_REVIEW
 
 echo "$REVIEW_HEADER" >> "$OUTPUT"
-printf '%b' "$AMBER_OEM_REVIEW_ROWS" | grep -v '^$' | sort -t$'\t' -k1 -n | cut -f2- >> "$OUTPUT"
+printf '%b' "$AMBER_OEM_REVIEW_ROWS" | sed '/^$/d' | sort -t$'\t' -k1 -n | cut -f2- >> "$OUTPUT"
 
 cat >> "$OUTPUT" << 'OEM_RED_REVIEW'
 
@@ -441,7 +443,7 @@ cat >> "$OUTPUT" << 'OEM_RED_REVIEW'
 OEM_RED_REVIEW
 
 echo "$REVIEW_HEADER" >> "$OUTPUT"
-printf '%b' "$RED_OEM_REVIEW_ROWS" | grep -v '^$' | sort -t$'\t' -k1 -n | cut -f2- >> "$OUTPUT"
+printf '%b' "$RED_OEM_REVIEW_ROWS" | sed '/^$/d' | sort -t$'\t' -k1 -n | cut -f2- >> "$OUTPUT"
 
 cat >> "$OUTPUT" << 'FOOTER'
 
@@ -492,6 +494,7 @@ Post-baseline (frozen) versions use AIDL stable versioning: `1`, `2`, `3`... (10
 FOOTER
 
 trap - ERR
+set +o pipefail
 chmod 644 "$OUTPUT" && mv -f "$OUTPUT" "$FINAL_OUTPUT" \
     || { rm -f "$OUTPUT"; echo "generate_rag_report.sh: cannot replace ${FINAL_OUTPUT}" >&2; exit 1; }
 echo "Report generated: ${FINAL_OUTPUT}"
