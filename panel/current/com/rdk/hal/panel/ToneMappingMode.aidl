@@ -20,16 +20,23 @@ package com.rdk.hal.panel;
 
 /**
  * @brief HDR tone-mapping mode.
+ *
+ * How the panel maps HDR content whose luminance exceeds the panel's peak.
+ * Whether a mode takes a level is declared per mode in the
+ * PQParameter.TONE_MAPPING_SETTINGS capability.
  */
 @VintfStability
 @Backing(type = "int")
 enum ToneMappingMode {
     /** Invalid or unset mode. */
     TONE_MAPPING_INVALID = -1,
-    /** Tone mapping adapts to the content. */
+    /** Tone mapping per scene: the curve follows the content as it changes. */
     TONE_MAPPING_DYNAMIC = 0,
-    /** Luminance above the panel's capability is clipped. */
+    /**
+     * No tone mapping (HGiG). Values up to the panel's peak are shown as
+     * mastered; values above it are clipped.
+     */
     TONE_MAPPING_CLIPPING = 1,
-    /** A fixed tone curve is applied. */
+    /** One fixed tone curve, the same for all content. */
     TONE_MAPPING_STATIC = 2,
 }

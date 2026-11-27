@@ -215,7 +215,9 @@ clean_build() {
 # ------------------------------------------------------------------------------
 build_sdk() {
     # Check if SDK already exists
-    if [ -f "$SDK_INSTALL_DIR/.sdk_ready" ] && [ "$CLEAN" != true ]; then
+    if [ -f "$SDK_INSTALL_DIR/.sdk_ready" ] && [ "$CLEAN" != true ] \
+        && [ -x "$BINDER_REPO_DIR/out/host/bin/aidl" ] \
+        && [ -x "$BINDER_REPO_DIR/out/host/bin/aidl-cpp" ]; then
         echo "✓ Binder SDK already built at $SDK_INSTALL_DIR"
         echo ""
         echo "To rebuild, run: ./build_binder.sh clean"
@@ -259,14 +261,16 @@ build_sdk() {
     if ! cmake -S "$BINDER_REPO_DIR" -B "$BINDER_BUILD_DIR" \
         -DCMAKE_INSTALL_PREFIX="$SDK_INSTALL_DIR" \
         -DCMAKE_BUILD_TYPE=Release \
-        -DBUILD_HOST_AIDL=ON; then
+        -DBUILD_HOST_AIDL=ON \
+        -DCMAKE_BUILD_RPATH_USE_ORIGIN=ON; then
         # Stale CMake cache (e.g. repo moved) — clear and retry once
         echo "    Clearing stale CMake cache and retrying..."
         rm -rf "$BINDER_BUILD_DIR"
         cmake -S "$BINDER_REPO_DIR" -B "$BINDER_BUILD_DIR" \
             -DCMAKE_INSTALL_PREFIX="$SDK_INSTALL_DIR" \
             -DCMAKE_BUILD_TYPE=Release \
-            -DBUILD_HOST_AIDL=ON
+            -DBUILD_HOST_AIDL=ON \
+            -DCMAKE_BUILD_RPATH_USE_ORIGIN=ON
         if [ $? -ne 0 ]; then
             echo ""
             echo "❌ ERROR: CMake configuration failed"
@@ -288,9 +292,8 @@ build_sdk() {
     # it does. The proper fix is the missing DEPENDS upstream (#53).
     if ! cmake --build "$BINDER_BUILD_DIR" -j$(nproc); then
         echo ""
-        echo "⚠️  Parallel build hit the codegen/aidl ETXTBSY race" \
-             "(linux_binder_idl#53); retrying serially to order the codegen" \
-             "after the aidl link..."
+        echo "⚠️  Parallel build failed; retrying serially in case it was the" \
+             "codegen/aidl ETXTBSY race (linux_binder_idl#53)..."
         cmake --build "$BINDER_BUILD_DIR" -j1
     fi
 
@@ -331,6 +334,14 @@ build_sdk() {
         # Remove empty include directory from target
         rmdir "$SDK_INSTALL_DIR/include" 2>/dev/null || true
     fi
+
+    # release.sh and the change-class check run the host compiler from the
+    # toolchain's own output directory. It carries its shared libraries, found
+    # through its \$ORIGIN runpath, so it still runs without the build directory
+    # (the change-class workflow caches only build-tools and out/target).
+    install -D -m 755 -t "$BINDER_REPO_DIR/out/host/bin" \
+        "$BINDER_BUILD_DIR/aidl" "$BINDER_BUILD_DIR/aidl-cpp" \
+        "$BINDER_BUILD_DIR/libbase.so" "$BINDER_BUILD_DIR/liblog.so" || return 1
 
     # Create halif placeholder directories
     mkdir -p "$SDK_INSTALL_DIR/lib/rdk-halif-aidl"
@@ -378,7 +389,7 @@ echo ""
 echo "Structure:"
 echo "  Binder libraries:    $(find $SDK_INSTALL_DIR/lib/binder -name '*.so' 2>/dev/null | wc -l) files"
 echo "  Binder headers:      $(find $SDK_INSTALL_DIR/include/binder_sdk -name '*.h' 2>/dev/null | wc -l) files"
-echo "  AIDL compiler:       $(find $SDK_INSTALL_DIR/bin -type f -executable 2>/dev/null | wc -l) files"
+echo "  AIDL compiler:       $BINDER_REPO_DIR/out/host/bin/aidl"
 echo "  HAL libraries:       (populated by build_module.sh)"
 echo "  HAL headers:         (populated by build_module.sh)"
 echo ""

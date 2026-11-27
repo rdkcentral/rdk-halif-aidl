@@ -36,12 +36,18 @@ can be edited, so the sync has to work out which one moved rather than assuming.
     - Both moved                 -> the labels win; the divergence is reported.
     - PR vs its linked issue     -> the PR wins, because the PR is the change.
                                     A PR with no class inherits the issue's.
-    - CR and New Interface       -> governance markers, not change classes. They
-                                    are written *with* `Major Change`, never
+    - CR                         -> a governance marker, not a change class. It
+                                    is written *with* `Major Change`, never
                                     instead of it: docs/governance/versioning-sop.md
                                     is explicit that `release.sh` reads
                                     `Major Change` for the bump and never reads
                                     `CR`, so replacing it would lose the bump.
+    - New Interface              -> a class of its own, below Major and above
+                                    Minor (#973). Adding a component breaks
+                                    nothing, and a new component releases at
+                                    0.1.0.0 whatever the label, so it carries
+                                    no `Major Change`. A PR that also breaks an
+                                    existing component is Major.
 
   Milestones
     Mirrored between a PR and its linked issues on the same rule, so a release
@@ -55,8 +61,8 @@ can be edited, so the sync has to work out which one moved rather than assuming.
     when that is genuinely wanted.
 
 Subcommands:
-  sync-item  --number N   one ticket, for a labeled/unlabeled event
-  reconcile               every ticket, both directions (the scheduled sweep)
+  sync-item  --number N   one ticket and its linked issues (configure_pr.sh, merge_pr.sh)
+  reconcile               every ticket, both directions (a full sweep, run by hand)
   check                   fail if the field options or labels have drifted
 
 Auth: GH_TOKEN must hold `project` scope. The Actions GITHUB_TOKEN cannot read
@@ -83,11 +89,12 @@ STATE_FIELD_NAME = os.environ.get("PROJECT_STATE_FIELD_NAME", "Interface Effect 
 
 # Option -> (colour, labels selecting it), most significant first. A CR is a
 # major change by shape raised at programme level, so it outranks Major and is
-# named CR-Major. A brand-new interface is major by definition.
+# named CR-Major. A brand-new interface adds a component and breaks nothing,
+# so it ranks below Major and above Minor (#973).
 MAPPING = [
     ("CR-Major", "PURPLE", ["CR"]),
-    ("New Interface", "ORANGE", ["New Interface"]),
     ("Major", "RED", ["Major Change", "Breaking Change"]),
+    ("New Interface", "ORANGE", ["New Interface"]),
     ("Minor", "BLUE", ["Minor Change"]),
     ("BugFix", "YELLOW", ["bug"]),
     ("Documentation", "GRAY", ["documentation"]),
@@ -95,6 +102,8 @@ MAPPING = [
     # is also a Minor Change still has a minor effect on the interface, and a
     # major change must never hide behind an infrastructure tag.
     ("Infrastructure", "GREEN", ["scope:infrastructure"]),
+    # A tracking ticket with no work of its own: weaker than every real class.
+    ("Query", "PINK", ["Query"]),
 ]
 
 # Display order of the options on the board.
@@ -106,6 +115,7 @@ OPTION_ORDER = [
     "BugFix",
     "Documentation",
     "Infrastructure",
+    "Query",
 ]
 
 # Precedence, strongest first - MAPPING order is the precedence order.
@@ -117,12 +127,15 @@ PRECEDENCE = [option for option, _colour, _labels in MAPPING]
 # class on the board would throw away triage information this sync does not own.
 # The cost is that an infrastructure-only ticket cannot be cleared from the
 # board - the label is still there, so the next sweep derives the value again.
-KEEP_ALWAYS = {"scope:infrastructure"}
+# `Query` is kept for the same reason: further information is wanted, whatever
+# the ticket's class turns out to be.
+KEEP_ALWAYS = {"scope:infrastructure", "Query"}
 
-# What a board selection writes back. CR-Major and New Interface carry
-# `Major Change` with them: the version bump is label-driven and `release.sh`
-# only ever reads the change class, so a marker that replaced it would quietly
-# turn a major release into a minor one.
+# What a board selection writes back. CR-Major carries `Major Change` with it:
+# the version bump is label-driven and `release.sh` only ever reads the change
+# class, so a marker that replaced it would quietly turn a major release into a
+# minor one. New Interface writes only itself: a new component releases at
+# 0.1.0.0 whatever the label (docs/governance/versioning-sop.md).
 #
 # BugFix is the exception with no release meaning: it writes `bug`, which the
 # bump logic does not read - a bugfix bump comes from `documentation` or from a
@@ -131,12 +144,13 @@ KEEP_ALWAYS = {"scope:infrastructure"}
 # the labels drive the bump.
 WRITEBACK_LABELS = {
     "CR-Major": ["CR", "Major Change"],
-    "New Interface": ["New Interface", "Major Change"],
+    "New Interface": ["New Interface"],
     "Major": ["Major Change"],
     "Minor": ["Minor Change"],
     "BugFix": ["bug"],
     "Documentation": ["documentation"],
     "Infrastructure": ["scope:infrastructure"],
+    "Query": ["Query"],
 }
 
 # Every label the mapping owns: applying one means removing the others.
@@ -421,6 +435,33 @@ def our_item(ticket):
     return None
 
 
+def pr_wins(winner, reason, prefer):
+    """A linked issue's board edit gives way to its PR's class: the PR is the change."""
+    if prefer and winner != prefer and reason == "board edit":
+        return prefer, "PR wins over a board edit"
+    return winner, reason
+
+
+def same_repo_links(ticket):
+    """The closing references in this repository: a cross-repo one is that repo's to sync."""
+    nodes = (ticket.get("closingIssuesReferences") or {}).get("nodes") or []
+    here = f"{REPO_OWNER}/{REPO_NAME}".lower()
+    return [n for n in nodes if (n.get("repository") or {}).get("nameWithOwner", here).lower() == here]
+
+
+def pr_classes(prs):
+    """{issue node id: strongest class among the PRs that close it}."""
+    out = {}
+    for pr in prs:
+        cls = class_of([n["name"] for n in pr["labels"]["nodes"]])
+        if not cls:
+            continue
+        for issue in same_repo_links(pr):
+            have = out.get(issue["id"])
+            out[issue["id"]] = cls if have is None else min(have, cls, key=PRECEDENCE.index)
+    return out
+
+
 def resolve(labels_class, field_class, synced):
     """Which class wins, and why, given the three surfaces and the stored state.
 
@@ -483,7 +524,7 @@ def moved_since_read(project, item, field_class, synced, ticket=None, labels=Non
     return ticket is not None and labels_moved(ticket["id"], labels or [])
 
 
-def sync_ticket(project, ticket, dry_run, report):
+def sync_ticket(project, ticket, dry_run, report, prefer=None):
     """Bring one ticket's labels, project item and stored state into agreement.
 
     Returns "changed", "would-add", None for nothing to do, or "skipped" when
@@ -511,7 +552,7 @@ def sync_ticket(project, ticket, dry_run, report):
         report.append(f"#{number}: board value {field_class!r} is not in the mapping")
         return None
 
-    winner, reason = resolve(labels_class, field_class, synced)
+    winner, reason = pr_wins(*resolve(labels_class, field_class, synced), prefer)
 
     if winner is None:
         # Nothing is classified in this snapshot. Check the board has not been
@@ -658,7 +699,7 @@ def propagate_pr_to_issues(pr, dry_run, report):
     A PR with no class inherits from its linked issue instead, so a classified
     ticket still reaches the board through its PR.
     """
-    linked = pr.get("closingIssuesReferences", {}).get("nodes", [])
+    linked = same_repo_links(pr)
     if not linked:
         return []
     mirror_milestone(pr, linked, dry_run, report)
@@ -714,7 +755,7 @@ def propagate_pr_to_issues(pr, dry_run, report):
             report.append(
                 f"#{issue['number']}: {pr_class} from PR #{pr['number']} (PR wins)"
             )
-            touched.append(issue["number"])
+            touched.append(issue["id"])
     return touched
 
 
@@ -737,7 +778,7 @@ query($owner:String!,$name:String!,$cursor:String){
 
 LINKS = """
         closingIssuesReferences(first:10){
-          nodes{ id number milestone{ id title state } labels(first:50){ nodes{ name } } }
+          nodes{ id number repository{ nameWithOwner } milestone{ id title state } labels(first:50){ nodes{ name } } }
         }
 """
 
@@ -790,6 +831,7 @@ def cmd_reconcile(args):
         for pr in fetch("pullRequests", "OPEN,CLOSED,MERGED", links=True)
         if in_scope(pr, args.all)
     ]
+    settled = []
     for pr in prs:
         # The PR's own surfaces settle first. Propagating an inherited label
         # before that would make a board edit on the PR look like a label edit,
@@ -799,15 +841,18 @@ def cmd_reconcile(args):
         before = class_of([n["name"] for n in pr["labels"]["nodes"]])
         propagate_pr_to_issues(pr, args.dry_run, report)
         if class_of([n["name"] for n in pr["labels"]["nodes"]]) != before:
-            sync_ticket(project, pr, args.dry_run, report)
+            if sync_ticket(project, pr, args.dry_run, report) == "skipped":
+                continue
+        settled.append(pr)   # only a PR read fresh may overrule its issues' board values
 
     issues = [
         issue
         for issue in fetch("issues", "OPEN,CLOSED", links=False)
         if in_scope(issue, args.all)
     ]
+    prefer = pr_classes(settled)
     for ticket in issues:
-        sync_ticket(project, ticket, args.dry_run, report)
+        sync_ticket(project, ticket, args.dry_run, report, prefer=prefer.get(ticket["id"]))
 
     for line in report:
         print(f"  {line}")
@@ -848,34 +893,47 @@ def cmd_sync_item(args):
     report = []
     # Same ordering as the sweep: this ticket's own surfaces first, so an edit
     # made on the board is not mistaken for a label edit once propagation runs.
-    if sync_ticket(project, ticket, args.dry_run, report) == "skipped":
+    # --labels-win: the caller's labels are the decision (release.sh after a cut),
+    # so a board value that differs is repaired, never adopted.
+    own = class_of([n["name"] for n in ticket["labels"]["nodes"]]) if args.labels_win else None
+    # A skipped sync exits non-zero: with no scheduled sweep to retry it, the
+    # caller (merge_pr.sh, release.sh) has to know the work is incomplete.
+    if sync_ticket(project, ticket, args.dry_run, report, prefer=own) == "skipped":
         for line in report:
             print(f"  {line}")
-        return
+        sys.exit(f"#{args.number}: skipped, it moved while syncing; run sync-item again")
+    skipped = []
     before = class_of([n["name"] for n in ticket["labels"]["nodes"]])
     touched = propagate_pr_to_issues(ticket, args.dry_run, report)
     if class_of([n["name"] for n in ticket["labels"]["nodes"]]) != before:
-        sync_ticket(project, ticket, args.dry_run, report)
+        if sync_ticket(project, ticket, args.dry_run, report, prefer=own) == "skipped":
+            skipped.append(args.number)
 
-    # A linked issue that just changed needs its own item updating too.
-    for number in touched:
+    # Every linked issue gets its own item synced, not only one whose labels
+    # just changed: an issue already carrying the PR's class can still have no
+    # project item or an unset field, and there is no sweep to repair it.
+    # Fetched by node id, not number: a number is only unique within one repository.
+    linked = [n["id"] for n in same_repo_links(ticket)]
+    prefer = class_of([n["name"] for n in ticket["labels"]["nodes"]]) if "closingIssuesReferences" in ticket else None
+    for node_id in dict.fromkeys(touched + linked):
         follow = gql(
             """
-            query($owner:String!,$name:String!,$number:Int!){
-              repository(owner:$owner,name:$name){
-                issue(number:$number){ id number labels(first:50){nodes{name}}
-                  projectItems(first:20,includeArchived:false){nodes{ %s }} }
-              }
+            query($id:ID!){
+              node(id:$id){ ... on Issue{ id number labels(first:50){nodes{name}}
+                projectItems(first:20,includeArchived:false){nodes{ %s }} } }
             }
             """
             % _item_fields(),
-            {"owner": REPO_OWNER, "name": REPO_NAME, "number": number},
-        )["repository"]["issue"]
-        if follow:
-            sync_ticket(project, follow, args.dry_run, report)
+            {"id": node_id},
+        )["node"]
+        if follow and sync_ticket(project, follow, args.dry_run, report, prefer=prefer) == "skipped":
+            skipped.append(follow["number"])
 
     for line in report or [f"#{args.number}: already in sync"]:
         print(f"  {line}")
+    if skipped:
+        sys.exit("skipped, moved while syncing: " + ", ".join(f"#{n}" for n in skipped)
+                 + f"; run sync-item --number {args.number} again")
 
 
 def cmd_check(args):
@@ -934,6 +992,8 @@ def main():
     one = sub.add_parser("sync-item", help="sync one ticket after a label event")
     one.add_argument("--number", type=int, required=True)
     one.add_argument("--dry-run", action="store_true")
+    one.add_argument("--labels-win", action="store_true",
+                     help="the ticket's labels are authoritative: a differing board value is overwritten")
     one.set_defaults(func=cmd_sync_item)
 
     every = sub.add_parser("reconcile", help="sweep tickets in scope, both directions")

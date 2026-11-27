@@ -31,7 +31,10 @@
 #                    metadata.yaml, mapped to GitHub team slugs. A PR always
 #                    requests the relevant teams regardless of the metadata
 #                    baseline review status.
-#   * Project      — sets the halif_aidl project Status to "Under Review".
+#   * Project      — sets the halif_aidl project Status to "Under Review",
+#                    and syncs its Interface Effect field (and the PR's linked
+#                    issues) from the labels via project_interface_effect.py,
+#                    under the caller's own gh login (#970).
 #
 # Usage:
 #   scripts/configure_pr.sh <PR_NUMBER> [--dry-run]
@@ -125,30 +128,40 @@ print(" ".join(sorted(comps)))
     # the version fields mean). The selection cascade below is
     # *predicate-based*, not severity-based — each branch checks the
     # condition that signals that class:
-    #   Major Change    — the PR carries `CR` or `New Interface`, or the
-    #                     title has a conventional-commit "!:" marker
+    #   Major Change    — the PR carries `CR`, or the title has a
+    #                     conventional-commit "!:" marker
     #                     (breaking => major bump)
+    #   New Interface   — the PR carries `New Interface` and is not breaking:
+    #                     it is the class, and no other class label is added
+    #                     (a new component releases at 0.1.0.0, #973). With
+    #                     `Major Change` already on it, Major stays.
     #   documentation   — every changed file is doc-like (else branch;
     #                     bugfix bump)
     #   Minor Change    — fallback when neither predicate matches
     #                     (additive interface work => minor bump)
     #
-    # `CR` and `New Interface` are orthogonal governance markers rather than
-    # classes, and both describe a change that alters the shape of the
-    # interface, so the class that belongs with them is Major. Checking them
-    # first matters: a CR whose title lacks the `!:` marker would otherwise be
-    # demoted to `Minor Change` here and promoted straight back by
+    # `CR` is an orthogonal governance marker that describes a change to the
+    # shape of the interface, so the class that belongs with it is Major.
+    # Checking it first matters: a CR whose title lacks the `!:` marker would
+    # otherwise be demoted to `Minor Change` here and promoted straight back by
     # scripts/project_interface_effect.py, leaving the two automations to
     # fight over the label.
     #
     # The `is_doc()` predicate mirrors scripts/release.sh:is_doc_like_path
     # so the two scripts agree on what counts as docs-only.
     local change_class=""
-    if [[ ",${current_labels}," == *",CR,"* ]] || \
-       [[ ",${current_labels}," == *",New Interface,"* ]]; then
+    if [[ ",${current_labels}," == *",CR,"* ]]; then
         change_class="Major Change"
     elif [[ "$title" =~ ^[a-z]+(\([^\)]*\))?!: ]]; then
         change_class="Major Change"
+    elif [[ ",${current_labels}," == *",New Interface,"* ]] && \
+         [[ ",${current_labels}," == *",Major Change,"* || ",${current_labels}," == *",Breaking Change,"* ]]; then
+        # A new component that also breaks an existing one: the Major
+        # Change the change-class check asked for stays (#973). The retired
+        # alias Breaking Change counts too, normalised to Major Change.
+        change_class="Major Change"
+    elif [[ ",${current_labels}," == *",New Interface,"* ]]; then
+        change_class="New Interface"
     else
         local docs_only
         docs_only=$(echo "$meta" | python3 -c '
@@ -179,6 +192,9 @@ print("yes" if fs and all(is_doc(p) for p in fs) else "no")
     # never leaves duplicates behind during the #712 transition.
     local remove_labels=()
     local cls
+    # New Interface is never removed here: it records that the PR adds a
+    # component, which this script cannot tell from the title, and it can sit
+    # beside Major Change.
     for cls in "Major Change" "Minor Change" "documentation" "Breaking Change"; do
         [ "$cls" = "$change_class" ] && continue
         if [[ ",${current_labels}," == *",${cls},"* ]]; then remove_labels+=("$cls"); fi
@@ -326,13 +342,29 @@ else: print("    ")
     fi
 }
 
+# Interface Effect follows the labels just set: the PR's field, its linked
+# issues' labels and fields, and their milestones (#970). There is no
+# PROJECTS_TOKEN for a workflow to do this, so it runs here, as the caller.
+sync_interface_effect() {
+    local pr="$1"
+    local args=(sync-item --number "$pr")
+    $DRY_RUN && args+=(--dry-run)
+    echo "  interface effect:"
+    if ! GH_TOKEN="${GH_TOKEN:-$(gh auth token)}" GITHUB_REPOSITORY="$REPO" \
+         python3 "${REPO_ROOT}/scripts/project_interface_effect.py" "${args[@]}"; then
+        echo "    WARN: Interface Effect sync failed" >&2
+        WARN_COUNT=$((WARN_COUNT + 1))
+    fi
+}
+
 # --- Main -------------------------------------------------------------------
 if [ "$PR_ARG" = "--all" ]; then
     PRS=$(gh pr list --repo "$REPO" --state open --limit 200 --json number --jq '.[].number')
     echo "Configuring $(echo "$PRS" | wc -w) open PR(s)"
-    for pr in $PRS; do configure_one_pr "$pr"; done
+    for pr in $PRS; do configure_one_pr "$pr"; sync_interface_effect "$pr"; done
 else
     configure_one_pr "$PR_ARG"
+    sync_interface_effect "$PR_ARG"
 fi
 echo "──────────────────────────────────────────────────────────────"
 $DRY_RUN && echo "Dry run complete — re-run without --dry-run to apply." || echo "Done."

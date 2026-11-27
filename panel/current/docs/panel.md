@@ -170,6 +170,16 @@ flowchart TD
 * Tone-mapping values are exchanged through `PQParameterValue`, using `toneMappingSettings` for `PQParameter.TONE_MAPPING_SETTINGS`.
 * `PQParameterCapabilities` associates supported dimming levels with each dimming mode through `rangeBound.dimmingSettingsCapabilities.modeLevelCapabilities`.
 * `PQParameterCapabilities` associates supported tone-mapping levels with each tone-mapping mode through `rangeBound.toneMappingSettingsCapabilities.modeLevelCapabilities`.
+* Tone-mapping modes and levels mean the following. Which modes take a level is declared per mode in `modeLevelCapabilities`.
+
+  | Value | Meaning |
+  | --- | --- |
+  | `TONE_MAPPING_DYNAMIC` | Tone mapping per scene: the curve follows the content as it changes. |
+  | `TONE_MAPPING_CLIPPING` | No tone mapping (HGiG). Values up to the panel's peak are shown as mastered; values above it are clipped. |
+  | `TONE_MAPPING_STATIC` | One fixed tone curve, the same for all content. |
+  | `TONE_MAPPING_LEVEL_NOT_APPLICABLE` | The selected mode takes no level. |
+  | `TONE_MAPPING_LEVEL_LOW`, `_MEDIUM`, `_HIGH` | The strength of tone mapping, weakest to strongest, for modes that take a level. |
+
 * `TwoPointWB` entries carry one colour-temperature string together with explicit red, green, and blue gain/offset values; `PQParameterValue.twoPointWBSettings` carries the full array of these entries.
 * `WhiteBalanceMultiPointSettings` entries carry one colour-temperature string and the per-channel arrays for that temperature; `PQParameterValue.multiPointWBSettings` carries the full array of these entries. `PQParameterCapabilities.supportedMultiPointWBValues` enumerates the same platform-defined colour-temperature strings used by `Capabilities.supportedColourTemperatures`.
 * Calibration mode holds the non-calibration PQ pipeline in a neutral state, applies white-balance and calibration-targeted writes live for the active permutation, and defers unrelated PQ writes, including `SDR_GAMMA`, until calibration mode is disabled.

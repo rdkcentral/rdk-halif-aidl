@@ -138,6 +138,12 @@ every component and flags every place they disagree; the operator corrects
 the label and the field to match, or (if the code was wrong) the change
 itself. Disabling the audit is not a resolution.
 
+A maintainer records that decision on the PR with the **`Change Class
+Override`** label. The `pr-change-class` check then passes a change-class
+label below the compiler's class, and still shows what the compiler found.
+Without the override, a label below the compiler fails the check. The
+override is not a change class and does not move the version on its own.
+
 ### How PRs Drive the Version Bump
 
 Pre-baseline component versions advance one PR at a time. The bump that each
@@ -148,7 +154,10 @@ add or correct them as needed.
 Every PR carries **exactly one change-class label**. The label mirrors the
 **Interface effect** field on the PR's `halif_aidl` project item, which is
 the source of truth; the label exists so that `release.sh` and reviewers can
-read the class from the PR itself. There is no implicit-default class: an
+read the class from the PR itself. `scripts/configure_pr.sh` and
+`scripts/merge_pr.sh` keep the two in step, and carry the PR's class to its
+linked issues, under the maintainer's own `gh` login. Merge with
+`scripts/merge_pr.sh <PR>` so the merged class reaches the project. There is no implicit-default class: an
 unlabelled PR, or one whose label and Interface effect disagree, is an
 unfinished PR.
 
@@ -159,6 +168,7 @@ field it bumps:
 | --- | --- | --- |
 | `Major Change` | **Major** (`0.g.m.p` → `0.(g+1).0.0`) | ABI-breaking change of any size (see [What "Major" Means](#what-major-means)) — conventional-commit `!:` marker in the PR title (e.g. `feat(avclock)!: ...`): a removed or renamed method, field, enum value or interface; a changed signature, type or documented semantics. Not a measure of how much changed. Auto-applied by `configure_pr.sh` on the `!:` marker. |
 | `Minor Change` | **Minor** (`0.g.m.p` → `0.g.(m+1).0`) | Backwards-compatible addition — the default for real interface work: new methods, new fields appended to parcelables, new enum values added with fallback handling, new sub-interfaces. |
+| `New Interface` | **None** for the new component: it releases at `0.1.0.0`. **Minor** for any existing component the PR also touches. | A brand-new component (a new interface surface). It is a class of its own, below Major and above Minor: adding a component breaks nothing. A PR that also breaks an existing component carries `Major Change` instead. |
 | `documentation` | **Bugfix** (`0.g.m.p` → `0.g.m.(p+1)`) | The interface surface is untouched — doc tweaks, metadata corrections, HFP YAML changes, comment-only refactors, trivial non-interface fixes. Auto-applied by `configure_pr.sh` when every changed file is doc-like (see `is_doc()`). |
 
 A PR that carries **no** change-class label but whose linked (closing)
@@ -727,7 +737,7 @@ for post-baseline).
 | **Architecture** | Final decision authority on feedback. Drives the 5-day resolution window. |
 | **RTAB_Group** | System-level alignment and stakeholder visibility above the engineering level. |
 | **Product_Architecture** | Cross-component alignment and product-level sign-off. |
-| **VTS_Team** | Validation and test strategy review for all components. |
+| **Vendor_Layer_Team** | Validation and test strategy review for all components; delivers the test harness. |
 
 ### Domain Reviewers (assigned per component)
 

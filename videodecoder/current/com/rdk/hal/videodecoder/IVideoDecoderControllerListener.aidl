@@ -64,13 +64,23 @@ oneway interface IVideoDecoderControllerListener {
      * It is delivered on this same listener and is ordered in-band - it
      * follows the last frame on the same ordered callback channel.
      *
+     * This callback is still delivered exactly once when a `flush()` interrupts
+     * a pending end-of-stream (a `flush()` after `signalEndOfStream()` but
+     * before this callback): the flushed frames are discarded, but the owed
+     * end-of-stream fires once after the flush completes.
+     *
      * Only the discrete EOS signal fires this callback. The advisory
      * in-bitstream marker (`FrameMetadata.bitstreamEOS`) never does - it may
      * denote a splice boundary rather than authoritative end-of-presentation.
      *
-     * After this callback the decoder remains in `State::STARTED` but is
-     * drained; no further `onFrameOutput()` is delivered until `flush()` or
-     * `stop()` + `start()`.
+     * After an uninterrupted end-of-stream the decoder remains in
+     * `State::STARTED` but is drained; no further `onFrameOutput()` is
+     * delivered until `flush(false)`, or `flush(true)` or `stop()` followed by
+     * `start()`. When a `flush()` interrupted the end-of-stream, the decoder is
+     * in the state that flush ended in: `STARTED` for reset=false, `READY` for
+     * reset=true. The HAL sends this callback after the `onStateChanged()`
+     * that ends the flush. That callback is on IVideoDecoderEventListener, so
+     * a client must not rely on receiving the two in that order.
      *
      * @see IVideoDecoderController.signalEndOfStream()
      */

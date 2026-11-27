@@ -71,12 +71,22 @@ oneway interface IAudioDecoderControllerListener {
      * It is delivered on this same listener and is ordered in-band - it
      * follows the last frame on the same ordered callback channel.
      *
+     * This callback is still delivered exactly once when a `flush()` interrupts
+     * a pending end-of-stream (a `flush()` after `signalEndOfStream()` but
+     * before this callback): the flushed frames are discarded, but the owed
+     * end-of-stream fires once after the flush completes.
+     *
      * Audio EOS is always client-signalled, so this callback is the sole
      * end-of-stream event for the audio decoder.
      *
-     * After this callback the decoder remains in `State::STARTED` but is
-     * drained; no further `onFrameOutput()` is delivered until `flush()` or
-     * `stop()` + `start()`.
+     * After an uninterrupted end-of-stream the decoder remains in
+     * `State::STARTED` but is drained; no further `onFrameOutput()` is
+     * delivered until `flush(false)`, or `flush(true)` or `stop()` followed by
+     * `start()`. When a `flush()` interrupted the end-of-stream, the decoder is
+     * in the state that flush ended in: `STARTED` for reset=false, `READY` for
+     * reset=true. The HAL sends this callback after the `onStateChanged()`
+     * that ends the flush. That callback is on IAudioDecoderEventListener, so
+     * a client must not rely on receiving the two in that order.
      *
      * @see IAudioDecoderController.signalEndOfStream()
      */

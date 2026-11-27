@@ -34,7 +34,7 @@ enum State {
     READY = 3,    ///< Decoder is configured and ready to start decoding but idle.
     STARTING = 4, ///< Decoder is transitioning from READY to DECODING; priming buffers.
     STARTED = 5,  ///< Decoder is actively decoding audio frames.
-    FLUSHING = 6, ///< Decoder is flushing pending input/output buffers; after flushing, returns to DECODING or READY.
+    FLUSHING = 6, ///< Decoder is flushing pending input/output buffers; after flushing, returns to STARTED (flush(false)) or READY (flush(true)).
     STOPPING = 7, ///< Decoder is stopping and flushing; will revert to READY after complete.
     CLOSING = 8   ///< Decoder is releasing resources and transitioning to CLOSED.
 }

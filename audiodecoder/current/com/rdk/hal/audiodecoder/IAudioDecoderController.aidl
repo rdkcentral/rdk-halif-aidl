@@ -76,7 +76,8 @@ interface IAudioDecoderController {
      * Stops the audio decoder.
      *
      * The decoder enters the `STOPPING` state and then any input data buffers that have been passed for decode but have
-     * not yet been decoded are freed automatically.  This is effectively the same as a flush.
+     * not yet been decoded are freed automatically.  This is effectively the same as a flush,
+     * including the handling of output buffers described for `flush()`.
      * Once buffers are freed and the internal audio decoder state is reset, the decoder enters the `READY` state.
      *
      * @exception binder::Status::Exception::EX_NONE for success.
@@ -150,14 +151,44 @@ interface IAudioDecoderController {
      * The audio decoder must be in a state of `STARTED`.
      * Any input data buffers that have been passed for decode but have
      * not yet been decoded are automatically freed.
+     *
+     * Ownership of an output buffer passes to the client when the HAL issues
+     * `onFrameOutput()` for it, even though the `oneway` callback may arrive
+     * later. Output buffers with no `onFrameOutput()` yet issued are freed and
+     * never delivered. Output buffers whose `onFrameOutput()` has been issued,
+     * including callbacks still in flight, are the client's: the HAL does not
+     * free them, and the client frees them with `IAVBuffer.free()` or passes
+     * them on. Once this call returns, no `onFrameOutput()` is issued for data
+     * submitted before it.
      * The internal audio decoder state is optionally reset.
      *
-     * @param[in] reset     When true, the internal audio decoder state is fully reset back to its opened READY state.
+     * On completion the decoder transitions from `FLUSHING` to `STARTED` when
+     * reset=false, and accepts input straight away. When reset=true it
+     * transitions to `READY`, and `start()` is required before further input.
+     *
+     * <b>Flush during a pending end-of-stream:</b> if `flush()` is called after
+     * `signalEndOfStream()` has been invoked but before
+     * `IAudioDecoderControllerListener.onEndOfStream()` has fired, the flush
+     * proceeds normally - input buffers not yet decoded are freed and any held
+     * frames are discarded rather than drained, so none are emitted via
+     * `onFrameOutput()`. The requested end-of-stream is still honoured: the HAL
+     * fires `onEndOfStream()` exactly once after the flush completes, whichever
+     * state the flush ends in.
+     * The flush completes first: the decoder has entered `STARTED` or `READY`
+     * and sent the `onStateChanged()` that ends `FLUSHING` before it sends
+     * `onEndOfStream()`. The two callbacks are on separate listeners, so a
+     * client must not rely on receiving them in that order; the state is
+     * settled by the time the EOS is sent.
+     *
+     * @param[in] reset     When true, the internal audio decoder state is fully reset and the decoder
+     *                      ends in `State::READY`. When false, it ends in `State::STARTED`.
      *
      * @exception binder::Status::Exception::EX_NONE for success
      * @exception binder::Status::Exception::EX_ILLEGAL_STATE
      *
      * @pre The resource must be in State::STARTED.
+     *
+     * @see signalEndOfStream(), IAudioDecoderControllerListener.onEndOfStream()
      */
     void flush(in boolean reset);
 
@@ -205,7 +236,11 @@ interface IAudioDecoderController {
      *
      * A second call is a no-op. After this call any `decodeBufferWithMetadata()`
      * throws `EX_ILLEGAL_STATE`. The decoder remains in `STARTED` (drained)
-     * until `flush()` or `stop()` + `start()`.
+     * until `flush(false)`, or `flush(true)` or `stop()` followed by `start()`. If `flush()` arrives after this
+     * call but before `onEndOfStream()` has fired, the held frames are
+     * discarded rather than drained, but the requested end-of-stream is still
+     * honoured - `onEndOfStream()` fires once after the flush completes; see
+     * `flush()`.
      *
      * Behaviour is identical in tunnel and non-tunnel modes - the MW calls this
      * method the same way. In tunnel mode the decoder->sink data flow is

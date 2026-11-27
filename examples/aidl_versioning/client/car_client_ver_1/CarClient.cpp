@@ -75,7 +75,7 @@ int main() {
     int32_t client_ver = ICar::VERSION;
     int32_t service_ver = carService->getInterfaceVersion();
 
-    char* client_hash = ICar::HASHVALUE;
+    const char* client_hash = ICar::HASHVALUE;
     std::string service_hash = carService->getInterfaceHash();
 
     ALOGI("Versions, Client: %d Service: %d", client_ver, service_ver);
