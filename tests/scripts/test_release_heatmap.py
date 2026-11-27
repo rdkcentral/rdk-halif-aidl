@@ -373,8 +373,8 @@ class Priorities(unittest.TestCase):
             os.makedirs(os.path.join(root, d))
             with open(os.path.join(root, d, "metadata.yaml"), "w") as fh:
                 fh.write("component: %s\nversion: %s\nstatus: GREEN\n" % (d, v))
-        self.assertEqual(rh.row_heading("drm", "DRM", root), "DRM ![0.2.0.0](https://img.shields.io/badge/0.2.0.0-0969da)")
-        self.assertEqual(rh.row_heading("bootreason", "Boot", root), "Boot ![0.2.1.0](https://img.shields.io/badge/0.2.1.0-0969da)")
+        self.assertEqual(rh.row_heading("drm", "DRM", root), "DRM<br>Version: ![0.2.0.0](https://img.shields.io/badge/0.2.0.0-0969da)")
+        self.assertEqual(rh.row_heading("bootreason", "Boot", root), "Boot<br>Version: ![0.2.1.0](https://img.shields.io/badge/0.2.1.0-0969da)")
         self.assertEqual(rh.row_heading("crypto", "Crypto", root), "Crypto")
         self.assertEqual(rh.row_heading("(documentation)", "General documentation", root), "General documentation")
         # With metadata.yaml in the repo, a label is not a component on its own.
@@ -527,10 +527,23 @@ class MetadataPriority(unittest.TestCase):
         root = tmpdir()
         _meta_fields(root, "panel", "0.1.0.0", "P3", "[TV]")
         _meta_fields(root, "ffv", "0.0.0.1")
-        self.assertEqual(rh.metadata("panel", root), {"version": "0.1.0.0", "priority": "P3", "devices": ("tv",)})
+        self.assertEqual(rh.metadata("panel", root), {"version": "0.1.0.0", "priority": "P3", "devices": ("tv",),
+                                                      "status": None})
         self.assertEqual(rh.metadata("ffv", root)["priority"], None)
         self.assertEqual(rh.devices_of("ffv", root), "STB, TV")
         self.assertEqual(rh.metadata("crypto", root), {})
+
+    def test_metadata_reads_status_and_red_marks_the_row(self):
+        root = tmpdir()
+        for d, status in (("wifi", "RED"), ("panel", "AMBER"), ("drm", "GREEN"), ("ffv", None)):
+            os.makedirs(os.path.join(root, d))
+            with open(os.path.join(root, d, "metadata.yaml"), "w") as fh:
+                fh.write("component: %s\nversion: 0.0.0.1\n" % d + ("status: %s\n" % status if status else ""))
+        self.assertEqual(rh.metadata("wifi", root)["status"], "RED")
+        self.assertEqual(rh.metadata("ffv", root)["status"], None)
+        self.assertEqual(rh.status_marker("wifi", root), "🟥 ")
+        self.assertEqual([rh.status_marker(d, root) for d in ("panel", "drm", "ffv", "crypto", "(overview)")],
+                         [""] * 5)
 
     def test_metadata_priority_places_the_component_and_rows_group_by_device(self):
         root = tmpdir()
@@ -545,8 +558,8 @@ class MetadataPriority(unittest.TestCase):
         self.assertEqual([r["row"] for r in secs[2]["rows"]], ["(documentation)"])
         self.assertEqual([r["row"] for r in SECTIONS[1]["rows"]], ["panel", "(documentation)"])  # not changed
         page = rh.render([], [], "now", sections=secs, components=rh.all_components(root), root=root)
-        self.assertIn("| DRM ![0.2.0.0](https://img.shields.io/badge/0.2.0.0-0969da) | STB, TV | 0 |", page)
-        self.assertIn("| hdmiinput ![0.2.0.0](https://img.shields.io/badge/0.2.0.0-0969da) | TV | 0 |", page)
+        self.assertIn("| DRM<br>Version: ![0.2.0.0](https://img.shields.io/badge/0.2.0.0-0969da) | STB, TV | 0 |", page)
+        self.assertIn("| hdmiinput<br>Version: ![0.2.0.0](https://img.shields.io/badge/0.2.0.0-0969da) | TV | 0 |", page)
 
     def test_retired_names_are_not_rows(self):
         # cdm became drm, flash shipped as firmwareupdate, factory was dropped; metrics is label-only.
@@ -601,6 +614,13 @@ class MetadataPriority(unittest.TestCase):
         t = rh.classify(issue(9, labels=["component:crypto"], milestone="0.24.0"), set(), "2026-11-03", None)
         page = rh.render([t], [{"title": "0.24.0", "due": None}], "now", sections=secs, components=["panel"], root=EMPTY)
         self.assertIn("| Crypto |  | [![#9", page.split("## P3")[1])
+
+    def test_rows_with_no_directory_are_p1(self):
+        # Repo-wide work, and halcompat which has no directory, are P1 (#1053).
+        rank = rh.rank_of(rh.read_priorities())
+        for row in ("(infrastructure)", "(overview)", "(documentation)", "halcompat"):
+            self.assertEqual(rank.get(row), 1, row)
+        self.assertEqual(rh.wanted_priority(["scope:overview"], None, rh.read_priorities()), "P1")
 
     def test_priority_list_agrees_with_metadata(self):
         # The list names a component's priority for people; its metadata.yaml sets it for the

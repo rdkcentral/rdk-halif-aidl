@@ -28,7 +28,7 @@
 # labels      - GitHub labels for it, when not component:<directory>      [manual]
 component: filesystem
 version: 0.0.0.1
-status: AMBER
+status: RED
 description: "File system layout standards and partition management"
 type: OEM
 priority: ~

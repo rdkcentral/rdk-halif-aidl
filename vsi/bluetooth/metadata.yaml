@@ -28,7 +28,7 @@
 # labels      - GitHub labels for it, when not component:<directory>      [manual]
 component: bluetooth
 version: 0.0.0.1
-status: AMBER
+status: RED
 description: "Bluetooth stack integration and profile support"
 type: OEM
 priority: ~

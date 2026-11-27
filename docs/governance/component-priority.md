@@ -12,7 +12,8 @@ The order in which HAL components are worked on. The [Release-Heatmap](https://g
 
 ## How a ticket gets its priority
 
-- A ticket or PR takes the priority of its highest-priority `component:*` label. One with no component label takes the priority of its `scope:infrastructure` or `documentation` row.
+- A ticket or PR takes the priority of its highest-priority `component:*` label. One with no component label takes the priority of its `scope:infrastructure`, `scope:overview` or `documentation` row.
+- Work with no clear directory to change, such as infrastructure, overview and documentation, is P1.
 - `scripts/release_heatmap.py --set-priority` writes that priority into the [halif_aidl](https://github.com/orgs/rdkcentral/projects/41) project's `Priority` field for every open ticket and PR. Run it with `--dry-run` first, to see what will change.
 - `P0 - Critical` is set by hand on a single ticket, and the script never changes it.
 - On a ticket with no component label, the script fills in `Priority` only where it is empty. A value set by hand stays, so build tooling can be raised above P3 one ticket at a time.
@@ -44,6 +45,8 @@ Worked on first.
 | Video Sink | `component:videosink` | P1 | Video output rendering for HDMI output. |
 | General documentation | `documentation` | P1 | Documentation the delivery depends on. |
 | Repository infrastructure and CI/CD | `scope:infrastructure` | P1 | Build tooling and CI the delivery depends on. |
+| HAL overview | `scope:overview` | P1 | Work across the whole HAL, with no one directory to change. |
+| HAL compatibility helper | `component:halcompat` | P1 | Shared client tooling, with no directory of its own. |
 
 \* Video Decoder is P1 for its importance to the core delivery; its prioritisation is not yet complete.
 

@@ -319,8 +319,9 @@ def rank_of(sections):
 
 
 def metadata(row, root=ROOT):
-    """The component's version, priority and devices from its metadata.yaml; {} without one.
-    A priority of ~ is none; devices is a tuple in DEVICE_GROUPS order."""
+    """The component's version, priority, devices and RAG status from its metadata.yaml; {} without
+    one. A priority of ~ is none; devices is a tuple in DEVICE_GROUPS order; status is GREEN, AMBER
+    or RED, or None when unset."""
     path = os.path.join(root, row, "metadata.yaml")
     if row.startswith("(") or not os.path.exists(path):
         return {}
@@ -329,9 +330,16 @@ def metadata(row, root=ROOT):
     field = lambda key: (re.search(r"^%s:[ \t]*(.*?)\s*$" % key, text, re.M) or [None, None])[1]
     priority = field("priority")
     devices = {d.strip().lower() for d in (field("devices") or "").strip("[]").split(",") if d.strip()}
+    status = (field("status") or "").split(" ")[0].upper()
     return {"version": (field("version") or "").split(" ")[0] or None,
             "priority": priority if priority and re.match(r"P\d$", priority) else None,
-            "devices": tuple(d for d in DEVICE_GROUPS[0] if d in devices)}
+            "devices": tuple(d for d in DEVICE_GROUPS[0] if d in devices),
+            "status": status if status in ("GREEN", "AMBER", "RED") else None}
+
+
+def status_marker(row, root=ROOT):
+    """🟥 before a component whose metadata.yaml status is RED; nothing otherwise."""
+    return "🟥 " if metadata(row, root).get("status") == "RED" else ""
 
 
 def version_of(row, root=ROOT):
@@ -562,9 +570,9 @@ def version_badge(v):
 
 
 def row_heading(row, name=None, root=ROOT):
-    """The row's name, then its component version, as a badge, where it has one."""
+    """The row's name, then on the next line its component version, as a badge, where it has one."""
     v = version_of(row, root)
-    return "%s %s" % (name or row, version_badge(v)) if v else (name or row)
+    return "%s<br>Version: %s" % (name or row, version_badge(v)) if v else (name or row)
 
 
 def column_heading(col, today=None):
@@ -690,7 +698,8 @@ def legend():
     states = " ".join("![PR %s](%s)" % (PR_STATE[k][0], shield("↳PR", *PR_STATE[k])) for k in OPEN)
     return (classes + "\n\nPR: " + states + " (open: review needed)" +
             "\n\n🟧 a Major or CR-Major PR is open · 🟩 only compatible PRs are open · no marker: no PR yet. "
-            "On a component it covers the whole row, on a cell just that due date.")
+            "On a component it covers the whole row, on a cell just that due date. "
+            "🟥 before a component: its status in metadata.yaml is RED.")
 
 
 def row_marker(tickets):
@@ -816,7 +825,7 @@ def render(tickets, milestones, generated, project_title="halif_aidl", sections=
         for r in sec["rows"]:
             row = [t for t in tickets if row_of(t, rank) == r["row"]]
             in_sec += row
-            lines.append(md_row([row_marker(row) + row_heading(r["row"], r["name"], root), devices_of(r["row"], root)] + [
+            lines.append(md_row([status_marker(r["row"], root) + row_marker(row) + row_heading(r["row"], r["name"], root), devices_of(r["row"], root)] + [
                 cell([t for t in row if column_of(t, due) == c]) for c in cols] + [str(len(row))]))
         lines.append(md_row(["**Tickets**", ""] + ["**%d**" % sum(1 for t in in_sec if column_of(t, due) == c)
                                                   for c in cols] + ["**%d**" % len(in_sec)]))

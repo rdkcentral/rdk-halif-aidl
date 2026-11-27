@@ -28,7 +28,7 @@
 # labels      - GitHub labels for it, when not component:<directory>      [manual]
 component: wifi
 version: 0.0.0.1
-status: AMBER
+status: RED
 description: "Wi-Fi driver integration and network management"
 type: OEM
 priority: ~
