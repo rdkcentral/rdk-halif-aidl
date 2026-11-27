@@ -43,11 +43,11 @@ parcelable DvbCCapabilities {
     DvbCBandwidth[] bandwidths;
     /** Supported annex standards. */
     DvbCAnnex[] dvbCAnnexes;
-    /** Supported modulations (AUTO is mandatory). */
+    /** Supported modulations (AUTO is mandatory for proper operation). */
     DvbCModulation[] modulations;
-    /** Supported code rates (AUTO is mandatory). */
+    /** Supported code rates (AUTO is mandatory for proper operation). */
     DvbCCodeRate[] codeRates;
-    /** Supported spectral inversion modes (AUTO is mandatory). */
+    /** Supported spectral inversion modes (AUTO is mandatory for proper operation). */
     SpectralInversion[] inversions;
 
     /** Reserved for future use. */

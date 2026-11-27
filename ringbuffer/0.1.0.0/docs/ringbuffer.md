@@ -34,7 +34,7 @@ implemented by the client, through which the implementation delivers notificatio
 `IRingBuffer` is implementation-internal by design. It is never registered with the service manager, has no
 `serviceName` constant, and is never returned to a producer or a consumer. Only the owning HAL component holds one, so
 buffer size and overflow behaviour are decided by that component rather than negotiated by its clients. This is why
-`setSize()` and `setOverflowing()` have no client-facing equivalent.
+`setSize()` and `setOverflowBehaviour()` have no client-facing equivalent.
 
 In the consumers that exist today, the owning HAL creates and configures the buffer and publishes only the endpoint the
 client needs: `IDemuxSoftwareInput.openForWriting()` returns a sink, and `IMpeg2TsDataFilter.registerConsumer()`
@@ -51,7 +51,7 @@ column names the interface element against which it is checked.
 | ----------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------- |
 | **HAL.RINGBUF.1** | `setSize()` shall reject a size less than or equal to zero with `EX_ILLEGAL_ARGUMENT`.                                                                                                             |                                                                 |
 | **HAL.RINGBUF.2** | `setSize()` shall reject a size above the implementation maximum with `EX_UNSUPPORTED_OPERATION`.                                                                                                  |                                                                 |
-| **HAL.RINGBUF.3** | `setSize()` and `setOverflowing()` shall throw `EX_ILLEGAL_STATE` while a producer or a consumer is registered.                                                                                    | Configuration is permitted only while the buffer is idle.       |
+| **HAL.RINGBUF.3** | `setSize()` and `setOverflowBehaviour()` shall throw `EX_ILLEGAL_STATE` while a producer or a consumer is registered.                                                                                    | Configuration is permitted only while the buffer is idle.       |
 | **HAL.RINGBUF.4** | Overflow behaviour is a capability of the implementation; one supporting only a single behaviour shall reject the other with `EX_UNSUPPORTED_OPERATION` rather than silently ignoring the request. | No default is defined; `getInfo()` reports the value in effect. |
 | **HAL.RINGBUF.5** | Sizes and offsets shall be treated as 32-bit; a ring buffer is bounded at 2 GiB.                                                                                                                   | Deliberate limit; recorded on `setSize()`.                      |
 
@@ -168,7 +168,7 @@ A buffer has at most one registered producer and one registered consumer. Regist
 endpoint interface, and that endpoint is the client's claim on the role. The buffer does not multiplex: fan-out to
 several consumers is the responsibility of whoever owns the buffer, not of this interface.
 
-Size and overflow behaviour are fixed while either role is registered. Both `setSize()` and `setOverflowing()` throw
+Size and overflow behaviour are fixed while either role is registered. Both `setSize()` and `setOverflowBehaviour()` throw
 `EX_ILLEGAL_STATE` once a producer or consumer exists, so configuration belongs to the idle buffer, before any endpoint
 is handed out.
 
@@ -206,7 +206,7 @@ Once `release()` returns, the releasing side must not touch that region again. T
 
 ### Overflow Is a Per-Implementation Capability
 
-`setOverflowing()` selects what happens when the producer outruns the consumer:
+`setOverflowBehaviour()` selects what happens when the producer outruns the consumer:
 
 - **Overflowing.** The producer is never refused. `acquire()` succeeds even when the buffer is full, overwriting data
   the consumer has not yet read. The producer never stalls; data is lost instead.
