@@ -687,6 +687,36 @@ def ticket(t, shown=None):
     return under(badge(t), [pr_badge(p) for p in prs])
 
 
+def resolved_together(ranked):
+    """The cell's tickets in groups: tickets that share an open PR, directly or through another
+    ticket, form one group, which one PR resolves. Groups keep the order of their most urgent
+    ticket, and each group keeps its tickets' order."""
+    groups = []
+    for t in ranked:
+        urls = {p["url"] for p in t["open_prs"]}
+        joined = [g for g in groups if urls & g["urls"]]
+        merged = {"tickets": [x for g in joined for x in g["tickets"]] + [t],
+                  "urls": urls.union(*[g["urls"] for g in joined])}
+        at = groups.index(joined[0]) if joined else len(groups)
+        groups = [g for g in groups if g not in joined]
+        groups.insert(min(at, len(groups)), merged)
+    order = {t["number"]: i for i, t in enumerate(ranked)}
+    return [sorted(g["tickets"], key=lambda t: order[t["number"]]) for g in groups]
+
+
+def group(tickets):
+    """A group's ticket badges side by side, then each open PR once, on the lines below: the PR
+    resolves every ticket above it."""
+    if len(tickets) == 1:
+        return ticket(tickets[0])
+    prs, seen = [], set()
+    for t in tickets:
+        for p in t["open_prs"]:
+            if p["url"] not in seen:
+                seen.add(p["url"]); prs.append(pr_badge(p))
+    return under(" ".join(badge(t) for t in tickets), prs)
+
+
 def under(ticket_badge, pr_badges):
     # On the line below, not beside: a narrow column would otherwise wrap a PR away from its ticket.
     return "<br>".join([ticket_badge] + pr_badges)
@@ -696,7 +726,8 @@ def legend():
     """The page's key: the change-class colours, the PR review states and the cell markers."""
     classes = " ".join("![%s](%s)" % (cls, shield(letter, cls, colour)) for cls, (letter, colour) in BADGE.items())
     states = " ".join("![PR %s](%s)" % (PR_STATE[k][0], shield("↳PR", *PR_STATE[k])) for k in OPEN)
-    return (classes + "\n\nPR: " + states + " (open: review needed)" +
+    return (classes + "\n\nPR: " + states + " (open: review needed). "
+            "Tickets side by side above one PR are all resolved by that PR." +
             "\n\n🟧 a Major or CR-Major PR is open · 🟩 only compatible PRs are open · no marker: no PR yet. "
             "On a component it covers the whole row, on a cell just that due date. "
             "🟥 before a component: its status in metadata.yaml is RED.")
@@ -722,8 +753,7 @@ def cell(tickets):
     if not tickets:
         return "·"
     ranked = sorted(tickets, key=lambda t: (-t["score"], t["number"]))
-    shown = set()
-    items = [ticket(t, shown) for t in ranked]
+    items = [group(g) for g in resolved_together(ranked)]
     body = flow(items, ["<br>" in i for i in items])
     colour = cell_colour(tickets)
     return "%s<br>%s" % (colour, body) if colour else body

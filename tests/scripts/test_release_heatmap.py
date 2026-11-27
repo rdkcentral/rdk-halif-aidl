@@ -163,6 +163,23 @@ class Render(unittest.TestCase):
         self.assertEqual(c.count("](p387)"), 1)
         self.assertEqual(sum(c.count("](u%d)" % n) for n in (385, 636, 637)), 3)
 
+    def test_tickets_one_pr_resolves_sit_side_by_side_above_it(self):
+        def tk(n, *prs):
+            pr = lambda u: {"number": int(u[1:]), "state": "OPEN", "labels": {"nodes": []}, "url": u}
+            return rh.classify(issue(n, labels=["component:panel"], milestone="0.25.0", prs=[pr(u) for u in prs]),
+                               set(), "2026-11-03", None)
+        a, b, c, d = tk(1061, "p1054"), tk(1053, "p1054"), tk(900, "p901"), tk(800)
+        groups = rh.resolved_together([a, c, b, d])
+        self.assertEqual([[t["number"] for t in g] for g in groups], [[1061, 1053], [900], [800]])
+        shared = rh.group(groups[0])
+        top, below = shared.split("<br>")
+        self.assertIn("](u1061)", top); self.assertIn("](u1053)", top)  # both tickets on one line
+        self.assertIn("](p1054)", below); self.assertEqual(shared.count("](p1054)"), 1)
+        self.assertEqual(rh.group(groups[1]), rh.ticket(c))              # a lone ticket draws as before
+        # A ticket with two PRs joins the groups of both.
+        e = tk(700, "p1054", "p901")
+        self.assertEqual([[t["number"] for t in g] for g in rh.resolved_together([a, c, e])], [[1061, 900, 700]])
+
     def test_age_text_for_the_backlog_page(self):
         self.assertEqual([rh.age_text(d) for d in (3, 20, 400, 365)], ["3d", "2w", "1y+", "1y"])
         self.assertEqual(rh.age_days("2026-10-03T10:00:00Z", "2026-11-03"), 31)
