@@ -232,7 +232,11 @@ else
     CXX_LOG_DIR="${WORK_DIR}/cxx"
     mkdir -p "${CXX_LOG_DIR}"
     export CXX CXX_LOG_DIR
-    export CXX_INCLUDES="-I ${WORK_DIR}/inc -I ${BINDER_INC}"
+    # The SDK's utils/StrongPointer.h uses uintptr_t without including
+    # <cstdint>; older libstdc++ pulled it in transitively, newer ones
+    # (seen with GCC 15) do not.
+    # Force-include it so the check reports our headers, not the SDK's.
+    export CXX_INCLUDES="-include cstdint -I ${WORK_DIR}/inc -I ${BINDER_INC}"
 
     echo "   generated C++: compiling ${#GEN_SRCS[@]} translation units (${JOBS} jobs) ..."
     compiled=0
@@ -332,6 +336,7 @@ elif ! command -v python3 > /dev/null 2>&1; then
     echo "⏭️  documentation: skipped (python3 not on PATH)"
 else
     DOC_ERRORS=""
+    DOC_NOTES=""
     for component in "${COMPONENTS[@]}"; do
         aidl_dir="${REPO_ROOT}/${component}/current"
         generated_include="${WORK_DIR}/inc"
@@ -351,8 +356,10 @@ else
             DOC_ERRORS+="${output}"$'\n'
         fi
 
+        # <component>/current/include/ is gitignored build output from
+        # ./build_interfaces.sh, so a fresh checkout has none to check.
         if [[ ! -d "${current_include}" ]]; then
-            DOC_ERRORS+="❌ Generated headers not found: ${current_include}"$'\n'
+            DOC_NOTES+="   ${component}: no ${current_include#"${REPO_ROOT}/"}/ (not built), headers check skipped"$'\n'
         elif ! output="$(python3 "${DOC_CHECK}" --validate \
             --repo-root "${REPO_ROOT}" \
             --aidl-dir "${aidl_dir}" \
@@ -360,7 +367,10 @@ else
             DOC_ERRORS+="${output}"$'\n'
         fi
     done
-    if [[ -z "${DOC_ERRORS}" ]]; then
+    if [[ -z "${DOC_ERRORS}" && -n "${DOC_NOTES}" ]]; then
+        echo "✅ documentation: complete and injected; built headers not checked"
+        printf '%s' "${DOC_NOTES}"
+    elif [[ -z "${DOC_ERRORS}" ]]; then
         echo "✅ documentation: complete, injected, and current headers are up to date"
     else
         fail "documentation: incomplete, inconsistent, or stale generated headers"
