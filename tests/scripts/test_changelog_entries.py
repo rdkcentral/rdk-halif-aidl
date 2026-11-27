@@ -53,8 +53,13 @@ class ChangelogEntries(unittest.TestCase):
             git(repo, "switch", "-q", "-c", "feature/7-thing")
             git(repo, "commit", "--allow-empty", "-q", msg="work on the thing")
             git(repo, "switch", "-q", "develop")
-            git(repo, "merge", "--no-ff", "-q", "feature/7-thing",
-                msg="Merge pull request #12 from org/feature/7-thing\n\nAdd #7: The thing")
+            # A long body (the squashed commit list GitHub writes) must not break the read under
+            # pipefail: a reader that stops early makes git log die of SIGPIPE.
+            body = "Add #7: The thing\n\n" + "\n".join("* commit %d of the squash" % i for i in range(20000))
+            msg_file = os.path.join(repo, ".git", "MERGE_BODY")
+            with open(msg_file, "w") as fh:
+                fh.write("Merge pull request #12 from org/feature/7-thing\n\n" + body + "\n")
+            git(repo, "merge", "--no-ff", "-q", "feature/7-thing", "-F", msg_file)
             # A branch merge that is not a PR is skipped.
             git(repo, "switch", "-q", "-c", "side")
             git(repo, "commit", "--allow-empty", "-q", msg="side work")
@@ -63,7 +68,9 @@ class ChangelogEntries(unittest.TestCase):
             # Commits made directly on develop: plain, and with a trailing PR number.
             git(repo, "commit", "--allow-empty", "-q", msg="Squashed commit of the following:")
             git(repo, "commit", "--allow-empty", "-q", msg="Merge #10: Sort imports (#9)")
-            out = subprocess.run(["bash", "-c", entries_function() + "\nchangelog_entries 0.1.0..HEAD org/repo"],
+            # release.sh runs under set -euo pipefail; so does the test.
+            out = subprocess.run(["bash", "-c", "set -euo pipefail\n" + entries_function()
+                                  + "\nchangelog_entries 0.1.0..HEAD org/repo"],
                                  env=dict(os.environ, REPO_ROOT=repo), capture_output=True, text=True,
                                  check=True).stdout.splitlines()
         self.assertEqual(out, [

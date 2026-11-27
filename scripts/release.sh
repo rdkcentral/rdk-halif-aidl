@@ -3747,7 +3747,9 @@ changelog_entries() {
             pr=""
             if [[ "${subject}" =~ $_merge_regex ]]; then
                 pr="${BASH_REMATCH[1]}"
-                title="$(git -C "${REPO_ROOT}" log -1 --format=%b "${sha}" | sed -n '/[^[:space:]]/{p;q;}')"
+                # awk reads the whole body: a reader that quits early would kill git log
+                # with SIGPIPE on a long body, and pipefail would abort the release.
+                title="$(git -C "${REPO_ROOT}" log -1 --format=%b "${sha}" | awk 'NF && !seen { print; seen = 1 }')"
                 subject="${title:-${subject}}"
             elif [[ "${subject}" =~ ^Merge\ (branch|tag|remote-tracking\ branch)\  ]]; then
                 continue
