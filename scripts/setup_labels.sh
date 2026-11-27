@@ -192,6 +192,15 @@ echo "Scope labels:"
 create_label "scope:infrastructure"  "bfd4f2" "Repo tooling, CI/CD, scripts, governance docs"
 create_label "scope:overview"        "d4c5f9" "Overview / tracking ticket spanning multiple components"
 
+# ---------------------------------------------------------------------------
+# Topic labels: a filter within one component. Not a component, so the
+# heatmap gives them no row of their own.
+# ---------------------------------------------------------------------------
+
+echo ""
+echo "Topic labels:"
+create_label "topic:audiomixer-aq"   "f9d0c4" "Audio mixer: audio quality (AQ) processors such as Dolby MS12 and DTS"
+
 echo ""
 if [ "${KEPT}" -gt 0 ]; then
     echo "${KEPT} legacy label(s) kept because tickets still carry them." >&2
