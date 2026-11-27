@@ -64,5 +64,19 @@ enum CSDAudioFormat {
      * Dolby AC-4 with 'dac4' box per ETSI TS 103 190.
      * Used in fMP4 and CMAF for DVB-I and ATSC 3.0 systems.
      */
-    AC4_SPECIFIC_CONFIG = 4
+    AC4_SPECIFIC_CONFIG = 4,
+
+    /**
+     * Opus identification header ("OpusHead") per RFC 7845 section 5.1.
+     * Carries the channel count, pre-skip, input sample rate, output gain
+     * and channel mapping family. For mapping families other than 0 it also
+     * carries the stream count, coupled stream count and channel mapping
+     * table, without which a multichannel Opus stream cannot be decoded.
+     *
+     * The bytes are the complete OpusHead, starting with the "OpusHead"
+     * magic signature, as carried in the first Ogg page or the WebM/Matroska
+     * CodecPrivate element. For Opus in MP4, the client converts the 'dOps'
+     * box (OpusSpecificBox) to OpusHead before passing it.
+     */
+    OPUS_SPECIFIC_CONFIG = 5
 }

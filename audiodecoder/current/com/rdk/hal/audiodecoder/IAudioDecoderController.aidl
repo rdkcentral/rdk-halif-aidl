@@ -270,6 +270,8 @@ interface IAudioDecoderController {
      * This must be invoked before any audio frame buffers are passed to `decodeBufferWithMetadata()`.
      *
      * For example, MPEG-4 Audio requires the AudioSpecificConfig, beginning with the audio object type.
+     * Opus requires its identification header (OpusHead), passed as `CSDAudioFormat.OPUS_SPECIFIC_CONFIG`;
+     * `MP4_AUDIO_SPECIFIC_CONFIG` is for AAC only and must not be used to carry Opus data.
      *
      * The accepted `CSDAudioFormat` values align with DVB, ISDB, HLS, and DASH broadcast/streaming standards.
      *
