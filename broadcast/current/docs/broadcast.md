@@ -40,7 +40,7 @@ Comments column names the interface element or capability field against which it
 
 | # | Requirement | Comments |
 |---|-------------|----------|
-| **HAL.BROADCAST.1** | The service shall publish a Binder interface under the name given by `IBroadcastManager.serviceName`. | `"BroadcastManager"`. |
+| **HAL.BROADCAST.1** | The service shall publish a Binder interface under its interface descriptor and the `default` instance. | `"com.rdk.hal.broadcast.IBroadcastManager/default"`; see [Service Naming](../../../docs/key_concepts/hal/hal_naming_conventions.md#service-naming). |
 | **HAL.BROADCAST.2** | Resource IDs returned by `getFrontendIds()`, `getDemuxIds()` and `getCaSlotIds()` shall remain stable for the lifetime of the service instance. | IDs are opaque; clients must not infer meaning from their values. |
 | **HAL.BROADCAST.3** | `getFrontend()`, `getDemux()` and `getCaSlot()` shall throw `EX_ILLEGAL_ARGUMENT` for an ID not returned by the corresponding list method. | |
 | **HAL.BROADCAST.4** | `getImplementationVersion()` shall return a semantic implementation version and a stable implementation name, independent of the AIDL interface version. | `ImplementationVersion.aidl`. |

@@ -31,9 +31,6 @@ import com.rdk.hal.audiomixer.IAudioMixer;
  */
 @VintfStability
 interface IAudioMixerManager {
-    /** The service name for registration with Binder Service Manager. */
-    const @utf8InCpp String serviceName = "audiomixer";
-
     /**
      * @brief Returns a list of available audio mixer instance IDs.
      *

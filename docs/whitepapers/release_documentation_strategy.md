@@ -138,7 +138,7 @@ Supported declaration types:
 | Method | `void reboot(in ResetType resetType, in String reasonString)` |
 | Parcelable field | `BootCause[] supportedBootCauses;` |
 | Enum value | `WATCHDOG = 0,` |
-| Constant | `const @utf8InCpp String serviceName = "BootReason"` |
+| Constant | `const long UNDEFINED_TIME = -1L` |
 
 ### **2.3 C++ Header Matching**
 
@@ -309,7 +309,6 @@ class IBootReason : public ::android::IInterface {
 public:
   DECLARE_META_INTERFACE(Boot)
   static const int32_t VERSION = 1;
-  static const ::std::string& serviceName();
   virtual ::android::binder::Status getCapabilities(
       ::com::rdk::hal::bootreason::Capabilities* _aidl_return) = 0;
   virtual ::android::binder::Status reboot(
@@ -331,8 +330,6 @@ class IBootReason : public ::android::IInterface {
 public:
   DECLARE_META_INTERFACE(Boot)
   static const int32_t VERSION = 1;
-  /** @aidl-doc The service name to publish. */
-  static const ::std::string& serviceName();
   /** @aidl-doc
    * Gets the capabilities of the boot service.
    *

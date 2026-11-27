@@ -37,9 +37,6 @@ import com.rdk.hal.audiosink.PlatformCapabilities;
 
 @VintfStability
 interface IAudioSinkManager {
-    /** The service name to publish. To be returned by getServiceName() in the derived class. */
-    const @utf8InCpp String serviceName = "AudioSinkManager";
-
     /**
      * Gets the list of platform audio sink IDs.
      *

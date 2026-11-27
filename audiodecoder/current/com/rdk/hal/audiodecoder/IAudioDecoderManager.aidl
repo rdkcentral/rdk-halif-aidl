@@ -36,9 +36,6 @@ import com.rdk.hal.audiodecoder.IAudioDecoder;
 
 @VintfStability
 interface IAudioDecoderManager {
-    /** The service name to publish. To be returned by getServiceName() in the derived class. */
-    const @utf8InCpp String serviceName = "audiodecodermanager";
-
     /**
      * Get all audio decoder resource IDs.
      *

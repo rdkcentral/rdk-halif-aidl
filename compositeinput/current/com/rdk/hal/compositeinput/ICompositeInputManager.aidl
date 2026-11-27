@@ -30,9 +30,6 @@ import com.rdk.hal.compositeinput.PlatformCapabilities;
  */
 @VintfStability
 interface ICompositeInputManager {
-    /** The service name to publish. */
-    const @utf8InCpp String serviceName = "composite_input";
-
     /**
      * Gets the platform capabilities for composite input.
      *

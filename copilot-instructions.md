@@ -7,7 +7,7 @@ This codebase defines **RDK Hardware Abstraction Layer interfaces using Android 
 - **HAL Modules**: Each directory (`boot/`, `videodecoder/`, `audiosink/`, etc.) contains one HAL component
 - **Versioning**: All modules use `current/` directory for the active interface version
 - **Package Structure**: All AIDL interfaces use `com.rdk.hal.*` package namespace
-- **Service Registration**: Each HAL registers with AIDL Service Manager using predefined `serviceName` constants
+- **Service Registration**: Each HAL registers with AIDL Service Manager under its interface descriptor and instance name (`<descriptor>/default`)
 
 ## Module Structure Pattern
 
@@ -26,33 +26,26 @@ Every HAL module follows this exact structure:
 ## Key Development Patterns
 
 ### AIDL Interface Design
-- **Main Interface**: `I{Module}.aidl` with `serviceName` constant for binder registration
+- **Main Interface**: `I{Module}.aidl`, registered as `<descriptor>/default` (no name constant)
 - **Stateless**: No open/close lifecycle - each call is independent
 - **Capabilities Pattern**: `getCapabilities()` method returns supported features at runtime
 - **Error Handling**: Use AIDL exceptions, not return codes
 
 ### Service Names & Packages
 
-**Service Naming Convention:**
-- Format: `{module}` or `{category}.{module}` (lowercase with dot separators)
-- Simple modules: `"boot"`, `"cec"`, `"panel"`
-- Categorized modules: `"sensor.motion"`, `"sensor.thermal"`, `"broadcast.tuner"`
-- Use the module directory path with dots instead of slashes
+**Service Naming Convention** (see `docs/key_concepts/hal/hal_naming_conventions.md`, "Service Naming"):
+- Format: `<interface-descriptor>/<instance>`; the descriptor is the fully qualified AIDL name (package + interface)
+- Singletons and managers use the `default` instance: `"com.rdk.hal.bootreason.IBootReason/default"`, `"com.rdk.hal.sensor.motion.IMotionSensorManager/default"`
+- Several instances of one interface use their own instance names: `"com.rdk.hal.drm.IDrmFactory/widevine"`
+- Do not declare a name constant in the AIDL; the descriptor is generated from the interface
 
-```aidl
-// Standard pattern in main interfaces
-package com.rdk.hal.bootreason;
-interface IBootReason {
-    const @utf8InCpp String serviceName = "BootReason";
-    // ...
-}
+```cpp
+// Server (NDK): register under descriptor + "/default"
+const std::string name = std::string(IBootReason::descriptor) + "/default";
+AServiceManager_addService(service->asBinder().get(), name.c_str());
 
-// Categorized module example
-package com.rdk.hal.sensor.motion;
-interface IMotionSensorManager {
-    const @utf8InCpp String serviceName = "sensor.motion";
-    // ...
-}
+// Client (cpp backend): halcompat resolves I::descriptor + "/default"
+auto bootReason = halcompat::getService<com::rdk::hal::bootreason::IBootReason>();
 ```
 
 ### HAL Feature Profile (HFP)
@@ -159,7 +152,7 @@ set(COMMON_VERSION "current")
 
 ## Common Pitfalls
 
-- **Service Names**: Must match exactly between `serviceName` constant and registration
+- **Service Names**: Server and client must both use `<descriptor>/default`; a bare name such as `"BootReason"` will not be found
 - **Package Paths**: AIDL package must align with file directory structure
 - **Dependencies**: Module CMakeLists.txt must declare version variables for imported modules
 - **Versioning**: Always use "current" for active development until interface stabilizes

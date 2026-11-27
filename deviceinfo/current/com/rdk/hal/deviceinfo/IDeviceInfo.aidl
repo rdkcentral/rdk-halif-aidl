@@ -41,9 +41,6 @@ import com.rdk.hal.deviceinfo.Property;
 
 @VintfStability
 interface IDeviceInfo {
-    /** The service name to publish. To be returned by getServiceName() in the derived class. */
-    const @utf8InCpp String serviceName = "DeviceInfo";
-
     /**
      * Gets the capabilities of the Device Info service.
      *

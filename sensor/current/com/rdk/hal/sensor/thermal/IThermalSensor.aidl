@@ -33,9 +33,6 @@ import com.rdk.hal.sensor.thermal.TemperatureReading;
 
 @VintfStability
 interface IThermalSensor {
-    /** @brief Binder service registration name. */
-    const @utf8InCpp String serviceName = "sensor.thermal";
-
     /**
      * @brief Register for event-driven thermal actions.
      * @param listener Listener to receive thermal action events.

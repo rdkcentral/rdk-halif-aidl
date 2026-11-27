@@ -75,7 +75,7 @@ As part of the vendor layer initialisation the `hdmicec` interface will be start
 
 The CEC HAL service depends on the Service Manager to register itself as a service.
 
-Upon starting, the service shall register the `IHdmiCec` interface with the Service Manager using the string `IHdmiCec.serviceName` and immediately becomes operational. It will be in the `CLOSED` state.
+Upon starting, the service shall register the `IHdmiCec` interface with the Service Manager using the name `com.rdk.hal.hdmicec.IHdmiCec/default` (see [Service Naming](../../../docs/key_concepts/hal/hal_naming_conventions.md#service-naming)) and immediately becomes operational. It will be in the `CLOSED` state.
 
 ---
 

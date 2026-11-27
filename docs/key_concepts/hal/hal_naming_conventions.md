@@ -50,18 +50,38 @@ src/audiodecoder/introInformation.md         (Camel case used, but first letter 
 src/AudioDecoder/intro_information.md        (Underscore used)
 ```
 
+## Service Naming
 
-## Interface Naming
+A HAL service registers with the Service Manager under its **interface descriptor**, followed by `/` and an **instance name**:
 
-
-```javascript
-interface IAudioSinkManager
-{
-    /** The service name to publish. To be returned by getServiceName() in the derived class. */
-    const
-    @utf8InCpp String serviceName = "AudioSinkManager";
-}
+```text
+<interface-descriptor>/<instance>
 ```
+
+The descriptor is the fully qualified AIDL name, generated from the interface, so it cannot drift from the AIDL and two packages cannot collide. Interfaces do not declare a name constant of their own.
+
+| Service | Registered as |
+| --- | --- |
+| Singleton or manager | `com.rdk.hal.audiodecoder.IAudioDecoderManager/default` |
+| One of several instances | `com.rdk.hal.drm.IDrmFactory/widevine` |
+
+Clients look a service up the same way. In C++, `halcompat::getService<I>()` does it for the `default` instance:
+
+```cpp
+auto decoders = halcompat::getService<com::rdk::hal::audiodecoder::IAudioDecoderManager>();
+// looks up "com.rdk.hal.audiodecoder.IAudioDecoderManager/default"
+```
+
+### Manager or Service Manager instances
+
+Two patterns are used, and each fits a different kind of service:
+
+* **A manager vends resources.** Use this for resources that are pooled, created at run time or arbitrated between clients: decoders, AV buffers, planes, clocks. One manager registers as `default` and hands out resource objects through its methods. The Service Manager cannot allocate or arbitrate, so these resources are never registered on their own.
+* **Service Manager instances.** Use this for services that are fixed, differ from one another, and are discovered independently. Each registers under its own instance name. DRM is the worked example: each DRM system registers `com.rdk.hal.drm.IDrmFactory/<instanceName>` (for example `clearkey`, `widevine`, `playready`), with the instance names declared in `hfp-drm.yaml`.
+
+Where two services already have different interfaces, as the thermal sensor (`IThermalSensor`) and the motion sensor manager (`IMotionSensorManager`) do, their descriptors differ and both register as `default`.
+
+The VINTF manifest can require that a manager exists, but it cannot see the resources the manager vends. That is expected: the pool is dynamic.
 
 ## Systemd Naming of Launch
 
@@ -75,5 +95,4 @@ Naming convention for [systemd](../../vsi/systemd/current/systemd.md) services f
 * **File Extensions:** Use appropriate file extensions for each file type (e.g., `.md` for Markdown, `.aidl` for AIDL).
 * **Directory Structure:**  Consider adding a brief description of the intended directory structure.  For example, what types of files go into the `docs` directory, `src` directory, etc.  This helps new contributors understand the organization of the repository.
 * **Consistency Across Project:** If there are other repositories in the project, it may be a good idea to align naming conventions.
-
 

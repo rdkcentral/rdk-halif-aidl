@@ -72,7 +72,7 @@ It operates at the HAL layer and is used by middleware components responsible fo
 
 ## Initialization
 
-* HAL service is binderized and registered via `IDeepSleep::serviceName = "DeepSleep"`.
+* HAL service is binderized and registered as `com.rdk.hal.deepsleep.IDeepSleep/default` (see [Service Naming](../../../docs/key_concepts/hal/hal_naming_conventions.md#service-naming)).
 * Starts via a systemd unit in the vendor or HAL layer during system boot.
 * Must register with the `ServiceManager`.
 

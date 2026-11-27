@@ -38,9 +38,6 @@ import com.rdk.hal.indicator.IIndicator;
 
 @VintfStability
 interface IIndicatorManager {
-    /** The service name to publish. To be returned by getServiceName() in the derived class. */
-    const @utf8InCpp String serviceName = "indicator";
-
     /**
      * Gets the list of platform indicator IDs.
      *

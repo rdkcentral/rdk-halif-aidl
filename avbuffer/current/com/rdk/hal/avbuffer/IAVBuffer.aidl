@@ -41,9 +41,6 @@ import com.rdk.hal.videodecoder.IVideoDecoder;
 
 @VintfStability
 interface IAVBuffer {
-    /** The service name to publish. To be returned by getServiceName() in the derived class. */
-    const @utf8InCpp String serviceName = "AVBuffer";
-
     /**
      * Gets the number of used/total bytes in a memory heap.
      *

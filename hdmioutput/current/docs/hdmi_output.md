@@ -74,7 +74,7 @@ The `HDMIOutput` HAL provides control over:
 
 ## Initialization
 
-The HAL service should be initialized via a systemd unit and must register with the Service Manager under the name defined in `IHDMIOutputManager.serviceName` ("hdmioutput"). It must be ready before middleware components attempt to query or bind.
+The HAL service should be initialized via a systemd unit and must register with the Service Manager under the name `com.rdk.hal.hdmioutput.IHDMIOutputManager/default` (see [Service Naming](../../../docs/key_concepts/hal/hal_naming_conventions.md#service-naming)). It must be ready before middleware components attempt to query or bind.
 
 ---
 

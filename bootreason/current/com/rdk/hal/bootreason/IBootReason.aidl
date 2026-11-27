@@ -39,9 +39,6 @@ import com.rdk.hal.bootreason.ResetType;
 
 @VintfStability
 interface IBootReason {
-    /** The service name to publish. To be returned by getServiceName() in the derived class. */
-    const @utf8InCpp String serviceName = "BootReason";
-
     /**
      * Gets the capabilities of the boot service.
      *

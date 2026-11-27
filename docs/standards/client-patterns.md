@@ -30,10 +30,11 @@ target_link_interfaces_libraries(myclient boot-vcurrent-cpp)
 
 using namespace com::rdk::hal::bootreason;
 
-// Get service by name
+// Get service by descriptor + "/default"
 std::shared_ptr<IBootReason> getBootService() {
+    const std::string name = std::string(IBootReason::descriptor) + "/default";
     ndk::SpAIBinder binder(
-        AServiceManager_getService(IBootReason::serviceName.c_str())
+        AServiceManager_getService(name.c_str())
     );
     
     if (binder == nullptr) {

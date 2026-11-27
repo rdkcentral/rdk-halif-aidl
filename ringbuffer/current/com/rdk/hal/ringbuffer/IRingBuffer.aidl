@@ -25,8 +25,8 @@ import com.rdk.hal.ringbuffer.RingBufferInfo;
  * @brief Generic ring buffer interface for HAL components.
  *
  * This interface is implementation-internal. It is owned by the HAL component that creates the ring buffer and is
- * deliberately never exposed over the producer or consumer interfaces: it is not registered with the service manager,
- * has no serviceName constant, and is not returned by any method a producer or consumer client can call. Clients only
+ * deliberately never exposed over the producer or consumer interfaces: it is not registered with the service manager
+ * under any name, and is not returned by any method a producer or consumer client can call. Clients only
  * ever hold an IRingBufferSink or an IRingBufferSource, obtained from the owning HAL component.
  *
  * Buffer size and overflow behaviour are therefore set by the owning component, not negotiated by its clients.

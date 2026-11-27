@@ -18,8 +18,8 @@ instances* it exposes. They have separate lifecycles.
 
 | Layer | Example | Registered with Service Manager? | Reached via |
 |---|---|---|---|
-| **Manager service** | `IAVClockManager`, `IAudioMixerManager` | **Yes** — by `serviceName` | systemd-started process |
-| **Singleton service** | `IDeepSleep`, `IBootReason` | **Yes** — by `serviceName` | systemd-started process |
+| **Manager service** | `IAVClockManager`, `IAudioMixerManager` | **Yes** — by descriptor (`<descriptor>/default`; see [Service Naming](hal_naming_conventions.md#service-naming)) | systemd-started process |
+| **Singleton service** | `IDeepSleep`, `IBootReason` | **Yes** — by descriptor (`<descriptor>/default`) | systemd-started process |
 | **Resource instance** ("device") | `IAVClock` id `0`, `mixer0` | **No** | `IxxxManager.getXxx(id)` |
 
 Some HALs expose a single resource directly (no manager + resource split) — `IDeepSleep` and `IBootReason` are examples. They register with the Service Manager exactly like a manager service does, but the API surface itself is the resource. The split into `IxxxManager` + `Ixxx` is the multi-resource pattern; the singleton pattern collapses to a single binder service.
@@ -32,7 +32,7 @@ flowchart LR
         R0["IAVClock id 0<br/>(resource)"]
         R1["IAVClock id 1<br/>(resource)"]
     end
-    MGR -- "registers serviceName" --> SM
+    MGR -- "registers descriptor/default" --> SM
     MGR -- "getAVClockIds() / getAVClock(id)" --> R0
     MGR --> R1
 ```

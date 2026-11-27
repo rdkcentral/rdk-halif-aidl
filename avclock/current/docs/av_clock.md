@@ -69,7 +69,7 @@ The [systemd](../vsi/systemd/current/systemd.md) `hal-av_clock_manager.service` 
 
 The AV Clock Manager service depends on the [Service Manager](../vsi/service_manager/current/service_manager.md) to register itself as a service.
 
-Upon starting, the service shall register the `IAVClockManager` interface with the [Service Manager](../vsi/service_manager/current/service_manager.md) using the String `IAVClockManager.serviceName` and immediately become operational.
+Upon starting, the service shall register the `IAVClockManager` interface with the [Service Manager](../vsi/service_manager/current/service_manager.md) using the name `com.rdk.hal.avclock.IAVClockManager/default` (see [Service Naming](../../../docs/key_concepts/hal/hal_naming_conventions.md#service-naming)) and immediately become operational.
 
 ### Product Customization
 

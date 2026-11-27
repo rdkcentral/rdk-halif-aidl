@@ -79,7 +79,7 @@ The `ICompositeInputManager` provides discovery of port IDs and exposes global `
 
 ## Initialization
 
-The HAL service should be initialized via a systemd unit and must register with the Service Manager under the name defined in `ICompositeInputManager.serviceName` (`"composite_input"`). It must be ready before middleware components attempt to query or bind.
+The HAL service should be initialized via a systemd unit and must register with the Service Manager under the name `com.rdk.hal.compositeinput.ICompositeInputManager/default` (see [Service Naming](../../../docs/key_concepts/hal/hal_naming_conventions.md#service-naming)). It must be ready before middleware components attempt to query or bind.
 
 The systemd unit file should include [Wants](https://www.freedesktop.org/software/systemd/man/latest/systemd.unit.html#Wants=) or [Requires](https://www.freedesktop.org/software/systemd/man/latest/systemd.unit.html#Requires=) directives to start any platform driver services it depends upon.
 

@@ -71,7 +71,7 @@ The Thermal HAL allows RDK Middleware to receive high-level **thermal action eve
 The [systemd](../../vsi/systemd/current/systemd.md) `hal-sensor-thermal.service` unit file is provided by the vendor layer to start the service and should include  
 [`Wants`](https://www.freedesktop.org/software/systemd/man/latest/systemd.unit.html#Wants=) or [`Requires`](https://www.freedesktop.org/software/systemd/man/latest/systemd.unit.html#Requires=) directives to start any platform driver services it depends upon.
 
-Upon starting, the service shall register the `IThermalSensor` interface with the Service Manager using the string `IThermalSensor.serviceName` and immediately become operational.
+Upon starting, the service shall register the `IThermalSensor` interface with the Service Manager using the name `com.rdk.hal.sensor.thermal.IThermalSensor/default` (see [Service Naming](../../../../docs/key_concepts/hal/hal_naming_conventions.md#service-naming)) and immediately become operational.
 
 ---
 

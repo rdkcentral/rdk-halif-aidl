@@ -40,9 +40,6 @@ import com.rdk.hal.panel.IPanelOutputEventListener;
  */
 @VintfStability
 interface IPanelOutput {
-    /** The service name to publish. To be returned by getServiceName() in the derived class. */
-    const @utf8InCpp String serviceName = "PanelOutput";
-
     /**
      * Gets the capabilities of the panel service.
      *

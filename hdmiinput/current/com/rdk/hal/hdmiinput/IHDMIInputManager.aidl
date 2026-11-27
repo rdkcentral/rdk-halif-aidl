@@ -38,9 +38,6 @@ import com.rdk.hal.hdmiinput.PlatformCapabilities;
 
 @VintfStability
 interface IHDMIInputManager {
-    /** The service name to publish. To be returned by getServiceName() in the derived class. */
-    const @utf8InCpp String serviceName = "HDMIInputManager";
-
     /**
      * Gets the platform capabilities for HDMI inputs.
      *
