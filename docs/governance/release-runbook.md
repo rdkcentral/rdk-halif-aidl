@@ -9,7 +9,7 @@ flowchart TD
     C --> D{Doubts?}
     D -- decide each --> E[4. stage all, with every --confirm]
     D -- none --> E
-    E --> F{Audit clean?}
+    E --> F{Exit 0 and Release scan completed successfully?}
     F -- no --> R[clean, fix, back to 4]
     F -- yes --> G[5. --apply: verify the release, stage the branch]
     G --> H[6. Review git diff --cached]
@@ -73,7 +73,7 @@ Use the class and reason decided in step 3 for each doubted component; leave out
 
 Give every `--confirm` (and every `--version` pin) in this one command. Staging writes each component's snapshot with imports pinned to the versions of the components it depends on. Re-staging one component later, by `drop` and `stage`, leaves its dependants importing the old version, and their snapshot builds then fail with `Unresolved versioned-import target`.
 
-Check that the output ends with `✅ Audit clean`. A row marked ⚠️ blocks the release: run `clean` (below), fix the cause, and repeat this step.
+Go on only when the command exits 0 and its last line is `Release scan completed successfully.` `✅ Audit clean` is printed before the writes and builds, so it appears even when a snapshot build fails afterwards. A row marked ⚠️ in the audit, or any failure after it, blocks the release: run `clean` (below), fix the cause, and repeat this step.
 
 Staging regenerates the bindings, builds each snapshot and the documentation site, and writes the snapshot directories, each `metadata.yaml`, `versions_released.yaml`, `mkdocs.yml`, `RAG_STATUS_REPORT.md`, a `CHANGELOG.md` section and `docs/releases/X.Y.Z.md`. A failed snapshot build names its log, `out/release-snapshot-<component>.log`.
 
