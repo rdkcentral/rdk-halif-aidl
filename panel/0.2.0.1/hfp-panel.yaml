@@ -1,0 +1,229 @@
+#** *****************************************************************************
+# *
+# * If not stated otherwise in this file or this component's LICENSE file the
+# * following copyright and licenses apply:
+# *
+# * Copyright 2025 RDK Management
+# *
+# * Licensed under the Apache License, Version 2.0 (the "License");
+# * you may not use this file except in compliance with the License.
+# * You may obtain a copy of the License at
+# *
+# *
+# * http://www.apache.org/licenses/LICENSE-2.0
+# *
+# * Unless required by applicable law or agreed to in writing, software
+# * distributed under the License is distributed on an "AS IS" BASIS,
+# * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# * See the License for the specific language governing permissions and
+# * limitations under the License.
+# *
+#** ******************************************************************************
+
+# HAL Feature Profile for panel
+
+panel:                  # Component object begins
+  interfaceVersion: current
+  # Free-form vendor panel type string returned by Capabilities.panelType.
+  panelType: "LCD"
+  pixelWidth: 3840   # UHD panel example
+  pixelHeight: 2160
+  widthCm: 124      # 55 inch; 43" 96.5x53.3, 50" 111.8x63.5, 55" 124.5x71.1, 65" 144.8x81.3, 75" 165.1x94
+  heightCm: 71
+  frameRateMatchingSupported: true
+  supportedPQParameters: [BRIGHTNESS, CONTRAST, SHARPNESS, SATURATION, HUE,
+      MANUAL_BACKLIGHT, SDR_GAMMA, COLOR_TEMPERATURE, DIMMING_SETTINGS,
+      LOW_LATENCY_STATE, MEMC, LOCAL_CONTRAST_LEVEL,
+      MPEG_NOISE_REDUCTION, NOISE_REDUCTION, AI_PQ_ENGINE, AMBIENT_LIGHT_SENSOR_CONTROL,
+      PRECISION_DETAIL, DV_CALIBRATION, TWO_POINT_WB, MULTI_POINT_WB,
+      COLOUR_MANAGEMENT_SETTINGS, DYNAMIC_CONTRAST_LEVEL, TONE_MAPPING_SETTINGS]
+  supportedRefreshRatesHz: [48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 75, 85,
+      100, 120, 144, 165, 240]
+  supportedAVSources: &allSources
+    - {type: IP}
+    - {type: TUNER}
+    - {type: HDMI, instance: "1"}
+    - {type: HDMI, instance: "2"}
+    - {type: HDMI, instance: "3"}
+    - {type: COMPOSITE, instance: "1"}
+  supportedDynamicRanges: [SDR, HLG, HDR10, DOLBY_VISION]
+  supportedColourTemperatures: &panelColourTemperatures ["WARM", "NORMAL", "COLD", "SUPER_COLD", "CUSTOM"]
+  # pictureMode -> dynamicRange -> AV sources. Every picture mode supports all four
+  # dynamic ranges; COMPOSITE_1 is SDR-only.
+  pictureModeCapabilities: &pqContexts
+    - "Entertainment": &allDynamicRanges
+        - SDR: {supportedAVSources: *allSources}
+        - HLG:
+            supportedAVSources: &hdrSources
+              - {type: IP}
+              - {type: TUNER}
+              - {type: HDMI, instance: "1"}
+              - {type: HDMI, instance: "2"}
+              - {type: HDMI, instance: "3"}
+        - HDR10:
+            supportedAVSources: *hdrSources
+        - DOLBY_VISION:
+            supportedAVSources: *hdrSources
+    - "Movie": *allDynamicRanges
+    - "Sports": *allDynamicRanges
+    - "Game": *allDynamicRanges
+    - "Custom": *allDynamicRanges
+    - "Vivid": *allDynamicRanges
+  # SDR-only parameter contexts reuse the same picture modes but limit each one
+  # to the SDR dynamic range.
+  sdrOnlyPictureModeCapabilities: &sdrOnlyPictureModeCapabilities
+    - "Entertainment": &sdrOnlyDynamicRanges
+        - SDR: {supportedAVSources: *allSources}
+    - "Movie": *sdrOnlyDynamicRanges
+    - "Sports": *sdrOnlyDynamicRanges
+    - "Game": *sdrOnlyDynamicRanges
+    - "Custom": *sdrOnlyDynamicRanges
+    - "Vivid": *sdrOnlyDynamicRanges
+  # One entry per PQParameter, in enum order. Parameters that apply in every context
+  # reference *pqContexts; common integer bounds are anchored once and referenced.
+  pqParameterCapabilities:
+    - BRIGHTNESS:                   {isSupported: true, isGlobal: false, rangeBound: {intBounds: &b0to100 {minValue: 0, maxValue: 100, stepValue: {value: 1}}}, pqParamPictureModeCapabilities: *pqContexts}
+    - CONTRAST:                     {isSupported: true, isGlobal: false, rangeBound: {intBounds: *b0to100}, pqParamPictureModeCapabilities: *pqContexts}
+    - SHARPNESS:                    {isSupported: true, isGlobal: false, rangeBound: {intBounds: *b0to100}, pqParamPictureModeCapabilities: *pqContexts}
+    - SATURATION:                   {isSupported: true, isGlobal: false, rangeBound: {intBounds: *b0to100}, pqParamPictureModeCapabilities: *pqContexts}
+    - HUE:                          {isSupported: true, isGlobal: false, rangeBound: {intBounds: *b0to100}, pqParamPictureModeCapabilities: *pqContexts}
+    - MANUAL_BACKLIGHT:             {isSupported: true, isGlobal: true, rangeBound: {intBounds: *b0to100}, pqParamPictureModeCapabilities: *pqContexts}
+    - SDR_GAMMA:
+        isSupported: true
+        isGlobal: false
+        supportedValues: {supportedSdrGammaValues: [SDR_GAMMA_1_8, SDR_GAMMA_1_9, SDR_GAMMA_2_0, SDR_GAMMA_2_1, SDR_GAMMA_2_2, SDR_GAMMA_2_3, SDR_GAMMA_2_4, SDR_GAMMA_BT_1886]}
+      pqParamPictureModeCapabilities: *sdrOnlyPictureModeCapabilities
+    - COLOR_TEMPERATURE:
+        isSupported: true
+        isGlobal: false
+        supportedValues: {supportedStringValues: *panelColourTemperatures}
+        pqParamPictureModeCapabilities: *pqContexts
+    - DIMMING_SETTINGS:
+        isSupported: true
+        isGlobal: true
+        rangeBound:
+          dimmingSettingsCapabilities:
+            modeLevelCapabilities:
+              entries:
+                - {dimmingMode: DIMMING_MODE_FIXED, numSupportedLevels: 1, supportedValues: [DIMMING_LEVEL_NOT_APPLICABLE]}
+                - {dimmingMode: DIMMING_MODE_GLOBAL, numSupportedLevels: 3, supportedValues: [DIMMING_LEVEL_LOW, DIMMING_LEVEL_MEDIUM, DIMMING_LEVEL_HIGH]}
+                - {dimmingMode: DIMMING_MODE_LOCAL, numSupportedLevels: 3, supportedValues: [DIMMING_LEVEL_LOW, DIMMING_LEVEL_MEDIUM, DIMMING_LEVEL_HIGH]}
+        pqParamPictureModeCapabilities: *pqContexts
+    - LOW_LATENCY_STATE:            {isSupported: true, isGlobal: true, rangeBound: {intBounds: &b0to1 {minValue: 0, maxValue: 1, stepValue: {value: 1}}}, pqParamPictureModeCapabilities: *pqContexts}
+    - MEMC:                         {isSupported: true, isGlobal: true, rangeBound: {intBounds: {minValue: 0, maxValue: 4, stepValue: {value: 1}}}, pqParamPictureModeCapabilities: *pqContexts}
+    - LOCAL_CONTRAST_LEVEL:         {isSupported: true, isGlobal: true, rangeBound: {intBounds: *b0to100}, pqParamPictureModeCapabilities: *pqContexts}
+    - MPEG_NOISE_REDUCTION:         {isSupported: true, isGlobal: false, rangeBound: {intBounds: *b0to100}, pqParamPictureModeCapabilities: *pqContexts}
+    - NOISE_REDUCTION:              {isSupported: true, isGlobal: false, rangeBound: {intBounds: *b0to100}, pqParamPictureModeCapabilities: *pqContexts}
+    - AI_PQ_ENGINE:                 {isSupported: true, isGlobal: true, rangeBound: {intBounds: *b0to1}, pqParamPictureModeCapabilities: *pqContexts}
+    - AMBIENT_LIGHT_SENSOR_CONTROL: {isSupported: true, isGlobal: true, rangeBound: {intBounds: *b0to1}, pqParamPictureModeCapabilities: *pqContexts}
+    - PRECISION_DETAIL:             {isSupported: true, isGlobal: false, rangeBound: {intBounds: *b0to100}, pqParamPictureModeCapabilities: *pqContexts}
+    - DV_CALIBRATION:
+        isSupported: true
+        isGlobal: false
+        rangeBound:
+          dvCalibrationBounds:
+            minBound: {Tmax: 0.0, Tmin: 0.0, Tgamma: 1.8, Rx: 0.0, Ry: 0.0, Gx: 0.0, Gy: 0.0, Bx: 0.0, By: 0.0, Wx: 0.0, Wy: 0.0}
+            maxBound: {Tmax: 10000.0, Tmin: 10000.0, Tgamma: 2.6, Rx: 1.0, Ry: 1.0, Gx: 1.0, Gy: 1.0, Bx: 1.0, By: 1.0, Wx: 1.0, Wy: 1.0}
+        supportedValues: {supportedDvCalibrationValues: []}
+        pqParamPictureModeCapabilities:   # DOLBY_VISION only
+          - "Entertainment": &dolbyVisionOnly [{DOLBY_VISION: {supportedAVSources: *hdrSources}}]
+          - "Movie": *dolbyVisionOnly
+          - "Sports": *dolbyVisionOnly
+          - "Game": *dolbyVisionOnly
+          - "Custom": *dolbyVisionOnly
+          - "Vivid": *dolbyVisionOnly
+    - TWO_POINT_WB:
+        isSupported: true
+        isGlobal: false
+        # Numeric gain/offset limits live in rangeBound; the discrete colour-
+        # temperature presets are listed separately as strings.
+        rangeBound:
+          twoPointWBCapabilities:
+            redGain: {minValue: 0, maxValue: 2047, stepValue: {value: 1}}
+            redOffset: {minValue: -1024, maxValue: 1023, stepValue: {value: 1}}
+            greenGain: {minValue: 0, maxValue: 2047, stepValue: {value: 1}}
+            greenOffset: {minValue: -1024, maxValue: 1023, stepValue: {value: 1}}
+            blueGain: {minValue: 0, maxValue: 2047, stepValue: {value: 1}}
+            blueOffset: {minValue: -1024, maxValue: 1023, stepValue: {value: 1}}
+        supportedValues: {supportedTwoPointWBValues: *panelColourTemperatures}
+        pqParamPictureModeCapabilities: *pqContexts
+    - MULTI_POINT_WB:
+        isSupported: true
+        isGlobal: false
+        # Fixed per-channel limits live in rangeBound; the discrete colour-
+        # temperature presets are listed separately as strings.
+        rangeBound:
+          multiPointWBCapabilities:
+            r: {minValue: 0, maxValue: 255}
+            g: {minValue: 0, maxValue: 255}
+            b: {minValue: 0, maxValue: 255}
+        supportedValues: {supportedMultiPointWBValues: *panelColourTemperatures}
+        pqParamPictureModeCapabilities: *pqContexts
+    - DYNAMIC_CONTRAST_LEVEL:       {isSupported: true, isGlobal: true, rangeBound: {intBounds: *b0to100}, pqParamPictureModeCapabilities: *pqContexts}
+    - AISR:                         {isSupported: false, isGlobal: false}
+    - COLOUR_MANAGEMENT_SETTINGS:
+        isSupported: true
+        isGlobal: false
+        # The CMS bounds follow the flattened 18-field parcelable shape.
+        rangeBound:
+          colourManagementSettingsBounds:
+            minBound:
+              redHue: 0
+              redSaturation: 0
+              redLuminance: 0
+              greenHue: 0
+              greenSaturation: 0
+              greenLuminance: 0
+              blueHue: 0
+              blueSaturation: 0
+              blueLuminance: 0
+              yellowHue: 0
+              yellowSaturation: 0
+              yellowLuminance: 0
+              cyanHue: 0
+              cyanSaturation: 0
+              cyanLuminance: 0
+              magentaHue: 0
+              magentaSaturation: 0
+              magentaLuminance: 0
+            maxBound:
+              redHue: 100
+              redSaturation: 100
+              redLuminance: 100
+              greenHue: 100
+              greenSaturation: 100
+              greenLuminance: 100
+              blueHue: 100
+              blueSaturation: 100
+              blueLuminance: 100
+              yellowHue: 100
+              yellowSaturation: 100
+              yellowLuminance: 100
+              cyanHue: 100
+              cyanSaturation: 100
+              cyanLuminance: 100
+              magentaHue: 100
+              magentaSaturation: 100
+              magentaLuminance: 100
+        supportedValues: {supportedColourManagementSettingsValues: []}
+        pqParamPictureModeCapabilities: *pqContexts
+    - TONE_MAPPING_SETTINGS:
+        isSupported: true
+        isGlobal: false
+        rangeBound:
+          toneMappingSettingsCapabilities:
+            modeLevelCapabilities:
+              entries:
+                - {toneMappingMode: TONE_MAPPING_DYNAMIC, numSupportedLevels: 1, supportedValues: [TONE_MAPPING_LEVEL_NOT_APPLICABLE]}
+                - {toneMappingMode: TONE_MAPPING_CLIPPING, numSupportedLevels: 1, supportedValues: [TONE_MAPPING_LEVEL_NOT_APPLICABLE]}
+                - {toneMappingMode: TONE_MAPPING_STATIC, numSupportedLevels: 3, supportedValues: [TONE_MAPPING_LEVEL_LOW, TONE_MAPPING_LEVEL_MEDIUM, TONE_MAPPING_LEVEL_HIGH]}
+        pqParamPictureModeCapabilities:
+          - "Entertainment": &hdrOnly
+              - HLG: {supportedAVSources: *hdrSources}
+              - HDR10: {supportedAVSources: *hdrSources}
+              - DOLBY_VISION: {supportedAVSources: *hdrSources}
+          - "Movie": *hdrOnly
+          - "Sports": *hdrOnly
+          - "Game": *hdrOnly
+          - "Custom": *hdrOnly
+          - "Vivid": *hdrOnly

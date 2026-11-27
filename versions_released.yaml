@@ -15,9 +15,9 @@
 default: current
 
 components:
-  audiodecoder: 0.3.0.0
-  audiomixer: 0.4.0.0
-  audiosink: 0.3.0.0
+  audiodecoder: 0.3.1.0
+  audiomixer: 0.4.1.0
+  audiosink: 0.3.0.1
   avbuffer: 0.2.1.0
   avclock: 0.3.0.0
   common: 0.3.0.0
@@ -28,12 +28,12 @@ components:
   firmwareupdate: 0.2.0.1
   hdmicec: 0.2.0.0
   hdmiinput: 0.2.0.0
-  hdmioutput: 0.2.0.0
+  hdmioutput: 0.2.1.0
   indicator: 0.2.0.0
-  panel: 0.2.0.0
+  panel: 0.2.0.1
   planecontrol: 0.3.0.0
   sensor: 0.3.0.0
-  videodecoder: 0.3.0.0
+  videodecoder: 0.3.1.0
   videosink: 0.3.0.0
   bootreason: 0.2.0.0
   broadcast: 0.1.0.0

@@ -67,17 +67,20 @@ nav:
     - AV Subsystem:
       - Audio Decoder:
         - Current: '!include audiodecoder/current/mkdocs.yml'
+        - 0.3.1.0: '!include audiodecoder/0.3.1.0/mkdocs.yml'
         - 0.3.0.0: '!include audiodecoder/0.3.0.0/mkdocs.yml'
         - 0.2.0.0: '!include audiodecoder/0.2.0.0/mkdocs.yml'
         - 0.1.0.0: '!include audiodecoder/0.1.0.0/mkdocs.yml'
       - Audio Mixer:
         - Current: '!include audiomixer/current/mkdocs.yml'
+        - 0.4.1.0: '!include audiomixer/0.4.1.0/mkdocs.yml'
         - 0.4.0.0: '!include audiomixer/0.4.0.0/mkdocs.yml'
         - 0.3.0.0: '!include audiomixer/0.3.0.0/mkdocs.yml'
         - 0.2.0.0: '!include audiomixer/0.2.0.0/mkdocs.yml'
         - 0.1.0.1: '!include audiomixer/0.1.0.1/mkdocs.yml'
       - Audio Sink:
         - Current: '!include audiosink/current/mkdocs.yml'
+        - 0.3.0.1: '!include audiosink/0.3.0.1/mkdocs.yml'
         - 0.3.0.0: '!include audiosink/0.3.0.0/mkdocs.yml'
         - 0.2.0.0: '!include audiosink/0.2.0.0/mkdocs.yml'
         - 0.1.0.0: '!include audiosink/0.1.0.0/mkdocs.yml'
@@ -94,6 +97,7 @@ nav:
         - 0.1.0.0: '!include avclock/0.1.0.0/mkdocs.yml'
       - Video Decoder:
         - Current: '!include videodecoder/current/mkdocs.yml'
+        - 0.3.1.0: '!include videodecoder/0.3.1.0/mkdocs.yml'
         - 0.3.0.0: '!include videodecoder/0.3.0.0/mkdocs.yml'
         - 0.2.0.1: '!include videodecoder/0.2.0.1/mkdocs.yml'
         - 0.2.0.0: '!include videodecoder/0.2.0.0/mkdocs.yml'
@@ -128,6 +132,7 @@ nav:
         - 0.1.0.0: '!include hdmiinput/0.1.0.0/mkdocs.yml'
       - HDMI Output:
         - Current: '!include hdmioutput/current/mkdocs.yml'
+        - 0.2.1.0: '!include hdmioutput/0.2.1.0/mkdocs.yml'
         - 0.2.0.0: '!include hdmioutput/0.2.0.0/mkdocs.yml'
         - 0.1.0.0: '!include hdmioutput/0.1.0.0/mkdocs.yml'
     - Common:
@@ -157,6 +162,7 @@ nav:
       - 0.1.0.0: '!include indicator/0.1.0.0/mkdocs.yml'
     - Panel:
       - Current: '!include panel/current/mkdocs.yml'
+      - 0.2.0.1: '!include panel/0.2.0.1/mkdocs.yml'
       - 0.2.0.0: '!include panel/0.2.0.0/mkdocs.yml'
       - 0.1.0.0: '!include panel/0.1.0.0/mkdocs.yml'
     - Plane Control:
@@ -228,6 +234,7 @@ nav:
     - FAQ:
       - Python Development: external_content/ut-core-wiki/FAQ:-Comparing-Python-Development-Platforms.md
     - Release Notes:
+      - 0.23.1: releases/0.23.1.md
       - 0.23.0: releases/0.23.0.md
       - 0.22.0: releases/0.22.0.md
       - 0.21.0: releases/0.21.0.md

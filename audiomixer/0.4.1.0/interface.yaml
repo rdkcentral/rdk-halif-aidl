@@ -1,0 +1,11 @@
+aidl_interface:
+  name: audiomixer
+  version: 4010
+  srcs:
+    - com/rdk/hal/audiomixer/*.aidl
+  imports:
+    - audiodecoder@0.3.1.0
+    - audiosink@0.3.0.1
+    - common@0.3.0.0
+  stability: vintf
+  layout: module-local
