@@ -11,9 +11,9 @@ flowchart TD
     D -- none --> E
     E --> F{Audit clean?}
     F -- no --> R[clean, fix, back to 4]
-    F -- yes --> G[5. --apply: snapshots and builds]
+    F -- yes --> G[5. --apply: verify the release, stage the branch]
     G --> H[6. Review git diff --cached]
-    H --> I[7. --apply --commit: push branch, deploy docs]
+    H --> I[7. --commit: commit, push branch, deploy docs]
     I --> J[8. --complete: tag on main, back-merge, publish]
 ```
 
@@ -43,7 +43,7 @@ git fetch origin
 git switch -c release/X.Y.Z origin/develop
 ```
 
-Create the branch before anything else. `stage` takes the release version from the branch name; it has no `--release-version` option. Run on `develop`, it assumes the next minor (for example 0.24.0 after 0.23.0) and writes a whole release for that version. A point release such as 0.23.1 is only possible from `release/0.23.1`.
+Create the branch before anything else. `stage` takes the release version from `--release-version` when given, otherwise from a `release/X.Y.Z` branch name. With neither, it assumes the next minor (for example 0.24.0 after 0.23.0) and writes a whole release for that version without asking. Working on the release branch means every step gets the version, including a point release such as 0.23.1.
 
 ## 3. Read the plan
 
@@ -75,7 +75,7 @@ Give every `--confirm` (and every `--version` pin) in this one command. Staging 
 
 Check that the output ends with `✅ Audit clean`. A row marked ⚠️ blocks the release: run `clean` (below), fix the cause, and repeat this step.
 
-Staging writes the snapshot directories, each `metadata.yaml`, `versions_released.yaml`, `mkdocs.yml`, `RAG_STATUS_REPORT.md`, a `CHANGELOG.md` section and `docs/releases/X.Y.Z.md`.
+Staging regenerates the bindings, builds each snapshot and the documentation site, and writes the snapshot directories, each `metadata.yaml`, `versions_released.yaml`, `mkdocs.yml`, `RAG_STATUS_REPORT.md`, a `CHANGELOG.md` section and `docs/releases/X.Y.Z.md`. A failed snapshot build names its log, `out/release-snapshot-<component>.log`.
 
 ## 5. Apply
 
@@ -83,7 +83,7 @@ Staging writes the snapshot directories, each `metadata.yaml`, `versions_release
 ./scripts/release.sh --apply --release-version X.Y.Z
 ```
 
-Regenerates the bindings, builds every snapshot and the documentation site, and stages the result on `release/X.Y.Z`. Nothing is committed. Each failed build names its log under `out/release-snapshot-<component>.log`.
+Re-runs the audit, verifies that the released cohort builds from `versions_released.yaml`, and stages everything on `release/X.Y.Z`. Nothing is committed. A verification failure is logged in `out/release-build-released.log`.
 
 ## 6. Review
 
@@ -139,6 +139,8 @@ gh release create X.Y.Z -R rdkcentral/rdk-halif-aidl --target main \
 ```
 
 ## Starting again
+
+This applies only before step 7 makes the release commit. `clean` cannot undo a commit, a push or a published version, and after the commit `git rm` would stage the deletion of the committed release notes.
 
 ```bash
 ./scripts/release.sh clean
