@@ -3727,6 +3727,34 @@ generate_release_notes_skeleton() {
 # the function leaves the file untouched (the operator may have hand-
 # edited the prose).
 
+# One "- <title> [`#N`](url)" line per first-parent commit in <range>. A PR
+# merge commit ("Merge pull request #N from ...") is listed by the PR title,
+# the first line of its body (#1082); other merges of branches and tags are
+# skipped. A plain commit is listed by its subject, linked to the PR in a
+# trailing "(#N)" when it has one.
+changelog_entries() {
+    local range="$1" repo="$2" sha subject title pr
+    local _merge_regex='^Merge pull request #([0-9]+) ' _pr_regex='\(#([0-9]+)\)[[:space:]]*$'
+    git -C "${REPO_ROOT}" log --first-parent --format='%H%x09%s' "${range}" \
+        | while IFS=$'\t' read -r sha subject; do
+            pr=""
+            if [[ "${subject}" =~ $_merge_regex ]]; then
+                pr="${BASH_REMATCH[1]}"
+                title="$(git -C "${REPO_ROOT}" log -1 --format=%b "${sha}" | sed -n '/[^[:space:]]/{p;q;}')"
+                subject="${title:-${subject}}"
+            elif [[ "${subject}" =~ ^Merge\ (branch|tag|remote-tracking\ branch)\  ]]; then
+                continue
+            elif [[ "${subject}" =~ $_pr_regex ]]; then
+                pr="${BASH_REMATCH[1]}"
+            fi
+            if [[ -n "${pr}" ]]; then
+                echo "- ${subject} [\`#${pr}\`](https://github.com/${repo}/pull/${pr})"
+            else
+                echo "- ${subject}"
+            fi
+        done
+}
+
 regenerate_changelog() {
     local release_version="$1"
     local changelog="${REPO_ROOT}/CHANGELOG.md"
@@ -3751,20 +3779,8 @@ regenerate_changelog() {
         echo ""
         echo "#### [${release_version}](${compare_url})"
         echo ""
-        local _pr_regex='\(#([0-9]+)\)[[:space:]]*$'
-        git -C "${REPO_ROOT}" log --first-parent --pretty='%s' "${SINCE_REF}..HEAD" \
-            | grep -vE '^Merge (branch|tag|pull request)' \
-            | while IFS= read -r subject; do
-                pr=""
-                if [[ "${subject}" =~ $_pr_regex ]]; then
-                    pr="${BASH_REMATCH[1]}"
-                fi
-                if [[ -n "${pr}" ]]; then
-                    echo "- ${subject} [\`#${pr}\`](https://github.com/${gh_owner_repo}/pull/${pr})"
-                else
-                    echo "- ${subject}"
-                fi
-            done
+        changelog_entries "${SINCE_REF}..HEAD" "${gh_owner_repo}"
+        echo ""
     } > "${tmp_section}"
 
     # Prepend the new section after the existing intro lines (before the
