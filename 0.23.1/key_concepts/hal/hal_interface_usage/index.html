@@ -7382,7 +7382,7 @@ Below the major each side chooses freely. After a component adopts frozen-AIDL
 discipline the interface is additive-only, and the vendor can hold a major while
 the middleware versions independently.</p>
 <p>Compatibility is checked at runtime rather than assumed.
-<a href="https://github.com/rdkcentral/rdk-halif-aidl/blob/fba36cb945b37a77eef29d1204310da531287390/common/current/halcompat.h"><code>halcompat::isCompatible()</code></a>
+<a href="https://github.com/rdkcentral/rdk-halif-aidl/blob/2a4494ef916a7eb6a59eeacef30bb713e93f74a9/common/current/halcompat.h"><code>halcompat::isCompatible()</code></a>
 applies the era rule for you — major equality while in era <code>0</code>, plain ordering
 once frozen — so a client never handles the encoding itself. The helper and the
 rules it applies are documented in
