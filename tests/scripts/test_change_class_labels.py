@@ -74,6 +74,13 @@ class PrChangeClass(unittest.TestCase):
     def test_no_class_label(self):
         self.assertEqual(pcc.label_class("enhancement"), ("minor", False))
 
+    def test_a_pr_changing_current_needs_its_own_class(self):
+        rows = [("panel", "minor", "adds a method")]
+        self.assertTrue(pcc.unlabelled(rows, False, False))
+        self.assertFalse(pcc.unlabelled(rows, True, False))      # labelled
+        self.assertFalse(pcc.unlabelled(rows, False, True))      # New Interface
+        self.assertFalse(pcc.unlabelled([], False, False))       # no current/ changed
+
     def test_label_below_compiler_fails(self):
         failed, line = pcc.verdict("minor", "major", override=False)
         self.assertTrue(failed)

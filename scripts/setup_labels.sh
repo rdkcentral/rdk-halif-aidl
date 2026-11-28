@@ -152,6 +152,11 @@ create_label "Minor Change"         "a2eeef" "Additive, backwards-compatible int
 create_label "documentation"        "0075ca" "Surface untouched (docs, comments, metadata): bumps bugfix; auto-applied when every file is doc-like"
 create_label "Breaking Change"      "d4c5f9" "RETIRED (#712): alias of Major Change accepted during transition — do not apply to new PRs"
 
+# An issue says only what kind of work it is: `Interface Change` or
+# `documentation`. The change class above is the pull request's to set (#1053).
+echo "Issue labels:"
+create_label "Interface Change"     "c5def5" "Issue: changes an interface; its PR sets the change class (Major, Minor, New Interface)"
+
 echo ""
 
 # ---------------------------------------------------------------------------
@@ -186,6 +191,15 @@ echo ""
 echo "Scope labels:"
 create_label "scope:infrastructure"  "bfd4f2" "Repo tooling, CI/CD, scripts, governance docs"
 create_label "scope:overview"        "d4c5f9" "Overview / tracking ticket spanning multiple components"
+
+# ---------------------------------------------------------------------------
+# Topic labels: a filter within one component. Not a component, so the
+# heatmap gives them no row of their own.
+# ---------------------------------------------------------------------------
+
+echo ""
+echo "Topic labels:"
+create_label "topic:audiomixer-aq"   "f9d0c4" "Audio mixer: audio quality (AQ) processors such as Dolby MS12 and DTS"
 
 echo ""
 if [ "${KEPT}" -gt 0 ]; then

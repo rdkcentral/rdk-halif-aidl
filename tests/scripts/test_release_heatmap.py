@@ -24,7 +24,9 @@ Run: python3 -m unittest discover -s tests/scripts
 """
 
 import importlib.util
+import io
 import os
+import tempfile
 import unittest
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -35,7 +37,7 @@ spec.loader.exec_module(rh)
 
 
 def issue(number=1, labels=(), milestone=None, due=None, author="someone", priority=None,
-          effect=None, blocking=0, people=1, refs=0, prs=(), ref_prs=()):
+          effect=None, blocking=0, people=1, refs=0, prs=(), ref_prs=(), created=None, updated=None):
     values = []
     if priority:
         values.append({"name": priority, "field": {"name": "Priority"}})
@@ -43,7 +45,7 @@ def issue(number=1, labels=(), milestone=None, due=None, author="someone", prior
         values.append({"name": effect, "field": {"name": "Interface Effect"}})
     return {
         "number": number, "title": "T%d" % number, "url": "u%d" % number,
-        "author": {"login": author},
+        "author": {"login": author}, "createdAt": created, "updatedAt": updated,
         "milestone": {"title": milestone, "dueOn": due} if milestone else None,
         "labels": {"nodes": [{"name": l} for l in labels]},
         "participants": {"totalCount": people},
@@ -114,19 +116,83 @@ class Classify(unittest.TestCase):
 
 class Render(unittest.TestCase):
 
-    def test_cell_badges_each_ticket_by_class(self):
-        major = rh.classify(issue(1, labels=["Major Change", "component:panel"], milestone="0.24.0"), set(), "2026-11-03", None)
-        minor = rh.classify(issue(2, labels=["Minor Change", "component:panel"], milestone="0.24.0"), set(), "2026-11-03", None)
-        none = rh.classify(issue(3, labels=["component:panel"], milestone="0.24.0"), set(), "2026-11-03", None)
-        page = rh.render([major, minor, none], [{"title": "0.24.0", "due": None}], "now")
+    def test_ticket_badge_is_coloured_by_class_and_the_pr_sets_it(self):
+        # The issue says Minor, but only the PR sets the class (#1053): its Major PR wins.
+        t1 = rh.classify(issue(1, labels=["Minor Change", "component:panel"], milestone="0.24.0",
+                               prs=[{"number": 9, "state": "OPEN",
+                                     "labels": {"nodes": [{"name": "Major Change"}]}}]), set(), "2026-11-03", None)
+        # No PR: the issue's own class shows; Interface Change alone is no class.
+        t2 = rh.classify(issue(2, labels=["documentation", "component:panel"], milestone="0.24.0"),
+                         set(), "2026-11-03", None)
+        t3 = rh.classify(issue(3, labels=["Interface Change", "component:panel"], milestone="0.24.0"),
+                         set(), "2026-11-03", None)
+        page = rh.render([t1, t2, t3], [{"title": "0.24.0", "due": None}], "now")
         self.assertIn("[![#1 Major](https://img.shields.io/badge/%231-M-d73a4a)](u1)", page)
-        self.assertIn("[![#2 Minor](https://img.shields.io/badge/%232-m-0969da)](u2)", page)
+        self.assertIn("[![#2 Documentation](https://img.shields.io/badge/%232-D-6e7781)](u2)", page)
         self.assertIn("[![#3 (no change class)](https://img.shields.io/badge/%233-%3F-d0d7de)](u3)", page)
-        self.assertNotIn("## Checks", page)
+        # The PR carries the class letter and review state, coloured by review state.
+        self.assertIn("[![PR 9 M open](https://img.shields.io/badge/%E2%86%B39-M%20open-bf8700)](p9)", page)
+        self.assertIn("| 🟧<br>", page)   # a Major PR makes the cell amber
+        # The key is the colour chart, and the intro is how to read the page.
+        self.assertIn("\n\n![Major](https://img.shields.io/badge/M-Major-d73a4a)", page)
+        self.assertIn("(open: review needed)", page)
+        self.assertIn("**How to read it.**", page)
+        self.assertNotIn("open issues, each shown once", page)
 
-    def test_unknown_class_badge_shows_its_name(self):
-        t = rh.classify(issue(5, effect="Spike"), set(), "2026-11-03", None)
-        self.assertEqual(rh.badge(t), "[![#5 Spike](https://img.shields.io/badge/%235-Spike-57606a)](u5)")
+    def test_component_cell_states_its_whole_row(self):
+        def t(n, *effects, ms="0.24.0"):
+            return {"number": n, "open_prs": [{"effect": e} for e in effects], "milestone": ms}
+        self.assertEqual(rh.row_marker([t(1, "Minor"), t(2, "Major", ms="0.25.0")]), "🟧 ")
+        self.assertEqual(rh.row_marker([t(1, "Minor"), t(2, "BugFix")]), "🟩 ")
+        self.assertEqual(rh.row_marker([t(1), t(2)]), "")
+        one = rh.classify(issue(1, labels=["component:panel"], milestone="0.24.0",
+                                prs=[{"number": 9, "state": "OPEN",
+                                      "labels": {"nodes": [{"name": "Major Change"}]}}]), set(), "2026-11-03", None)
+        two = rh.classify(issue(2, labels=["component:panel"], milestone="0.25.0",
+                                prs=[{"number": 8, "state": "OPEN",
+                                      "labels": {"nodes": [{"name": "Minor Change"}]}}]), set(), "2026-11-03", None)
+        page = rh.render([one, two], [{"title": "0.24.0", "due": "2026-11-30T00:00:00Z"},
+                                      {"title": "0.25.0", "due": "2026-12-31T00:00:00Z"}], "now", root=EMPTY)
+        self.assertIn("| 🟧 panel |", page)   # one Major PR anywhere in the row makes the component amber
+
+    def test_a_pr_closing_several_tickets_shows_once_per_cell(self):
+        pr = {"number": 387, "state": "OPEN", "labels": {"nodes": [{"name": "New Interface"}]}}
+        ts = [rh.classify(issue(n, labels=["component:crypto"], milestone="0.25.0", prs=[dict(pr, url="p387")]),
+                          set(), "2026-11-03", None) for n in (385, 636, 637)]
+        c = rh.cell(ts)
+        self.assertEqual(c.count("](p387)"), 1)
+        self.assertEqual(sum(c.count("](u%d)" % n) for n in (385, 636, 637)), 3)
+
+    def test_tickets_one_pr_resolves_sit_side_by_side_above_it(self):
+        def tk(n, *prs):
+            pr = lambda u: {"number": int(u[1:]), "state": "OPEN", "labels": {"nodes": []}, "url": u}
+            return rh.classify(issue(n, labels=["component:panel"], milestone="0.25.0", prs=[pr(u) for u in prs]),
+                               set(), "2026-11-03", None)
+        a, b, c, d = tk(1061, "p1054"), tk(1053, "p1054"), tk(900, "p901"), tk(800)
+        groups = rh.resolved_together([a, c, b, d])
+        self.assertEqual([[t["number"] for t in g] for g in groups], [[1061, 1053], [900], [800]])
+        shared = rh.group(groups[0])
+        top, below = shared.split("<br>")
+        self.assertIn("](u1061)", top); self.assertIn("](u1053)", top)  # both tickets on one line
+        self.assertIn("](p1054)", below); self.assertEqual(shared.count("](p1054)"), 1)
+        self.assertEqual(rh.group(groups[1]), rh.ticket(c))              # a lone ticket draws as before
+        # A ticket with two PRs joins the groups of both.
+        e = tk(700, "p1054", "p901")
+        self.assertEqual([[t["number"] for t in g] for g in rh.resolved_together([a, c, e])], [[1061, 900, 700]])
+
+    def test_age_text_for_the_backlog_page(self):
+        self.assertEqual([rh.age_text(d) for d in (3, 20, 400, 365)], ["3d", "2w", "1y+", "1y"])
+        self.assertEqual(rh.age_days("2026-10-03T10:00:00Z", "2026-11-03"), 31)
+
+    def test_cell_colour_comes_from_the_prs(self):
+        def t(*effects):
+            return {"open_prs": [{"effect": e} for e in effects]}
+        self.assertEqual(rh.cell_colour([t("Minor"), t("BugFix", "New Interface")]), "🟩")
+        self.assertEqual(rh.cell_colour([t("Minor"), t("CR-Major")]), "🟧")
+        self.assertEqual(rh.cell_colour([t(), t()]), "")
+
+    def test_unknown_class_letter_shows_its_name(self):
+        self.assertEqual((rh.class_letter("Spike"), rh.class_letter(None), rh.class_letter("Major")), ("Spike", "?", "M"))
 
     def test_shield_escapes_dashes_and_spaces(self):
         self.assertEqual(rh.shield("CR", "CR-Major", "8b0000"),
@@ -136,13 +202,23 @@ class Render(unittest.TestCase):
 
     def test_page_is_only_the_heatmap(self):
         t = rh.classify(issue(1, labels=["Minor Change"], milestone="0.24.0"), set(), "2026-11-03", None)
-        page = rh.render([t], [{"title": "0.24.0", "due": None}], "now")
-        self.assertEqual([l for l in page.splitlines() if l.startswith("#")], ["# Release heatmap"])
+        page = rh.render([t], [{"title": "0.24.0", "due": None}], "now", sections=SECTIONS, components=["drm"])
+        self.assertEqual([l for l in page.splitlines() if l.startswith("# ") or l.startswith("## ")],
+                         ["# Release heatmap", "## P1 – Critical", "## P3 – Low", "## Not yet prioritised"])
+        self.assertNotIn("Aged tickets", page)
 
-    def test_closed_milestone_is_flagged(self):
-        t = rh.classify(issue(1, labels=["component:panel"], milestone="0.22.0"), set(), "2026-11-03", None)
-        page = rh.render([t], [{"title": "0.24.0", "due": None}], "now")
-        self.assertIn("| Component | ⚠️ 0.22.0 closed | Total |", page)
+
+    def test_closed_milestone_has_no_column(self):
+        # A ticket left on a closed milestone shows under No milestone, and is named above the tables.
+        t = rh.classify(issue(1, labels=["component:panel"], milestone="0.23.0 - Next Release"),
+                        set(), "2026-11-03", None)
+        u = rh.classify(issue(2, labels=["component:panel"], milestone="0.24.0"), set(), "2026-11-03", None)
+        page = rh.render([t, u], [{"title": "0.24.0", "due": None}], "now")
+        self.assertIn("| Component | Devices | No date | Triage required | Total |", page)
+        self.assertNotIn("0.23.0", page.split("| Component")[1])
+        self.assertIn("⚠️ Open on a closed milestone, so shown under Triage required: [#1](u1) (0.23.0 - Next Release).",
+                      page)
+        self.assertNotIn("⚠️", rh.render([u], [{"title": "0.24.0", "due": None}], "now"))
 
     def test_maintainer_takes_several_logins(self):
         a = rh.parse_args(["--maintainer", "alice", "bob", "--maintainer", "carol"])
@@ -207,18 +283,6 @@ class Render(unittest.TestCase):
                                       {"number": 4, "state": "OPEN", "repository": {"isPrivate": False}}]))
         self.assertEqual([p["number"] for p in prs], [4])
 
-    def test_release_lookup_fails_loudly(self):
-        import subprocess
-        real = subprocess.run
-        try:
-            subprocess.run = lambda *a, **k: subprocess.CompletedProcess(a, 1, "", "gh: Not Found (HTTP 404)")
-            self.assertIsNone(rh.fetch_last_release())
-            subprocess.run = lambda *a, **k: subprocess.CompletedProcess(a, 1, "", "gh: HTTP 502")
-            with self.assertRaises(RuntimeError):
-                rh.fetch_last_release()
-        finally:
-            subprocess.run = real
-
     def test_gh_json_retries_a_transient_5xx(self):
         import subprocess
         real = subprocess.run
@@ -253,39 +317,359 @@ class Render(unittest.TestCase):
         t = rh.classify(issue(1, labels=["Minor Change", "component:panel"], milestone="0.24.0",
                               prs=[{"number": 9, "state": "OPEN"}]), set(), "2026-11-03", None)
         page = rh.render([t], [{"title": "0.24.0", "due": None}], "now")
-        self.assertIn("(u1)<br>[![PR 9 open](https://img.shields.io/badge/%E2%86%B39-open-bf8700)](p9)", page)
-
-    def test_resolved_shows_only_prs_merged_into_develop(self):
-        t = rh.classify(issue(2, labels=["bug", "component:panel"], milestone="0.24.0",
-                              prs=[{"number": 11, "state": "MERGED"},
-                                   {"number": 12, "state": "MERGED", "baseRefName": "main"}]),
-                        set(), "2026-11-03", None)
-        release = {"tag": "0.23.0", "url": "r", "at": "2026-10-26T23:10:03Z"}
-        section = rh.render([], [], "now", resolved=[t], release=release).split("## Resolved since 0.23.0")[1]
-        self.assertIn("%E2%86%B311-merged", section)
-        self.assertNotIn("%E2%86%B312", section)
-        self.assertIn("| **Tickets** | | **1** |", section)
+        self.assertIn("(u1)<br>[![PR 9 ? open](https://img.shields.io/badge/%E2%86%B39-%3F%20open-bf8700)](p9)", page)
 
     def test_a_ticket_on_several_components_is_in_its_first_row(self):
         one = rh.classify(issue(1, labels=["component:panel"], milestone="0.24.0"), set(), "2026-11-03", None)
         two = rh.classify(issue(2, labels=["component:videosink", "component:audiosink"], milestone="0.24.0"),
                           set(), "2026-11-03", None)
-        page = rh.render([one, two], [{"title": "0.24.0", "due": None}], "now")
+        page = rh.render([one, two], [{"title": "0.24.0", "due": None}], "now", root=EMPTY)
         self.assertEqual(page.count("](u2)"), 1)
-        self.assertIn("| audiosink |", page)
+        self.assertIn("| audiosink |  | [", page)
         self.assertNotIn("| videosink |", page)
         self.assertNotIn("several components) |", page)
         totals = [int(l.rsplit("|", 2)[1]) for l in page.splitlines()
                   if l.startswith("| ") and not l.startswith(("| Component", "| ---", "| **"))]
         self.assertEqual(sum(totals), 2)
 
-    def test_resolved_section_needs_a_release(self):
-        self.assertNotIn("## Resolved", rh.render([], [], "now"))
-        release = {"tag": "0.23.0", "url": "r", "at": "2026-10-26T23:10:03Z"}
-        self.assertIn("Nothing yet.", rh.render([], [], "now", resolved=[], release=release))
-
     def test_ticket_with_a_pr_gets_its_own_line(self):
         self.assertEqual(rh.flow(["a", "b", "c", "d"], [False, True, False, False]), "a<br>b<br>c d")
+
+
+_TMP = []
+
+
+def tmpdir():
+    """A temporary directory, removed when the test run ends."""
+    _TMP.append(tempfile.TemporaryDirectory())
+    return _TMP[-1].name
+
+
+EMPTY = tmpdir()   # a repo root with no metadata.yaml: rows carry no version
+SECTIONS = [
+    {"priority": "P1", "title": "P1 – Critical", "about": "Core.",
+     "rows": [{"name": "DRM", "row": "drm"}, {"name": "Video Sink", "row": "videosink"}]},
+    {"priority": "P3", "title": "P3 – Low", "about": "Later.",
+     "rows": [{"name": "Panel", "row": "panel"}, {"name": "General documentation", "row": "(documentation)"}]},
+]
+
+
+class Priorities(unittest.TestCase):
+
+    def test_reads_the_component_priority_list(self):
+        secs = rh.read_priorities()
+        self.assertEqual([s["priority"] for s in secs], ["P1", "P2", "P3"])
+        rank = rh.rank_of(secs)
+        self.assertEqual((rank["drm"], rank["avclock"], rank["hdmioutput"]), (1, 1, 1))
+        self.assertEqual((rank["bootreason"], rank["vsi/abstractfilesystem"], rank["sensor"]), (1, 3, 1))
+        self.assertEqual((rank["panel"], rank["(documentation)"], rank["(infrastructure)"], rank["deviceinfo"]), (3, 1, 1, 1))
+        self.assertTrue(all(s["about"] for s in secs))
+        # The HAL architecture documentation row has no label, so it is no heatmap row.
+        self.assertNotIn("HAL architecture documentation", [r["name"] for s in secs for r in s["rows"]])
+
+    def test_every_component_is_listed_even_without_tickets(self):
+        page = rh.render([], [], "now", sections=SECTIONS, components=["drm", "videosink", "ffv"], root=EMPTY)
+        p1 = page.split("## P1")[1].split("## P3")[0]
+        # No open milestone: every row has the header's three cells.
+        self.assertIn("| Component | Devices | Total |\n| --- | --- | --- |", p1)
+        self.assertIn("| DRM |  | 0 |", p1)
+        self.assertIn("| Video Sink |  | 0 |", p1)
+        self.assertIn("| ffv |  | 0 |", page.split("## Not yet prioritised")[1])
+
+    def test_a_ticket_goes_to_its_highest_priority_component(self):
+        t = rh.classify(issue(4, labels=["component:panel", "component:videosink"], milestone="0.24.0"),
+                        set(), "2026-11-03", None)
+        page = rh.render([t], [{"title": "0.24.0", "due": None}], "now", sections=SECTIONS,
+                         components=["panel", "videosink"], root=EMPTY)
+        self.assertIn("| Video Sink |  | [![#4", page)
+        self.assertIn("| Panel |  | · | 0 |", page)
+
+    def test_row_heading_has_the_component_version(self):
+        root = tmpdir()
+        for d, v in (("drm", "0.2.0.0"), ("bootreason", "0.2.1.0")):
+            os.makedirs(os.path.join(root, d))
+            with open(os.path.join(root, d, "metadata.yaml"), "w") as fh:
+                fh.write("component: %s\nversion: %s\nstatus: GREEN\n" % (d, v))
+        self.assertEqual(rh.row_heading("drm", "DRM", root), "DRM<br>Version: ![0.2.0.0](https://img.shields.io/badge/0.2.0.0-0969da)")
+        self.assertEqual(rh.row_heading("bootreason", "Boot", root), "Boot<br>Version: ![0.2.1.0](https://img.shields.io/badge/0.2.1.0-0969da)")
+        self.assertEqual(rh.row_heading("crypto", "Crypto", root), "Crypto")
+        self.assertEqual(rh.row_heading("(documentation)", "General documentation", root), "General documentation")
+        # With metadata.yaml in the repo, a label is not a component on its own.
+        self.assertEqual(rh.all_components(root, ["component:crypto", "component:boot", "bug"]),
+                         ["bootreason", "drm"])
+
+    def test_columns_are_due_dates_not_milestones(self):
+        mk = lambda n, m: rh.classify(issue(n, labels=["component:drm"], milestone=m), set(), "2026-11-26", None)
+        ts = [mk(1, "0.25.0"), mk(2, "0.24.0"), mk(3, "0.24.1 - Infrastructure"), mk(4, "0.26.0"), mk(5, None),
+              mk(6, "0.23.1")]
+        ms = [{"title": "0.23.1", "due": "2026-11-22T08:00:00Z"}, {"title": "0.24.0", "due": "2026-12-13T08:00:00Z"},
+              {"title": "0.24.1 - Infrastructure", "due": "2026-12-13T08:00:00Z"},
+              {"title": "0.25.0", "due": "2027-01-31T08:00:00Z"}, {"title": "0.26.0", "due": None}]
+        page = rh.render(ts, ms, "2026-11-26 09:00 UTC", sections=SECTIONS, root=EMPTY)
+        self.assertIn("| Component | Devices | ⚠️ 2026-11-22<br>overdue | 2026-12-13 | 2027-01-31 | No date "
+                      "| Triage required | Total |", page)
+        self.assertIn("| **Tickets** |  | **1** | **2** | **1** | **1** | **1** | **6** |", page)
+        self.assertNotIn("0.24.0", page.split("| Component")[1])
+
+    def test_wanted_priority(self):
+        w = lambda labels, cur=None: rh.wanted_priority(labels, cur, SECTIONS)
+        self.assertEqual(w(["component:panel", "component:drm"]), "P1")
+        self.assertEqual(w(["component:panel"], "P1"), "P3")
+        self.assertIsNone(w(["component:panel"], "P3"))          # already right
+        self.assertIsNone(w(["component:drm"], "P0"))            # P0 is a hand-set override
+        self.assertIsNone(w(["component:ffv"], "P2"))            # not yet prioritised
+        self.assertEqual(w(["component:ffv", "component:panel"]), "P3")
+        self.assertEqual(w(["documentation"]), "P3")             # repo-wide: filled in when empty
+        self.assertIsNone(w(["documentation"], "P1"))            # ... but a hand-set value stays
+        self.assertIsNone(w(["scope:overview", "documentation"]))  # the overview row is not prioritised
+
+    def test_set_priorities_dry_run_changes_nothing(self):
+        def node(n, labels, prio=None, state="OPEN", repo=rh.REPO):
+            return {"id": "I%d" % n, "fieldValueByName": {"name": prio} if prio else None,
+                    "content": {"number": n, "issueState": state, "repository": {"nameWithOwner": repo},
+                                "labels": {"nodes": [{"name": l} for l in labels]}}}
+        page = {"data": {"organization": {"projectV2": {
+            "id": "P", "field": {"id": "F", "options": [{"id": "o1", "name": "P1 - High"},
+                                                        {"id": "o3", "name": "P3 - Low"}]},
+            "items": {"pageInfo": {"hasNextPage": False}, "nodes": [
+                node(1, ["component:drm"], "P3 - Low"), node(2, ["component:drm"], "P1 - High"),
+                node(3, ["component:drm"], state="CLOSED"), node(4, ["component:drm"], repo="other/x"),
+                node(5, ["component:panel"])]}}}}}
+        calls, real = [], rh.gh_json
+        try:
+            rh.gh_json = lambda args, **k: calls.append(args) or page
+            out = io.StringIO()
+            self.assertEqual(rh.set_priorities(True, SECTIONS, out), 2)
+            self.assertEqual(len(calls), 1)
+            self.assertIn("#1: P3 -> P1", out.getvalue())
+            self.assertIn("#5: none -> P3", out.getvalue())
+            calls.clear()
+            rh.set_priorities(False, SECTIONS, io.StringIO())
+            self.assertEqual([c[-1] for c in calls[1:]], ["o=o1", "o=o3"])
+        finally:
+            rh.gh_json = real
+
+
+def _meta(root, d, version):
+    os.makedirs(os.path.join(root, d), exist_ok=True)
+    with open(os.path.join(root, d, "metadata.yaml"), "w") as fh:
+        fh.write("component: %s\nversion: %s\nstatus: GREEN\n" % (d, version))
+
+
+class Backlog(unittest.TestCase):
+
+    def test_lists_only_issues_older_than_the_limit_oldest_first(self):
+        mk = lambda n, created, ms=None: rh.classify(issue(n, labels=["component:panel"], milestone=ms, created=created,
+                                                          updated="2026-10-01T00:00:00Z"), set(), "2026-11-25", None)
+        ts = [mk(1, "2025-11-01T00:00:00Z", "0.24.0"), mk(2, "2024-06-01T00:00:00Z"), mk(3, "2026-11-01T00:00:00Z")]
+        page = rh.render_backlog(ts, "now")
+        rows = [l for l in page.splitlines() if l.startswith("| [")]
+        self.assertEqual([r.split("](u")[1][0] for r in rows], ["2", "1"])
+        self.assertIn("| T2 | panel | Triage required | 2y+ | 2026-10-01 |", page)
+        self.assertIn("2 open issues with no PR have been open for 365 days or more", page)
+        self.assertIn("None.", rh.render_backlog([ts[2]], "now"))
+
+    def test_an_issue_with_a_pr_is_not_backlog(self):
+        mk = lambda n, prs=(), refs=(): rh.classify(issue(n, labels=["component:panel"], created="2024-06-01T00:00:00Z",
+                                                          prs=prs, ref_prs=refs), set(), "2026-11-25", None)
+        ts = [mk(1), mk(2, prs=[{"number": 9, "state": "OPEN"}]), mk(3, prs=[{"number": 8, "state": "MERGED"}]),
+              mk(4, refs=[{"number": 7, "state": "OPEN"}]), mk(5, prs=[{"number": 6, "state": "CLOSED"}])]
+        rows = [l for l in rh.render_backlog(ts, "now").splitlines() if l.startswith("| [")]
+        # Only #1 (no PR) and #5 (its one PR closed unmerged) are backlog.
+        self.assertEqual([r.split("](u")[1][0] for r in rows], ["1", "5"])
+
+    def test_heatmap_links_the_backlog_page(self):
+        page = rh.render([], [], "now", backlog_page=rh.BACKLOG_PAGE)
+        self.assertIn("](%s)" % rh.BACKLOG_PAGE, page)
+        self.assertNotIn(rh.BACKLOG_PAGE, rh.render([], [], "now"))
+
+
+class History(unittest.TestCase):
+
+    HISTORY = {"tags": ["0.21.0", "0.22.0", "0.23.0"],
+               "versions": {"drm": {"0.21.0": "0.1.0.0", "0.22.0": "0.1.0.0", "0.23.0": "0.2.0.0"},
+                            "videosink": {"0.21.0": "0.2.0.0", "0.22.0": "0.2.1.0", "0.23.0": "0.3.0.0"},
+                            "panel": {"0.22.0": "0.1.0.0", "0.23.0": "0.1.0.0"}}}
+
+    def test_a_component_in_the_last_release_stays_listed(self):
+        # Gone from develop, no label and no priority row: still in 0.23.0, so still shown.
+        page = rh.render([], [], "now", sections=[], components=[], root=EMPTY, history=self.HISTORY)
+        self.assertNotIn("## Settling", page)
+        self.assertIn("| panel |  | 0 |", page.split("## Not yet prioritised")[1])
+        gone = dict(self.HISTORY, versions={"drm": {"0.21.0": "0.1.0.0"}})
+        self.assertNotIn("| DRM |", rh.render([], [], "now", sections=[], root=EMPTY, history=gone))
+
+    def test_release_history_reads_each_tag(self):
+        root = tmpdir()
+        git = lambda *a: rh.subprocess.run(["git", "-C", root, "-c", "user.name=t", "-c", "user.email=t@t"] + list(a),
+                                           check=True, capture_output=True)
+        git("init", "-q")
+        for tag, v in (("0.1.0", "0.1.0.0"), ("0.2.0", "0.2.0.0")):
+            _meta(root, "sensor", v)
+            _meta(root, "vsi/wifi", "0.0.0.1")
+            git("add", "-A"); git("commit", "-qm", tag); git("tag", tag)
+        git("tag", "not-a-release")
+        h = rh.release_history(root)
+        self.assertEqual(h["tags"], ["0.1.0", "0.2.0"])
+        self.assertEqual(h["versions"]["sensor"], {"0.1.0": "0.1.0.0", "0.2.0": "0.2.0.0"})
+        self.assertEqual(h["versions"]["vsi/wifi"]["0.2.0"], "0.0.0.1")
+        self.assertIsNone(rh.release_history(EMPTY))
+
+    def test_nested_and_shared_component_directories(self):
+        root = tmpdir()
+        for d in ("sensor", "vsi/wifi", "vsi/kernel", "bootreason", "drm"):
+            _meta(root, d, "0.1.0.0")
+        self.assertEqual(rh.all_components(root), ["bootreason", "drm", "sensor", "vsi/kernel", "vsi/wifi"])
+        self.assertEqual(rh.version_of("sensor", root), "0.1.0.0")
+        self.assertEqual(rh.version_of("vsi/wifi", root), "0.1.0.0")
+
+    def test_priority_query_aliases_the_two_state_types(self):
+        # Issue.state and PullRequest.state are different enum types; one response name
+        # for both is a GraphQL field conflict.
+        self.assertIn("issueState: state", rh.PRIORITY_ITEMS)
+        self.assertIn("prState: state", rh.PRIORITY_ITEMS)
+        self.assertNotIn("number state", rh.PRIORITY_ITEMS)
+
+
+def _meta_fields(root, d, version, priority="~", devices="[stb, tv]"):
+    os.makedirs(os.path.join(root, d), exist_ok=True)
+    with open(os.path.join(root, d, "metadata.yaml"), "w") as fh:
+        fh.write("component: %s\nversion: %s\ntype: SOC\npriority: %s\ndevices: %s\n"
+                 % (d, version, priority, devices))
+
+
+class MetadataPriority(unittest.TestCase):
+
+    def test_metadata_reads_priority_and_devices(self):
+        root = tmpdir()
+        _meta_fields(root, "panel", "0.1.0.0", "P3", "[TV]")
+        _meta_fields(root, "ffv", "0.0.0.1")
+        self.assertEqual(rh.metadata("panel", root), {"version": "0.1.0.0", "priority": "P3", "devices": ("tv",),
+                                                      "status": None})
+        self.assertEqual(rh.metadata("ffv", root)["priority"], None)
+        self.assertEqual(rh.devices_of("ffv", root), "STB, TV")
+        self.assertEqual(rh.metadata("crypto", root), {})
+
+    def test_metadata_reads_status_and_red_marks_the_row(self):
+        root = tmpdir()
+        for d, status in (("wifi", "RED"), ("panel", "AMBER"), ("drm", "GREEN"), ("ffv", None)):
+            os.makedirs(os.path.join(root, d))
+            with open(os.path.join(root, d, "metadata.yaml"), "w") as fh:
+                fh.write("component: %s\nversion: 0.0.0.1\n" % d + ("status: %s\n" % status if status else ""))
+        self.assertEqual(rh.metadata("wifi", root)["status"], "RED")
+        self.assertEqual(rh.metadata("ffv", root)["status"], None)
+        self.assertEqual(rh.status_marker("wifi", root), "🟥 ")
+        self.assertEqual([rh.status_marker(d, root) for d in ("panel", "drm", "ffv", "crypto", "(overview)")],
+                         [""] * 5)
+
+    def test_metadata_priority_places_the_component_and_rows_group_by_device(self):
+        root = tmpdir()
+        _meta_fields(root, "drm", "0.2.0.0", "P1")
+        _meta_fields(root, "videosink", "0.3.0.0", "P1", "[stb]")
+        _meta_fields(root, "hdmiinput", "0.2.0.0", "P1", "[tv]")    # moved up from no section
+        _meta_fields(root, "panel", "0.1.0.0", "P2", "[tv]")        # moved from P3 to a new P2
+        secs = rh.with_metadata(SECTIONS, rh.all_components(root), root)
+        self.assertEqual([s["priority"] for s in secs], ["P1", "P2", "P3"])
+        self.assertEqual([r["row"] for r in secs[0]["rows"]], ["drm", "videosink", "hdmiinput"])
+        self.assertEqual(secs[1]["rows"], [{"name": "Panel", "row": "panel"}])
+        self.assertEqual([r["row"] for r in secs[2]["rows"]], ["(documentation)"])
+        self.assertEqual([r["row"] for r in SECTIONS[1]["rows"]], ["panel", "(documentation)"])  # not changed
+        page = rh.render([], [], "now", sections=secs, components=rh.all_components(root), root=root)
+        self.assertIn("| DRM<br>Version: ![0.2.0.0](https://img.shields.io/badge/0.2.0.0-0969da) | STB, TV | 0 |", page)
+        self.assertIn("| hdmiinput<br>Version: ![0.2.0.0](https://img.shields.io/badge/0.2.0.0-0969da) | TV | 0 |", page)
+
+    def test_retired_names_are_not_rows(self):
+        # cdm became drm, flash shipped as firmwareupdate, factory was dropped; metrics is label-only.
+        root = tmpdir()
+        _meta_fields(root, "firmwareupdate", "0.2.0.1", "P2")
+        labels = ["component:cdm", "component:flash", "component:factory", "component:metrics"]
+        self.assertEqual(rh.all_components(root, labels), ["firmwareupdate"])
+        # A repo with no metadata.yaml (linux_binder_idl) has its labels, less the retired ones.
+        self.assertEqual(rh.all_components(EMPTY, labels), ["metrics"])
+        git = lambda *a: rh.subprocess.run(["git", "-C", root, "-c", "user.name=t", "-c", "user.email=t@t"] + list(a),
+                                           check=True, capture_output=True)
+        git("init", "-q")
+        os.rename(os.path.join(root, "firmwareupdate"), os.path.join(root, "flash"))
+        git("add", "-A"); git("commit", "-qm", "a"); git("tag", "0.20.0")
+        os.rename(os.path.join(root, "flash"), os.path.join(root, "firmwareupdate"))
+        git("add", "-A"); git("commit", "-qm", "b"); git("tag", "0.21.0")
+        h = rh.release_history(root)
+        self.assertEqual(h["versions"], {"firmwareupdate": {"0.20.0": "0.2.0.1", "0.21.0": "0.2.0.1"}})
+
+    def test_labels_point_tickets_at_their_component(self):
+        root = tmpdir()
+        _meta_fields(root, "drm", "0.2.0.0", "P1")
+        _meta_fields(root, "sensor", "0.3.0.0", "P1")
+        with open(os.path.join(root, "sensor", "metadata.yaml"), "a") as fh:
+            fh.write("labels: [component:motion_sensor, component:thermal_sensor]\n")
+        dirs = rh.label_map(root)
+        self.assertEqual(dirs, {"drm": "drm", "motion_sensor": "sensor", "thermal_sensor": "sensor"})
+        self.assertEqual(rh.row_name("component:thermal_sensor", dirs), "sensor")
+        self.assertEqual(rh.row_name("component:metrics", dirs), "metrics")   # claimed by none
+        self.assertEqual(rh.label_dirs(root), dirs)
+        # The repo's own: one ticket on both sensor labels is one sensor ticket.
+        _meta_fields(root, "bootreason", "0.2.0.0", "P2")
+        with open(os.path.join(root, "bootreason", "metadata.yaml"), "a") as fh:
+            fh.write("labels: [component:boot]\n")
+        dirs = rh.label_map(root)
+        # One ticket on both sensor labels is one sensor ticket.
+        t = rh.classify(issue(7, labels=["component:motion_sensor", "component:thermal_sensor", "component:boot"]),
+                        set(), "2026-11-03", None, dirs=dirs)
+        self.assertEqual(t["components"], ["bootreason", "sensor"])
+        # Another repo's labels are not mapped through this checkout's metadata.yaml.
+        other = rh.classify(issue(8, labels=["component:boot"]), set(), "2026-11-03", None, "rdkcentral/linux_binder_idl")
+        self.assertEqual(other["components"], ["boot"])
+
+    def test_a_listed_label_shows_only_with_an_open_ticket(self):
+        # Crypto is on the priority list but has no metadata.yaml: it ranks, and shows only with a ticket.
+        secs = [{"priority": "P3", "title": "P3 – Low", "about": None, "rows": [
+            {"name": "Panel", "row": "panel"}, {"name": "Crypto", "row": "crypto"},
+            {"name": "General documentation", "row": "(documentation)"}]}]
+        page = rh.render([], [], "now", sections=secs, components=["panel"], root=EMPTY)
+        self.assertNotIn("| Crypto |", page)
+        self.assertIn("| General documentation |", page)
+        t = rh.classify(issue(9, labels=["component:crypto"], milestone="0.24.0"), set(), "2026-11-03", None)
+        page = rh.render([t], [{"title": "0.24.0", "due": None}], "now", sections=secs, components=["panel"], root=EMPTY)
+        self.assertIn("| Crypto |  | [![#9", page.split("## P3")[1])
+
+    def test_rows_with_no_directory_are_p1(self):
+        # Repo-wide work, and halcompat which has no directory, are P1 (#1053).
+        rank = rh.rank_of(rh.read_priorities())
+        for row in ("(infrastructure)", "(overview)", "(documentation)", "halcompat"):
+            self.assertEqual(rank.get(row), 1, row)
+        self.assertEqual(rh.wanted_priority(["scope:overview"], None, rh.read_priorities()), "P1")
+
+    def test_priority_list_agrees_with_metadata(self):
+        # The list names a component's priority for people; its metadata.yaml sets it for the
+        # scripts. A component in both must not have two priorities.
+        listed = {r["row"]: s["priority"] for s in rh.read_priorities() for r in s["rows"]}
+        for row in rh.all_components():
+            if row in listed:
+                self.assertEqual(rh.metadata(row).get("priority"), listed[row], row)
+
+
+
+OTHER = "rdkcentral/linux_binder_idl"
+
+
+class OtherRepo(unittest.TestCase):
+    # The fetch and classify helpers take a repo, for a copy of this script in another repo (#1047).
+
+    def test_refs_come_from_the_named_repo(self):
+        ref = {"number": 7, "state": "OPEN", "repository": {"isPrivate": False, "nameWithOwner": OTHER},
+               "body": "Refs #1"}
+        here = rh.classify(issue(1, ref_prs=[ref]), set(), "2026-11-18", None, OTHER)
+        elsewhere = rh.classify(issue(1, ref_prs=[ref]), set(), "2026-11-18", None)
+        self.assertEqual([p["number"] for p in here["open_prs"]], [7])
+        self.assertEqual(elsewhere["open_prs"], [])
+
+    def test_project_fields_for_the_named_repo(self):
+        def node(n, repo, prio):
+            return {"content": {"number": n, "repository": {"nameWithOwner": repo}},
+                    "fieldValues": {"nodes": [{"name": prio, "field": {"name": "Priority"}}]}}
+        nodes = [node(1, rh.REPO, "P1 - High"), node(1, OTHER, "P0 - Critical")]
+        self.assertEqual(rh.item_fields(nodes, OTHER), {1: {"Priority": "P0 - Critical"}})
+        self.assertEqual(rh.item_fields(nodes), {1: {"Priority": "P1 - High"}})
 
 
 if __name__ == "__main__":

@@ -22,11 +22,17 @@
 # status      - RAG status: GREEN / AMBER / RED                          [manual]
 # description - One-line human-readable summary                          [manual]
 # type        - Responsibility: SOC or OEM                                [manual]
+# priority    - Delivery priority: P1, P2 or P3; ~ when not yet set       [manual]
+#               (docs/governance/component-priority.md)
+# devices     - Device classes that use it: stb, tv                       [manual]
+# labels      - GitHub labels for it, when not component:<directory>      [manual]
 component: deviceinfo
 version: 0.2.0.0
 status: GREEN
 description: "Device information and platform capability reporting"
 type: OEM
+priority: P1
+devices: [stb, tv]
 
 # lifecycle - 14+5 review cycle dates                                    [pr_cycle.sh]
 #   review_started    - Date the review window opened
