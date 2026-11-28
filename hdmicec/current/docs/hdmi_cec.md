@@ -193,7 +193,7 @@ sequenceDiagram
 ## Resource Management
 
 - **Open/Close:** `open()` acquires the controller; `close()` removes addresses and releases hardware.
-- **Logical Addressing:** Controller must call `addLogicalAddress()` after successful poll-based allocation. `removeLogicalAddress()` when device not ready (e.g., HPD down, deep sleep).
+- **Logical Addressing:** Controller must call `addLogicalAddress()` after successful poll-based allocation. The HAL accepts up to `Property::MAX_LOGICAL_ADDRESSES` addresses in total (`MAX_LOGICAL_ADDRESSES` in the HFP, 2 by default); which addresses and device types to use is the middleware's choice, and the HAL does not check the combination. `removeLogicalAddress()` when device not ready (e.g., HPD down, deep sleep).
 - **Concurrency:** Single controller client; HAL serialises Tx; one message in flight. Watchers are passive.
 - **Crash/Exit:** HAL should auto-reclaim resources and clear any addresses if the client disconnects.
 

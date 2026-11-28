@@ -45,11 +45,12 @@ interface IHdmiCecController {
      *
      * The Client must first acquire a logical address using the CEC Logical Address Allocation method
      * (ref <HDMI Specification 2-0> Section <CEC 11.3.3>) before adding the logical address.
-     * A physical device may add at most two logical addresses. Multiple logical addresses
-     * are permitted only for the device-type combinations explicitly defined in HDMI
-     * Specification 2-0, Section 11.3.2, Table 11-8. The client can add permitted
-     * logical addresses in one call or add them one by one.
+     * The client can add all the logical addresses in one call or add them one by one.
      *
+     * Allocating logical addresses, and choosing which device types and address combinations to use,
+     * is the client's responsibility. The HAL does not check the combination of addresses added.
+     *
+     * The total number of logical addresses added must not exceed Property::MAX_LOGICAL_ADDRESSES.
      * All addresses must be in the directly addressable range of 0 to 14 (0x0 ~ 0xE) or the function will return false.
      * If any addresses passed in are already added then the function will return false.
      *
@@ -58,11 +59,9 @@ interface IHdmiCecController {
      * @returns
      *    true  - if successfully added
      *    false - if the logical addresses cannot be added, including when:
-     *             - more than two logical addresses are supplied;
-     *             - any address is outside the directly addressable range of 0 to 14 (0x0 ~ 0xE);
-     *             - any address has already been added; or
-     *             - the logical address combination is not permitted by HDMI Specification 2-0,
-     *               Section 11.3.2, Table 11-8.
+     *             - the total number of added addresses would exceed Property::MAX_LOGICAL_ADDRESSES;
+     *             - any address is outside the directly addressable range of 0 to 14 (0x0 ~ 0xE); or
+     *             - any address has already been added.
      *
      * @pre The resource must be in State::STARTED.
      *
