@@ -1,13 +1,15 @@
 # Tests
 
-On-demand build verification for the module-local layout.
+On-demand build verification for the root-CMake interface build.
 
 | Concern | Where |
 | ------- | ----- |
-| Does the system build? | `./tests/test.sh` — the top-level suite: build paths, direct-CMake, cross-compile, and `yocto/` (Test 12) |
+| Does the system build? | `./tests/test.sh` — the top-level suite: build paths, direct-CMake, and cross-compile |
 | Module build smoke | `tests/smoke/` — the `build_modules.sh` paths in depth (standalone) |
-| Yocto build integration | `tests/yocto/` — run by `test.sh` Test 12, also standalone |
 | Is a release's structure OK? | `./scripts/release.sh` — link-check, no-untracked-generated-files, and a clean-checkout verification build |
+
+Yocto packaging and consumption are documented in
+[`docs/standards/yocto_integration.md`](../docs/standards/yocto_integration.md).
 
 ## `smoke/`
 
@@ -28,30 +30,3 @@ and asserts the produced HAL libraries:
 
 Exit status is `0` only if every check passes. The Binder SDK is staged
 automatically by `build_modules.sh` if missing.
-
-## `yocto/`
-
-Emulates the Yocto/BitBake **build** integration **without** a real BitBake, so
-the production per-component CMake path is exercised offline.
-
-**Builds** (examples an integrator can run):
-
-- **`yocto_build_vendor.sh`** / **`yocto_build_mw.sh`** — build the **full** HAL
-  for the vendor / MW role, from a versions manifest passed in (default: the
-  repo's `versions_released.yaml`), installed to the role's destination. Thin
-  wrappers over **`yocto_build.sh <role> [manifest]`**.
-
-**Tests:**
-
-- **`yocto_build_each.sh`** — builds **every** released component **individually**:
-  each component's dependency closure in a fresh sysroot, verify its library, then
-  remove the output before the next. Proves each `<comp>/<version>/CMakeLists.txt`
-  builds on its own (the cohort on the branch, e.g. `release/0.22.0`) — not only as
-  part of one cumulative build. (`test.sh` Test 13.)
-- **`yocto_staging_check.sh`** — builds `hdmicec → common` from the self-contained
-  `<module>/<version>/CMakeLists.txt`, with a negative control proving the
-  inter-module dependency staging is required (the regression from #661).
-
-The consumable BitBake reference layer is `yocto/meta-rdk-halif-aidl/` (see
-`docs/standards/build_integration.md`); the scripts above exercise the contract
-its `rdk-halif-aidl` recipe implements.

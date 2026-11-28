@@ -50,6 +50,7 @@ if [ "${1:-}" = "--help" ] || [ "${1:-}" = "-h" ]; then
 fi
 
 HALIF_LIB_DIR="${REPO_ROOT}/out/target/lib/rdk-halif-aidl"
+HALIF_INC_DIR="${REPO_ROOT}/out/target/include"
 PASS=0
 FAIL=0
 
@@ -209,7 +210,7 @@ fi
 #######################################################################
 # 5. Standalone snapshot build with its dependency closure wiped (#638)
 #
-# Steps 1-4 leave out/build/include + out/target fully populated, so a
+# Steps 1-4 leave out/target fully populated, so a
 # per-version snapshot build never proves it can stand up its own
 # dependencies. Here we pick a released snapshot that HAS dependencies,
 # wipe those dependencies' staged headers + libraries, then build ONLY
@@ -242,11 +243,11 @@ else
     # dirs so the build genuinely starts from an unstaged state.
     rm -rf "build/${dcomp}-${dver}" "build/${dcomp}/${dver}"
     rm -f  "${HALIF_LIB_DIR}/lib${dcomp}-v${dver}-cpp.so"
-    rm -rf "${REPO_ROOT}/out/build/include/${dcomp}/${dver}"
+    rm -rf "${HALIF_INC_DIR}/${dcomp}/${dver}"
     for pair in "${DEPS[@]}"; do
         set -- ${pair}; dep="$1"; depver="$2"
         rm -f  "${HALIF_LIB_DIR}/lib${dep}-v${depver}-cpp.so"
-        rm -rf "${REPO_ROOT}/out/build/include/${dep}/${depver}"
+        rm -rf "${HALIF_INC_DIR}/${dep}/${depver}"
         rm -rf "build/${dep}-${depver}" "build/${dep}/${depver}"
     done
 
@@ -257,10 +258,10 @@ else
             set -- ${pair}; c="$1"; v="$2"
             [ -f "${HALIF_LIB_DIR}/lib${c}-v${v}-cpp.so" ] || { fail "dep-closure: lib${c}-v${v}-cpp.so not rebuilt"; missing=1; }
         done
-        # Each dependency's headers must have been re-staged (the #638 symptom).
+        # Each dependency's headers must have been installed again (the #638 symptom).
         for pair in "${DEPS[@]}"; do
             set -- ${pair}; dep="$1"; depver="$2"
-            [ -d "${REPO_ROOT}/out/build/include/${dep}/${depver}/include" ] || { fail "dep-closure: ${dep}/${depver} headers not staged"; missing=1; }
+            [ -d "${HALIF_INC_DIR}/${dep}/${depver}/com" ] || { fail "dep-closure: ${dep}/${depver} headers not installed"; missing=1; }
         done
         [ "${missing}" -eq 0 ] && pass "dep-closure: ${dcomp}/${dver} auto-resolved and rebuilt ${#DEPS[@]} dependency(ies) from a wiped state"
     else

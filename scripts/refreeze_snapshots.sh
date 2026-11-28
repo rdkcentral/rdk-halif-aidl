@@ -31,7 +31,7 @@
 #              only, the generator is deterministic for unchanged AIDL),
 #              <ver>/interface.yaml (gains `version: <int>`),
 #              <ver>/.hash (the contract hash the generator bakes + verifies)
-#   untouched: <ver>/com/ (AIDL), docs/, CMakeLists.txt, hfp-*.yaml,
+#   untouched: <ver>/com/ (AIDL), docs/, hfp-*.yaml,
 #              module-root headers — the frozen contract stays byte-frozen.
 #
 # Method (mirrors scripts/release.sh create_snapshot): the snapshot's own
@@ -134,9 +134,8 @@ refreeze_one() {
     mkdir "${cur}"
 
     # Stage the snapshot's own sources into the current/ slot. Skip the
-    # regenerated trees and the snapshot's cohort-patched CMakeLists —
-    # generation runs with current/'s own (vcurrent) CMakeLists so
-    # dependency lib names and include paths resolve in the dev build.
+    # regenerated trees and any legacy per-snapshot CMakeLists — generation
+    # runs through the root build, so no module-local CMake file is needed.
     # NOTE: this function is invoked in an `if` condition, which suppresses
     # errexit for its whole body — every critical command below must carry
     # its own failure handling.
@@ -153,12 +152,6 @@ refreeze_one() {
             return 1
         fi
     done
-    if ! cp "${bak}/CMakeLists.txt" "${cur}/CMakeLists.txt"; then
-        restore_current
-        warn "[${comp}] failed to stage CMakeLists.txt — skipped."
-        return 1
-    fi
-
     # Stamp: contract hash over the snapshot's AIDL (label must be
     # 'latest-version' — anything else fails the generator's integrity
     # check), then the positional version int into interface.yaml.

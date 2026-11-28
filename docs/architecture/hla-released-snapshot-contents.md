@@ -282,10 +282,10 @@ All No except:
 | # | Title | Link |
 |---|---|---|
 | 1 | How each side uses a component, which code it compiles, and how it selects a version | [HAL Interface Usage](../key_concepts/hal/hal_interface_usage.md) |
-| 2 | The per-component build and staging contract for integrators | [Third-Party Build Integration](../standards/build_integration.md) |
+| 2 | The build, packaging and consumption contract for integrators | [Third-Party Build Integration](../standards/build_integration.md) |
 | 3 | Client-side version discovery, capability gating and fallback | [Client Usage of Stable AIDL](../whitepapers/client_usage_of_stable_aidl.md) |
 | 4 | AOSP stable AIDL: freeze mechanics and `versions_with_info` | <https://source.android.com/docs/core/architecture/aidl/stable-aidl> |
-| 5 | The layout in force: version selection, role mount points, and where the version sits | [`rdk-halif-aidl.bb`](../../tests/yocto/meta-rdk-halif-aidl/recipes-halif/rdk-halif-aidl/rdk-halif-aidl.bb) |
+| 5 | The layout in force: version selection and packaging in the Yocto recipe | [Yocto Integration](../standards/yocto_integration.md) |
 | 6 | The version scheme and the era rules | [Versioning Guide](../standards/versioning-guide.md) |
 | 7 | What the generator guarantees: determinism, interface identity, known deviations | <https://github.com/rdkcentral/linux_binder_idl/blob/develop/CODEGEN.md> |
 | 8 | Release cadence, when a snapshot is created, and the `CR` label | [HAL Delivery & Versioning SOP](../governance/versioning-sop.md) |

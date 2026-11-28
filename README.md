@@ -124,42 +124,48 @@ environment. See [Third-Party Build Integration](docs/standards/build_integratio
 for the full contract and reference recipes.
 
 libbinder is built and staged by the separate **`linux-binder`** recipe
-(`DEPENDS = "linux-binder"`). The HAL libraries are then built **per component**
-from that staged SDK — each `<module>/<version>/` is self-contained (committed
-C++, its own CMakeLists, **no linux_binder_idl toolchain source needed**):
+(`DEPENDS = "linux-binder"`). The HAL libraries are then built from the
+top-level `CMakeLists.txt` and the version manifest, using the committed C++
+(**no linux_binder_idl toolchain source needed**):
 
 ```bash
-# For each released <module>/<version>. A staged SDK is flat, so headers and
-# libs share one prefix — point both BINDER_SDK_DIR and BINDER_SDK_INCLUDE_DIR
-# at it (they differ only in the local dev tree).
-cmake -S <module>/<version> -B build \
-      -DBINDER_SDK_DIR=${STAGING_DIR}/usr \
-      -DBINDER_SDK_INCLUDE_DIR=${STAGING_DIR}/usr
+cmake -S . -B build \
+      -DCMAKE_PREFIX_PATH=${STAGING_DIR}/usr \
+      -DINTERFACE_RELEASE_FILE=versions_released.yaml
 cmake --build build
 cmake --install build
 ```
 
-Compiles the committed module-local C++ into `lib<module>-v<version>-cpp.so`.
-Requires only CMake, a C++ compiler and the staged linux_binder SDK — no Python,
-no AIDL compiler, and no linux_binder_idl source.
+Compiles the committed C++ of every released version in the manifest into
+`lib<module>-v<version>-cpp`. Requires only CMake, a C++ compiler and the staged
+linux_binder SDK — no Python, no AIDL compiler (only `current` versions need
+it), and no linux_binder_idl source.
 
-> **Note (#635):** the one-shot root build (`cmake -S . -DINTERFACE_TARGET=all`)
-> is the **integrated dev** path — it pulls in the linux_binder_idl toolchain
-> (`CMakeLists.inc`) and so requires that source tree. It is **not** for a
-> standalone Yocto recipe; use the per-component build above.
+> **Note (#635):** the root build (`cmake -S . -B build`) builds the components
+> selected by a version manifest. It does not need the linux_binder_idl source
+> tree, but it does need a staged Binder SDK and, for `current` components, the
+> `aidl` executable (`AIDL_EXECUTABLE`, or `aidl` in `PATH`). A standalone Yocto
+> recipe only builds released snapshots, so the per-component build above
+> is the simplest fit.
 
-### Version manifest (`versions.yaml`)
+### Version manifests
 
-`versions.yaml` is the manifest of which version of each component to build —
-`current` (the in-development interface) or a released `<version>/` snapshot.
-`./build_modules.sh manifest` builds the set it lists:
+`versions_released.yaml` selects the released component cohort by default, while
+`versions_current.yaml` selects the in-development cohort. An alternate file can
+select `current` or a released `<version>/` snapshot for each component.
+`./build_modules.sh manifest` builds the selected set:
 
 ```bash
-./build_modules.sh manifest               # build everything in versions.yaml
-./build_modules.sh manifest --file alt.yaml
+./build_modules.sh manifest                              # versions_released.yaml
+./build_modules.sh manifest --file versions_current.yaml # current cohort
+./build_modules.sh manifest --file alt.yaml              # alternate manifest
 ```
 
-A component absent from the manifest falls back to its `default:` entry.
+A root CMake build uses the same selection model. Leave `INTERFACE_TARGET`
+unset to build every component in `INTERFACE_RELEASE_FILE`. For a single
+component, set `INTERFACE_TARGET`; its version defaults to `current`, and its
+dependency versions come from that version's `interface.yaml` imports. Set
+`INTERFACE_VERSION` to select a released snapshot explicitly.
 
 ## Scripts
 
@@ -170,7 +176,7 @@ build with CMake directly — see [Consuming the interfaces](#consuming-the-inte
 | Script | Role |
 | ------ | ---- |
 | `build_binder.sh` | **Stage 1** — clone, build and install the Binder SDK into `out/target/`. |
-| `build_modules.sh` | **Stage 3** — compile the HAL libraries (`.so`) from each component's generated C++. The CMake configure step regenerates any missing sources. `build_modules.sh manifest` builds the set in `versions.yaml`. |
+| `build_modules.sh` | **Stage 3** — compile the HAL libraries (`.so`) from each component's generated C++. The build regenerates the sources whenever an AIDL file changes. `build_modules.sh manifest` builds the set in `versions.yaml`. |
 | `build_interfaces.sh` | **Admin / orchestration** — stages the Binder SDK then delegates the build to `build_modules.sh`; also test/clean helpers. |
 | `release.sh` | Snapshot a component's `current/` into a versioned, controlled release directory (`<module>/<version>/`). |
 | `check_aidl_changes.sh` | Hash-based detection of AIDL source changes. |
@@ -191,9 +197,8 @@ do_configure() {
     CC="${CC}" CXX="${CXX}" \
     CFLAGS="${CFLAGS}" CXXFLAGS="${CXXFLAGS}" LDFLAGS="${LDFLAGS}" \
     cmake -S ${S} -B ${B} \
-          -DINTERFACE_TARGET=all \
-          -DBINDER_SDK_DIR=${STAGING_DIR}${prefix} \
-          -DBINDER_SDK_INCLUDE_DIR=${STAGING_DIR}${prefix}
+          -DCMAKE_INSTALL_PREFIX=${prefix} \
+          -DINTERFACE_RELEASE_FILE=${S}/versions_released.yaml
 }
 
 do_compile() {
@@ -201,11 +206,9 @@ do_compile() {
 }
 
 do_install() {
-    install -d ${D}${libdir}
-    install -m 0755 ${B}/out/target/lib/rdk-halif-aidl/*.so ${D}${libdir}/
-
-    # Note: Headers not needed on target (runtime only)
-    # For development packages, create separate -dev recipe
+    # Installs the libraries to ${libdir}, plus sources, headers and pkg-config files
+    # that belong in the -dev package.
+    DESTDIR=${D} cmake --install ${B}
 }
 ```
 
@@ -228,24 +231,24 @@ Yocto's build system automatically provides these variables with appropriate cro
 
 Used when building HAL libraries for deployment:
 
-| Variable                 | Purpose                           | Default      | Required |
-|--------------------------|-----------------------------------|--------------|----------|
-| `INTERFACE_TARGET`       | Module(s) to build                | `all`        | No       |
-| `AIDL_SRC_VERSION`       | Version to build                  | `current`    | No       |
-| `BINDER_SDK_DIR`         | linux_binder SDK libs location    | `out/target` | **Yes**  |
-| `BINDER_SDK_INCLUDE_DIR` | linux_binder SDK headers location | `out/build`  | Yocto    |
-| `OUT_DIR`                | Output directory                  | `out`        | No       |
+| Variable                 | Purpose                                      | Default                  | Required |
+|--------------------------|----------------------------------------------|--------------------------|----------|
+| `INTERFACE_TARGET`       | Single module to build; unset builds manifest | Unset                    | No       |
+| `INTERFACE_VERSION`      | Version of `INTERFACE_TARGET`                | `current`                | No       |
+| `INTERFACE_RELEASE_FILE` | Component version manifest                   | `versions_released.yaml` | No       |
+| `CMAKE_PREFIX_PATH`      | Prefix of the staged linux_binder SDK        | CMake default            | No       |
+| `CMAKE_INSTALL_PREFIX`   | Install prefix                               | CMake default            | No       |
+| `BUILD_SHARED_LIBS`      | Build shared instead of static libraries     | `OFF`                    | No       |
 
-`BINDER_SDK_DIR` and `BINDER_SDK_INCLUDE_DIR` differ only in the local dev
-tree (libs in `out/target`, headers in `out/build`). A Yocto-staged SDK is
-flat, so set both to the same staging prefix.
+The SDK is found through `pkg-config` and the standard CMake search paths, so
+a Yocto-staged SDK needs no extra variables.
 
 **Example**:
 
 ```bash
 cmake -B build \
-      -DINTERFACE_TARGET=boot \
-      -DBINDER_SDK_DIR=/usr
+      -DINTERFACE_TARGET=bootreason \
+      -DCMAKE_PREFIX_PATH=/usr
 ```
 
 ### Development Build Variables (Scripts)
@@ -273,11 +276,11 @@ full consumer/integrator build contract.
   - Systemd service configuration
   - 32-bit userspace on 64-bit kernel support
 
-- **[docs/standards/build_integration.md](docs/standards/build_integration.md)** - Consumer/integrator build contract: direct-CMake switches, required variables, reference BitBake/Bob recipes
+- **[docs/standards/build_integration.md](docs/standards/build_integration.md)** - Consumer/integrator build contract: direct-CMake switches, required variables, packaging and consumption (CMake, pkg-config)
+- **[docs/standards/yocto_integration.md](docs/standards/yocto_integration.md)** - Yocto recipe, package split and developer workflows
 
 - **[tests/README.md](tests/README.md)** - On-demand build verification
   - `tests/smoke/smoke_test.sh` - exercises the `all`, `manifest` and per-version build paths
-  - `tests/yocto/` - emulates the Yocto production build offline
 
 ## Copyright and License
 

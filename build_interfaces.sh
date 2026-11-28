@@ -318,8 +318,8 @@ mkdir -p "$OUT_DIR"
 # The central stable/ tree is retired: each component generates its C++
 # in place under <module>/current/{include,src}. AIDL update/generation
 # (Stage 2) and compilation (Stage 3) are both handled by
-# build_modules.sh, whose CMake configure step regenerates any missing
-# module-local sources. build_interfaces.sh stays the orchestration
+# build_modules.sh, whose CMake build regenerates the module-local
+# sources whenever an AIDL file changes. build_interfaces.sh stays the orchestration
 # entry point - it stages the Binder SDK (above) and then delegates.
 #
 # The legacy aidl_ops -u / stable/ machinery is intentionally retained

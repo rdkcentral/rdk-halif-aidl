@@ -2814,7 +2814,9 @@ compute_next_versions() {
 #   3. git add <component>/<version>/   # snapshot now contains bindings
 #
 # Frozen `<version>/` includes everything from `current/`: AIDL,
-# generated include/src, docs, CMakeLists, interface.yaml, hfp-*.yaml.
+# generated include/src, docs, interface.yaml and hfp-*.yaml. The root
+# CMake build consumes the snapshot through the release manifest; current/
+# no longer needs a per-version CMakeLists.txt.
 
 # A component is considered "buildable" if it has a current/interface.yaml.
 # Components without one (broadcast, ffv, r4ce, …) are incubating — they
@@ -2849,8 +2851,8 @@ is_buildable_component() {
 # at 9: a 10th doc-only respin of the same minor forces a minor bump.
 # getInterfaceHash() is the toolchain's aidl_hash_gen digest. current/ carries
 # neither field, so dev builds report HASH="notfrozen" — the pre-freeze
-# marker. Snapshots are compile-only (their CMakeLists glob src/*.cpp and
-# never regenerate), so both values are baked in at freeze time: stamp
+# marker. Snapshot builds compile the generated src/*.cpp without
+# regenerating bindings, so both values are baked in at freeze time: stamp
 # current/, regenerate, copy into the snapshot, restore current/.
 _snapshot_version_int() {
     local ver="$1" out="" f i
@@ -3039,14 +3041,10 @@ create_snapshot() {
         return 1
     fi
 
-    # Patch the copied CMakeLists.txt so the snapshot links + installs
-    # with cohort-pinned versioned names. The `current/CMakeLists.txt`
-    # template uses `<comp>-vcurrent-cpp` for its own LIB_NAME and for
-    # inter-module link/include dep paths (`<dep>-vcurrent-cpp`,
-    # `<dep>/current/include`). Left unpatched, the snapshot build
-    # produces lib<comp>-vcurrent-cpp.so + links against
-    # lib<dep>-vcurrent-cpp.so, and the released-cohort verification
-    # step fails with "Snapshot library not found".
+    # Legacy compatibility: if current/ still has a per-module CMakeLists.txt,
+    # patch the copied file to use cohort-pinned versioned names. The root
+    # CMake build no longer uses per-snapshot CMakeLists.txt; current modules
+    # without one are built from the release manifest instead.
     #
     # Rewrite three things using the cohort versions read from
     # versions_released.yaml (the post-bump file just written by
@@ -3170,10 +3168,10 @@ create_snapshot() {
 #
 # This pass rewrites, for the cohort snapshot of every component listed in
 # versions_released.yaml, each reference to ANOTHER component to that
-# dependency's cohort version — in both CMakeLists.txt (link names + include
-# paths) and interface.yaml (AIDL import pins, including `@current`). A
-# snapshot's own version is never touched, and non-cohort historical snapshots
-# are left frozen.
+# dependency's cohort version. It pins imports in interface.yaml and updates
+# link/include references in legacy per-snapshot CMakeLists.txt files, when
+# present. A snapshot's own version is never touched, and non-cohort historical
+# snapshots are left frozen.
 normalize_cohort_snapshot_deps() {
     local changed
     changed="$(python3 - "${REPO_ROOT}" <<'PYEOF'
@@ -3197,7 +3195,7 @@ changed = []
 for comp, ver in sorted(cohort.items()):
     if ver == "current":
         continue
-    # 1. CMakeLists.txt — link names + include paths (#623).
+    # 1. Legacy per-snapshot CMakeLists.txt — link names + include paths (#623).
     cmake = os.path.join(repo, comp, ver, "CMakeLists.txt")
     if os.path.isfile(cmake):
         text = orig = open(cmake).read()
@@ -3660,8 +3658,7 @@ for i in range(start, end):
 
 # Strip any stale "<comp>: current" entries — versions_released.yaml is
 # the released-cohort manifest, so by definition no component should pin
-# to `current`. The default: current fallback already covers components
-# that haven't released yet. A `<comp>: current` entry is leftover
+# to `current`. A `<comp>: current` entry is leftover
 # placeholder state from before the component's first release.
 stale_current = [
     (comp, idx) for comp, (indent, idx) in existing.items()
@@ -3858,7 +3855,7 @@ PYEOF
 #
 # Surfaces every version-shaped string ("0.X.Y.Z") found in:
 #   - <comp>/current/docs/*.md           (#581)
-#   - <comp>/current/CMakeLists.txt      (#582)
+#   - <comp>/current/CMakeLists.txt      (#582; legacy files only)
 #   - <comp>/current/interface.yaml      (#582)
 #   - <comp>/current/hfp-*.yaml          (#582)
 #   - <comp>/current/mkdocs.yml          (#582)

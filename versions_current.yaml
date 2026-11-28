@@ -6,8 +6,8 @@
 #   <major>.<minor>.<patch>.<build>   a released snapshot  (<component>/<version>/)
 #
 # build_modules.sh reads this file in `manifest` mode to determine the set of
-# components to build and the version of each. A component absent from the
-# `components:` map falls back to `default:`.
+# components to build and the version of each. Only components listed in the
+# `components:` map are built.
 #
 # A released snapshot is produced by ./release.sh, which copies
 # <component>/current/ to <component>/<version>/, taking <version> verbatim
@@ -16,8 +16,6 @@
 # NOTE: building a component from a released <version>/ snapshot (rather than
 # current/) depends on per-version selection support in the linux_binder_idl
 # toolchain. Until that lands, every component is expected to be `current`.
-
-default: current
 
 components:
   audiodecoder:   current
