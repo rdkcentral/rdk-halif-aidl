@@ -144,7 +144,7 @@ Examples:
 
 Output Structure:
   <module>/current/
-    include/  src/                      # Generated C++ (module-local, committed)
+    include/  src/                      # Generated C++ (module-local; gitignored in current/)
   out/target/
     lib/
       binder/                           # Binder runtime libraries (*.so)

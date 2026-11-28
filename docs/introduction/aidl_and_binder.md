@@ -4,194 +4,154 @@
 
 | Version | Date       | Author           | Changes                                    |
 | ------- | ---------- | ---------------- | ------------------------------------------ |
+| 1.2     | 2026-11-18 | Gerald Weatherup | Corrected to the current layout, versioning and toolchain; call detail moved to Binder Call Path |
 | 1.1     | 2025-06-17 | Gerald Weatherup | Updated to include more detail |
 | 1.0     | 2024-08-13 | Lucien Kennedy-Lamb| Initial version, AIDL + RDK Binder Context |
 
-## Purpose
-
-This document provides a comprehensive overview of how Android Interface Definition Language (AIDL) is used within the RDK platform to define and implement Hardware Abstraction Layers (HALs) using Binder IPC. It includes motivation from the 2023 RDK HAL study, a system flowchart, and references to upstream documentation and tooling.
+Every RDK HAL is an AIDL interface, served by a vendor process and called by middleware over Binder IPC.
+This page is the entry point: what the pieces are, how a component is laid out, and how it is versioned.
+What one call costs, and which threads run it, is in [Binder Call Path](binder_call_path.md).
 
 ---
 
-## System Architecture Flow
+## How a HAL is found and called
 
 ```mermaid
-flowchart LR
-    subgraph Client Side
-        App["Client"]
-        AIDLClient["Proxy - AIDL-generated Stub"]
-    end
-
-    subgraph Binder IPC Layer
-        BinderDriver["Binder Kernel Driver"]
-    end
-
-    subgraph Service Side
-        AIDLStub["Stub - AIDL-generated Skeleton"]
-        Service["Service Implementation"]
-    end
-
-    App --> AIDLClient
-    AIDLClient -->|binder.transact| BinderDriver
-    BinderDriver -->|onTransact| AIDLStub
-    AIDLStub --> Service
-    Service -->|result| AIDLStub
-    AIDLStub -->|writeReply| BinderDriver
-    BinderDriver --> AIDLClient
-    AIDLClient --> App
+sequenceDiagram
+    participant HAL as HAL service (vendor)
+    participant SM as servicemanager
+    participant MW as Middleware client
+    HAL->>SM: addService("<serviceName>", BnFoo)
+    MW->>SM: getService("<serviceName>")
+    SM-->>MW: binder handle
+    Note over MW: wraps the handle in BpFoo (proxy)
+    MW->>HAL: IFoo::call(args) — marshalled by BpFoo, one binder transaction
+    HAL-->>MW: reply, unmarshalled by BpFoo
 ```
+
+The HAL registers under the service name its AIDL interface declares. The client holds only the proxy;
+it never links against vendor code.
 
 ---
 
 ## RDK HAL and Binder Design Goals
 
-The 2023 RDK HAL study outlined a next-generation HAL strategy built on the following principles:
-
-### Design Goals
+The 2023 RDK HAL study set these goals for the next-generation HAL:
 
 * **Clean Separation:** Middleware and vendor code are modular and clearly separated.
-* **Process Isolation:** Each HAL runs in its own process, improving stability and testability.
+* **Process Isolation:** Each HAL runs in its own process, so a HAL crash is contained.
 * **Late Binding:** Middleware and vendor components are linked only at runtime, not build-time.
-* **Versioning:** AIDL interfaces support backward/forward compatibility.
-* **Performance:** Binder provides efficient IPC suitable for real-time AV use cases.
-* **Testability:** Vendor HALs can be tested in isolation without full stack.
-* **Debuggability:** Rich tracing and tooling for diagnostics.
+* **Versioning:** AIDL interfaces support backward and forward compatibility.
+* **Testability:** Vendor HALs can be tested in isolation, without the full stack.
+* **Debuggability:** Calls can be traced and inspected at the transaction level.
 
 ---
 
 ## Binder in RDK HALs
 
-Binder is a lightweight, low-latency IPC mechanism designed for Android and now adopted in RDK HALs.
+Binder is the kernel IPC mechanism from Android, built into the RDK kernel (`CONFIG_ANDROID_BINDER_IPC`).
+The user-space side, `libbinder`, the `servicemanager` and the AIDL generator, comes from
+[linux_binder_idl](https://github.com/rdkcentral/linux_binder_idl): AOSP's sources with the patches that
+make them build and run on Linux.
 
-### Benefits for RDK HALs
-
-* **Process & Memory Isolation:** HAL crashes are contained, improving robustness.
-* **Late Binding:** HAL and middleware components can be delivered and updated independently.
-* **Security & Debugging:** Binder integrates with SELinux and provides kernel-level tracing.
-
-Binder is implemented as a kernel driver and must be enabled at kernel configuration time.
+* **Process and memory isolation:** a HAL crash is contained in its process; the client sees the binder die.
+* **Late binding:** HAL and middleware components are delivered and updated independently.
+* **Security:** RDK runs AppArmor. The `servicemanager` registers without requesting callers' security
+  contexts, so binder works under AppArmor or with no LSM.
+* **Debugging:** the kernel's binder tracepoints record every transaction.
 
 ---
 
 ## AIDL: Interface Definition and Contract
 
-AIDL (Android Interface Definition Language) is the mechanism used to define HAL interfaces in RDK.
+AIDL (Android Interface Definition Language) defines each HAL's interface.
 
-### Why AIDL?
+* **Contract definition:** a precise, language-neutral description of the API.
+* **Code generation:** the generator emits the proxy and stub C++ classes, so no marshalling is hand-written.
+  What the generated code guarantees is in linux_binder_idl's
+  [CODEGEN.md](https://github.com/rdkcentral/linux_binder_idl/blob/develop/CODEGEN.md).
+* **Stable AIDL:** interfaces evolve with runtime version negotiation (see [Versioning](#versioning)).
 
-* **Contract Definition:** Precise and language-agnostic description of available APIs.
-* **Tooling:** Generates proxy and stub C++ classes that reduce boilerplate and human error.
-* **Binder Integration:** Seamlessly marshals and unmarshals calls across process boundaries.
-* **Stable AIDL:** Allows interface evolution with runtime version negotiation.
+For an interface `IFoo`, the generator emits:
 
----
-
-## Key Concepts and Benefits
-
-| Concept              | Description                                                         |
-| -------------------- | ------------------------------------------------------------------- |
-| Interface Definition | `.aidl` files describe the HAL’s public API contract                |
-| Code Generation      | AIDL compiler emits client and server glue code                     |
-| Proxy                | Client-side object that wraps Binder calls                          |
-| Stub                 | Server-side object that receives and dispatches Binder transactions |
-| Versioning           | Stable AIDL supports version negotiation and compatibility          |
-| Process Isolation    | Middleware and HALs run in separate processes                       |
-| Late Binding         | Middleware doesn't link directly to vendor libraries                |
+| Generated | Role |
+| --- | --- |
+| `IFoo.h` | The interface, with its `VERSION` and `HASH` identity |
+| `BpFoo` | Proxy: client side, marshals each call into a transaction |
+| `BnFoo` | Stub: server side, unmarshals and dispatches to the implementation |
 
 ---
 
 ## HAL Development Flow
 
-1. Define an interface in `.aidl` (e.g. `IAudioSink.aidl`).
-2. Use the AIDL compiler to generate proxy/stub code.
-3. Implement the server-side service in the vendor HAL.
-4. Bind the service using a `ServiceManager`.
-5. Middleware connects via the AIDL proxy.
+1. Once per checkout, run `./build_binder.sh` from the repository root. It clones and builds linux_binder_idl
+   and stages the binder SDK (the `aidl` compiler, `libbinder` and its headers) under `out/`; the commands
+   below stop with a pointer to it until it has run.
+2. Define or change the interface in `.aidl` under the component's `current/`.
+3. Run `./scripts/validate_aidl.sh <component>` to check the AIDL in seconds, then
+   `./build_interfaces.sh <component>` to generate the C++ bindings and build the interface library.
+4. Implement the service in the vendor HAL by deriving from `BnFoo`, and register it with the `servicemanager`.
+5. Middleware gets the service by name and calls it through `BpFoo`.
+
+Generated code under `current/` is build output and is never committed.
 
 ---
 
-## Example: Audio Sink AIDL
+## Component Directory Structure
 
-```aidl
-interface IAudioSink {
-    void play();
-    void stop();
-    int getLatencyMs();
-}
-```
+Each HAL component is a self-contained module. Its working version lives in `current/`; each released
+version is a frozen snapshot beside it.
 
-Generates:
-
-* `BpAudioSink` (Proxy)
-* `BnAudioSink` (Stub)
-* `IAudioSink.h` (Interface definition)
-
-## Component Directory Structure and Interface Versioning
-
-Each RDK HAL component is maintained as a self-contained module. The working version of each component lives under a `current/` subdirectory, which includes AIDL interfaces, build configuration, and metadata. Interface versioning is not embedded in the directory structure during development; instead, it is applied during the release process.
-
-### Example: `audiosink` Component Layout
+### Example: `audiosink`
 
 ```text
 audiosink/
+├── metadata.yaml               # component version, RAG status, reviewers
+├── 0.1.0.0/  0.2.0.0/  0.3.0.0/   # released snapshots
 └── current/
-    ├── CMakeLists.txt
-    ├── com/
-    │   └── rdk/
-    │       └── hal/
-    │           └── audiosink/
-    │               ├── Capabilities.aidl
-    │               ├── ContentType.aidl
-    │               ├── ErrorCode.aidl
-    │               ├── IAudioSink.aidl
-    │               ├── IAudioSinkController.aidl
-    │               ├── IAudioSinkControllerListener.aidl
-    │               ├── IAudioSinkEventListener.aidl
-    │               ├── IAudioSinkManager.aidl
-    │               ├── PlatformCapabilities.aidl
-    │               ├── Property.aidl
-    │               ├── Volume.aidl
-    │               └── VolumeRamp.aidl
-    └── hfp-audiosink.yaml
+    ├── CMakeLists.txt          # builds the interface library from the staged SDK
+    ├── interface.yaml          # AIDL module: sources, imports, stability
+    ├── hfp-audiosink.yaml      # HAL Feature Profile
+    ├── mkdocs.yml
+    ├── docs/
+    │   └── audio_sink.md       # the HAL specification
+    └── com/rdk/hal/audiosink/
+        ├── IAudioSinkManager.aidl
+        ├── IAudioSink.aidl
+        ├── IAudioSinkController.aidl
+        ├── IAudioSinkControllerListener.aidl
+        ├── IAudioSinkEventListener.aidl
+        └── ... (parcelables and enums)
 ```
 
-### Breakdown of Key Elements
-
-* `current/`:
-  The active development version of the component. This is the authoritative source for both the AIDL definitions and the associated HAL feature metadata.
-
-* `com/rdk/hal/audiosink/*.aidl`:
-  The AIDL files define the complete Binder IPC interface set for the `audiosink` HAL. Each file represents a distinct part of the interface, such as data types, error codes, control interfaces, and listener callbacks.
-
-* `CMakeLists.txt`:
-  Defines how to build the AIDL-generated C++ sources and any associated HAL service or unit test binaries.
-
-* `hfp-audiosink.yaml`:
-  The HAL Feature Pack (HFP) descriptor. This file maps interface implementations to service names, identifies required capabilities, and may include metadata for integration and deployment.
+* `current/` is the authoritative working copy of the AIDL and its HAL Feature Profile.
+* `interface.yaml` declares the module: its sources, the components it imports, and its stability.
+* `hfp-audiosink.yaml` is the [HAL Feature Profile](../key_concepts/hal/hal_feature_profiles.md): what a
+  platform's implementation of this HAL supports.
+* `CMakeLists.txt` builds the component's interface library standalone, against the staged binder SDK.
 
 ---
 
-### Interface Versioning via Release Process
+## Versioning
 
-* The `current/` directory is **unversioned during development**.
-* During the **formal release process**, the `current/` tree is:
-    * Validated for stability using AIDL tooling.
-    * Snapshotted or copied to a versioned directory (e.g., `1/`, `2/`)
-    * Used to generate bindings against specific interface versions.
+* `current/` carries no version while it is developed.
+* At a release, `release.sh` validates each changed component, snapshots `current/` to a versioned
+  directory, and sets the component's version in `metadata.yaml`. Before the 1.0 baseline, versions are
+  `0.<generation>.<minor>.<patch>`, so `audiosink/0.3.0.0` is the third generation.
+* A PR never edits the version: its change-class label decides the bump.
 
-This approach allows:
+The rules are in the [HAL Delivery & Versioning SOP](../governance/versioning-sop.md), and what a client can
+rely on across versions is in the [Versioning Guide](../standards/versioning-guide.md).
 
-* **Concurrent development** of future features in `current/` without affecting released versions.
-* **Stable integration points** for validation systems.
-* **Backwards compatibility** enforcement through version-aware AIDL and runtime checks.
-
-> Stable AIDL requires a `version` declaration and enforces compatibility rules during build and test, ensuring that client/server pairs remain interoperable across versions.
+---
 
 ## Resources
 
 ### RDK HAL & AIDL
 
 * [RDK HAL AIDL Repository](https://github.com/rdkcentral/rdk-halif-aidl)
+* [linux_binder_idl](https://github.com/rdkcentral/linux_binder_idl): the binder SDK and AIDL generator
+* [Binder Call Path](binder_call_path.md): layers, threads, copies and priority of one call
 
 ### Android AIDL Documentation
 
@@ -204,4 +164,3 @@ This approach allows:
 * [Binder Kernel Driver (v5.15)](https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/tree/drivers/android?h=v5.15.164)
 * [Binder Tracing Tools](https://github.com/foundryzero/binder-trace)
 * [Binder Explorer](https://github.com/opersys/binder-explorer-web)
-
